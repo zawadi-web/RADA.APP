@@ -1,0 +1,152 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 6, 28, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+.sheet {
+  position: relative;
+  z-index: 1000;
+  width: 100%;
+  max-width: 480px;
+  background: var(--color-plum-surface);
+  border-top-left-radius: var(--radius-2xl);
+  border-top-right-radius: var(--radius-2xl);
+  border-top: 1px solid var(--color-border);
+  padding: 16px 20px 28px;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.grabber {
+  width: 40px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: var(--radius-full);
+  margin: 0 auto 14px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.tag {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-radiant-coral);
+  letter-spacing: 0.02em;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.promptQuote {
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid var(--color-radiant-coral);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+
+.promptQ {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.promptA {
+  font-size: 13.5px;
+  color: var(--color-warm-cream);
+  font-style: italic;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  color: var(--color-warm-cream);
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  margin-bottom: 4px;
+}
+
+.textarea:focus {
+  border-color: var(--color-radiant-coral);
+}
+
+.charCount {
+  align-self: flex-end;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 12px;
+}
+
+.sparkRow {
+  margin-bottom: 18px;
+}
+
+.sparkLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--color-text-secondary);
+}
+
+.checkbox {
+  accent-color: var(--color-sunset-amber);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.sparkText strong {
+  color: var(--color-sunset-amber);
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+}
+
+.actions button {
+  flex: 1;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

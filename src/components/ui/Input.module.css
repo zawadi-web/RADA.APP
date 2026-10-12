@@ -1,0 +1,102 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.label {
+  font-family: var(--font-heading);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--rada-cream);
+}
+
+.charCount {
+  font-size: 0.75rem;
+  color: var(--rada-cream-muted);
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  background-color: var(--rada-surface-elevated);
+  border: 1px solid var(--rada-border-plum);
+  border-radius: var(--radius-md);
+  color: var(--rada-cream);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+  padding: 12px 16px;
+  min-height: var(--touch-target-min);
+  box-sizing: border-box;
+  transition: all var(--transition-fast);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--rada-coral);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 90, 95, 0.2);
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: rgba(253, 251, 247, 0.4);
+}
+
+.textarea {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.selectContainer {
+  position: relative;
+  width: 100%;
+}
+
+.select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--rada-cream-muted);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.option {
+  background-color: var(--rada-surface-plum);
+  color: var(--rada-cream);
+}
+
+.hasError {
+  border-color: var(--rada-danger) !important;
+}
+
+.errorText {
+  font-size: 0.8125rem;
+  color: var(--rada-danger);
+  font-weight: 500;
+}
+
+.helperText {
+  font-size: 0.8125rem;
+  color: var(--rada-cream-muted);
+  opacity: 0.8;
+}

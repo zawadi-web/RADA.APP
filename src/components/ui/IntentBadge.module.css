@@ -1,0 +1,56 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  border: 1px solid transparent;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  transition: all var(--transition-fast);
+}
+
+.sm {
+  padding: 3px 10px;
+  font-size: 0.75rem;
+}
+
+.md {
+  padding: 6px 14px;
+  font-size: 0.8125rem;
+}
+
+.icon {
+  font-size: 0.9em;
+  line-height: 1;
+}
+
+.label {
+  line-height: 1.2;
+}
+
+/* Specific Intent Styling */
+.marriage {
+  background-color: var(--rada-amber-subtle);
+  color: var(--rada-amber);
+  border-color: rgba(255, 178, 56, 0.35);
+}
+
+.longTerm {
+  background-color: var(--rada-coral-subtle);
+  color: var(--rada-coral);
+  border-color: rgba(255, 90, 95, 0.35);
+}
+
+.intentional {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: var(--rada-success);
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.exploring {
+  background-color: rgba(168, 85, 247, 0.15);
+  color: #C084FC;
+  border-color: rgba(168, 85, 247, 0.35);
+}

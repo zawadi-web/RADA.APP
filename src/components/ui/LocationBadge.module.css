@@ -1,0 +1,33 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background-color: rgba(26, 11, 46, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: var(--rada-cream);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.sm {
+  padding: 3px 10px;
+  font-size: 0.75rem;
+}
+
+.md {
+  padding: 5px 12px;
+  font-size: 0.8125rem;
+}
+
+.pin {
+  font-size: 0.85em;
+  line-height: 1;
+}
+
+.text {
+  line-height: 1.2;
+}

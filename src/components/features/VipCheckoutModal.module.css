@@ -1,0 +1,484 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 6, 28, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+.modalCard {
+  position: relative;
+  z-index: 1001;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--color-plum-surface);
+  border: 1px solid rgba(255, 178, 56, 0.3);
+  border-radius: var(--radius-2xl);
+  padding: 24px 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 178, 56, 0.15);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.vipTag {
+  padding: 4px 12px;
+  background: rgba(255, 178, 56, 0.15);
+  border: 1px solid var(--color-sunset-amber);
+  color: var(--color-sunset-amber);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--color-warm-cream);
+  margin-bottom: 4px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin-bottom: 16px;
+}
+
+/* Gateway Tabs */
+.gatewayTabs {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 3px;
+  margin-bottom: 16px;
+}
+
+.gatewayTab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.gatewayTabActive {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-warm-cream);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.gatewayTabActiveMpesa {
+  background: rgba(0, 132, 61, 0.25);
+  color: #34D399;
+  border: 1px solid rgba(0, 132, 61, 0.4);
+}
+
+.gatewayTabActivePaystack {
+  background: rgba(14, 165, 233, 0.2);
+  color: #38BDF8;
+  border: 1px solid rgba(14, 165, 233, 0.4);
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.featureIcon {
+  font-size: 16px;
+}
+
+.featureItem strong {
+  display: block;
+  font-size: 13px;
+  color: var(--color-warm-cream);
+}
+
+.featureItem p {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+}
+
+.planSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.planCard {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectedPlan {
+  border-color: var(--color-sunset-amber);
+  background: rgba(255, 178, 56, 0.08);
+}
+
+.planBadge {
+  position: absolute;
+  top: -8px;
+  background: var(--color-deep-plum);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: 10px;
+  padding: 1px 8px;
+  color: var(--color-text-secondary);
+}
+
+.bestValue {
+  background: var(--color-sunset-amber);
+  color: var(--color-deep-plum);
+  font-weight: 700;
+  border: none;
+}
+
+.planPeriod {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.planPrice {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--color-warm-cream);
+  margin-bottom: 2px;
+}
+
+.planDesc {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.mpesaSection {
+  margin-bottom: 16px;
+}
+
+.label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.phoneInputRow {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.flagPrefix {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-warm-cream);
+  border-right: 1px solid var(--color-border);
+}
+
+.phoneInput {
+  flex: 1;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-warm-cream);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.payBtnMpesa {
+  background: #00843D !important; /* Safaricom brand green */
+  border: none !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+.payBtnMpesa:hover {
+  background: #006830 !important;
+}
+
+.payBtnPaystack {
+  background: #0EA5E9 !important; /* Paystack brand cyan */
+  border: none !important;
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+}
+
+.paystackBanner {
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.25);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #BAE6FD;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Authentic Safaricom SIM Toolkit STK Push Prompt */
+.simToolkitOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.simToolkitBox {
+  width: 100%;
+  max-width: 320px;
+  background: #2D3748; /* Authentic Android / SIM Toolkit Slate */
+  border-radius: 12px;
+  padding: 20px 18px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  color: #FFFFFF;
+  text-align: center;
+  animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.stkHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.stkSafaricomIcon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #00843D;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.stkTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.05em;
+}
+
+.stkMessage {
+  font-size: 13px;
+  color: #E2E8F0;
+  line-height: 1.4;
+  margin-bottom: 16px;
+}
+
+.stkPinRow {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.stkPinDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #CBD5E1;
+  background: transparent;
+  transition: all 0.15s ease;
+}
+
+.stkPinDotFilled {
+  background: #00843D;
+  border-color: #00843D;
+  transform: scale(1.15);
+}
+
+.keypadGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.keypadBtn {
+  background: #4A5568;
+  border: 1px solid #718096;
+  border-radius: 8px;
+  color: #FFFFFF;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.keypadBtn:active {
+  background: #00843D;
+}
+
+.stkActions {
+  display: flex;
+  gap: 10px;
+}
+
+.stkCancelBtn {
+  flex: 1;
+  background: #4A5568;
+  border: none;
+  border-radius: 6px;
+  color: #CBD5E1;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.stkSendBtn {
+  flex: 1;
+  background: #00843D;
+  border: none;
+  border-radius: 6px;
+  color: #FFFFFF;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Floating Simulated SMS Notification */
+.smsToast {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1200;
+  width: calc(100% - 32px);
+  max-width: 400px;
+  background: #1E293B;
+  border-left: 4px solid #00843D;
+  border-radius: 10px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  animation: slideDown 0.35s ease-out;
+  color: #FFFFFF;
+}
+
+.smsHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #34D399;
+  margin-bottom: 4px;
+}
+
+.smsBody {
+  font-size: 12px;
+  color: #E2E8F0;
+  line-height: 1.35;
+}
+
+.guaranteeText {
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 14px;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

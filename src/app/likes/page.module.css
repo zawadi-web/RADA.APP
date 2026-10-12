@@ -1,0 +1,251 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 12px 16px 20px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--color-warm-cream);
+  margin-bottom: 2px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.vipActiveBadge {
+  background: rgba(255, 178, 56, 0.15);
+  border: 1px solid var(--color-sunset-amber);
+  color: var(--color-sunset-amber);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.unlockPill {
+  background: var(--color-radiant-coral);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.unlockPill:hover {
+  background: #FF4248;
+}
+
+.vipPromoCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: linear-gradient(135deg, rgba(255, 178, 56, 0.15) 0%, rgba(255, 90, 95, 0.15) 100%);
+  border: 1px solid rgba(255, 178, 56, 0.35);
+  border-radius: var(--radius-xl);
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+
+.vipPromoText strong {
+  display: block;
+  font-size: 13px;
+  color: var(--color-warm-cream);
+  margin-bottom: 2px;
+}
+
+.vipPromoText p {
+  font-size: 11.5px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.likesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.likeCard {
+  background: var(--color-plum-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.photoContainer {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  background: var(--color-deep-plum);
+  overflow: hidden;
+}
+
+.cardPhoto {
+  object-fit: cover;
+  transition: filter 0.3s ease;
+}
+
+.blurredPhoto {
+  filter: blur(14px);
+  transform: scale(1.1);
+}
+
+.intentBadgeWrapper {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 5;
+}
+
+.superSparkTag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: var(--color-sunset-amber);
+  color: var(--color-deep-plum);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: var(--radius-full);
+  z-index: 5;
+}
+
+.lockOverlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(26, 11, 46, 0.45);
+  cursor: pointer;
+  z-index: 4;
+}
+
+.lockIcon {
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.lockText {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--color-warm-cream);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+}
+
+.cardDetails {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.nameRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.senderName {
+  font-size: 13.5px;
+  color: var(--color-warm-cream);
+}
+
+.senderAge {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.commentBubble {
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 2px solid var(--color-radiant-coral);
+  padding: 6px 8px;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: 4px 0;
+}
+
+.quoteMark {
+  font-size: 12px;
+  color: var(--color-radiant-coral);
+  margin-right: 2px;
+}
+
+.commentText {
+  display: inline;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--color-text-secondary);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.cardActions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.passBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.passBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+}
+
+.acceptBtn {
+  flex: 1;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: var(--color-radiant-coral);
+  border: none;
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.acceptBtn:hover {
+  background: #FF4248;
+}
+
+.emptyWrapper {
+  margin-top: 60px;
+}

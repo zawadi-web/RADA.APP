@@ -1,0 +1,126 @@
+@import "../styles/tokens.css";
+
+/* Base Reset & Box Sizing */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  background-color: var(--rada-bg);
+  color: var(--rada-pearl);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--rada-pearl);
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--rada-teal);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
+/* Accessible Minimum Touch Targets */
+button, a.nav-link, .touch-target {
+  min-height: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Mobile-First App Shell Container */
+.rada-app-container {
+  min-height: 100vh;
+  width: 100%;
+  max-width: 480px; /* Constrained on desktop for a genuine mobile feel */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background-color: var(--rada-bg-plum);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.4);
+}
+
+.rada-main-content {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: 84px; /* Space for the 4-tab bottom navigation */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Common Utility Helpers */
+.flex-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.gap-xs { gap: 4px; }
+.gap-sm { gap: 8px; }
+.gap-md { gap: 14px; }
+.gap-lg { gap: 20px; }
+
+.text-muted {
+  color: var(--rada-cream-muted);
+  opacity: 0.72;
+}
+
+.text-caption {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+}
+
+.text-bold {
+  font-weight: 600;
+}

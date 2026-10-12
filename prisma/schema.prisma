@@ -1,0 +1,253 @@
+// Rada Production Database Schema
+// High-concurrency PostgreSQL configuration for Supabase / Neon connection pooling
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum IntentType {
+  MARRIAGE
+  LONG_TERM
+  INTENTIONAL_DATING
+  SERIOUS_RELATIONSHIP
+  EXPLORING
+}
+
+enum Gender {
+  MAN
+  WOMAN
+  NON_BINARY
+}
+
+enum LikeType {
+  STANDARD
+  SUPER_SPARK
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum PaymentProvider {
+  MPESA
+  PAYSTACK
+}
+
+model User {
+  id              String        @id @default(cuid())
+  email           String?       @unique
+  phone           String?       @unique
+  fullName        String
+  birthDate       DateTime
+  gender          Gender        @default(WOMAN)
+  county          String        @default("Nairobi")
+  area            String        @default("Kilimani")
+  occupation      String?
+  intent          IntentType    @default(LONG_TERM)
+  bio             String?
+  verified        Boolean       @default(false)
+  isVip           Boolean       @default(false)
+  completionScore Int           @default(50)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  // Geolocation (optional, user opt-in only, ~1km precision for privacy)
+  latitude           Float?        // Rounded to 2 decimal places
+  longitude          Float?        // Rounded to 2 decimal places
+  locationUpdatedAt  DateTime?
+
+  // Gender preferences
+  interestedInGenders String[]    @default(["WOMAN"])
+
+  // Media & Profile Relationships
+  photos          Photo[]
+  prompts         Prompt[]
+  voiceNotes      VoiceNote[]
+  
+  // Interactions
+  sentLikes       Like[]        @relation("SentLikes")
+  receivedLikes   Like[]        @relation("ReceivedLikes")
+  matchesAsUser1  Match[]       @relation("User1Matches")
+  matchesAsUser2  Match[]       @relation("User2Matches")
+  sentMessages    Message[]     @relation("SentMessages")
+  transactions    Transaction[]
+
+  // Password Auth & Reset Code (Secured with bcrypt salt)
+  passwordHash       String?
+  resetCode          String?       // Hashed 6-digit OTP code
+  resetCodeExpires   DateTime?
+
+  // Virtual Currency (Coins)
+  coins              Int           @default(20) // 20 welcome bonus coins
+  coinTransactions   CoinTransaction[]
+
+  // NextAuth OAuth accounts (Google)
+  accounts        Account[]
+  sessions        Session[]
+
+  @@index([county, area, intent])
+  @@index([createdAt])
+}
+
+model CoinTransaction {
+  id           String   @id @default(cuid())
+  userId       String
+  amount       Int      // e.g. +50, +200, -10, -15
+  balanceAfter Int      @default(0)
+  type         String   // "WELCOME_BONUS", "PURCHASE", "CHAT_UNLOCK", "DIRECT_MESSAGE"
+  description  String
+  reference    String?  // Mpesa / Paystack reference if purchase
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Photo {
+  id        String   @id @default(cuid())
+  userId    String
+  url       String   // Cloudinary / AWS S3 CDN URL
+  publicId  String?  // Cloud storage asset ID
+  isPrimary Boolean  @default(false)
+  order     Int      @default(0)
+  caption   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, order])
+}
+
+model Prompt {
+  id        String   @id @default(cuid())
+  userId    String
+  promptId  String
+  question  String
+  answer    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VoiceNote {
+  id          String   @id @default(cuid())
+  userId      String
+  promptTitle String
+  durationSec Int
+  audioUrl    String   // Direct Cloud CDN storage URL
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Like {
+  id         String   @id @default(cuid())
+  senderId   String
+  receiverId String
+  likeType   LikeType @default(STANDARD)
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  sender   User @relation("SentLikes", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedLikes", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, createdAt])
+}
+
+model Match {
+  id             String    @id @default(cuid())
+  user1Id        String
+  user2Id        String
+  createdAt      DateTime  @default(now())
+  lastActivity   DateTime  @default(now())
+  expiresAt      DateTime  // 48-Hour Momentum expiration
+  isExpired      Boolean   @default(false)
+
+  user1    User      @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2    User      @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@unique([user1Id, user2Id])
+  @@index([expiresAt, isExpired])
+  @@index([lastActivity])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  matchId   String
+  senderId  String
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  isSystem  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender User  @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([matchId, createdAt])
+}
+
+model Transaction {
+  id                 String          @id @default(cuid())
+  userId             String
+  provider           PaymentProvider @default(PAYSTACK)
+  reference          String          @unique
+  amount             Int             // In KES cents or whole shillings
+  currency           String          @default("KES")
+  status             PaymentStatus   @default(PENDING)
+  mpesaReceiptNumber String?
+  plan               String          // "WEEKLY_PASS", "MONTHLY_VIP"
+  rawPayload         Json?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([reference])
+}

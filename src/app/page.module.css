@@ -1,0 +1,268 @@
+.header {
+  padding: 12px 0 20px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--rada-border-plum);
+  margin-bottom: 20px;
+}
+
+.logoRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoBadge {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--rada-coral) 0%, #B91C1C 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--rada-shadow-glow-coral);
+}
+
+.logoWave {
+  font-size: 1.25rem;
+  color: #FFFFFF;
+}
+
+.brandTitle {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--rada-cream);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.brandSubtitle {
+  font-size: 0.75rem;
+  color: var(--rada-cream-muted);
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.statusPill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--rada-surface-elevated);
+  border: 1px solid var(--rada-border-plum);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--rada-cream);
+}
+
+.onlineDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--rada-success);
+  box-shadow: 0 0 6px var(--rada-success);
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.sectionHeading {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--rada-cream);
+}
+
+.toggleBtn {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--rada-coral);
+  background-color: var(--rada-coral-subtle);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.toggleBtn:hover {
+  background-color: rgba(255, 90, 95, 0.25);
+}
+
+/* Discovery Card Styling */
+.discoveryCard {
+  padding: 0 !important;
+  overflow: hidden;
+  border-radius: var(--radius-xl) !important;
+  border: 1px solid var(--rada-border-plum) !important;
+  box-shadow: var(--rada-shadow-lg) !important;
+}
+
+.photoContainer {
+  position: relative;
+  width: 100%;
+}
+
+.photoBadges {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 3;
+}
+
+.profileBody {
+  padding: 16px;
+  background-color: var(--rada-surface-plum);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profileName {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--rada-cream);
+  line-height: 1.2;
+}
+
+.profileAge {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.verifiedCheck {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--rada-success);
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+
+.profileBio {
+  font-size: 0.9375rem;
+  color: var(--rada-cream);
+  opacity: 0.9;
+  line-height: 1.45;
+}
+
+.promptBox {
+  background-color: var(--rada-surface-elevated);
+  border: 1px solid var(--rada-border-plum);
+  border-left: 3px solid var(--rada-coral);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.promptLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--rada-coral);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.promptAnswer {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rada-cream);
+  line-height: 1.4;
+  font-style: italic;
+}
+
+/* Action Buttons */
+.actionRow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding-top: 8px;
+}
+
+.passBtn {
+  width: 52px !important;
+  height: 52px !important;
+  background-color: var(--rada-surface-elevated) !important;
+  color: var(--rada-slate) !important;
+  border: 1px solid rgba(100, 116, 139, 0.3) !important;
+  font-size: 1.25rem !important;
+}
+
+.passBtn:hover {
+  background-color: rgba(100, 116, 139, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+.superSparkBtn {
+  width: 48px !important;
+  height: 48px !important;
+  background-color: var(--rada-amber-subtle) !important;
+  color: var(--rada-amber) !important;
+  border: 1px solid rgba(255, 178, 56, 0.35) !important;
+  font-size: 1.125rem !important;
+}
+
+.superSparkBtn:hover {
+  background-color: var(--rada-amber) !important;
+  color: var(--rada-charcoal) !important;
+}
+
+.likeBtn {
+  width: 60px !important;
+  height: 60px !important;
+  background-color: var(--rada-coral) !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  font-size: 1.5rem !important;
+  box-shadow: var(--rada-shadow-glow-coral) !important;
+}
+
+.likeBtn:hover {
+  background-color: var(--rada-coral-hover) !important;
+  transform: translateY(-2px) scale(1.08) !important;
+}
+
+/* Component Groups */
+.componentGroup {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groupLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--rada-cream-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badgeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.buttonGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}

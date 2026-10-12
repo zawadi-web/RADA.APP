@@ -1,0 +1,372 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 12px 16px 20px;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0 12px;
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brandSymbol {
+  color: var(--color-radiant-coral);
+  font-size: 20px;
+}
+
+.brandName {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-warm-cream);
+}
+
+.vipPill {
+  background: rgba(255, 178, 56, 0.15);
+  border: 1px solid var(--color-sunset-amber);
+  color: var(--color-sunset-amber);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vipPill:hover {
+  background: rgba(255, 178, 56, 0.25);
+  transform: translateY(-1px);
+}
+
+.emptyWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 60px;
+}
+
+.cardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  max-width: 440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.profileCard {
+  background: var(--color-plum-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+}
+
+.photoViewport {
+  position: relative;
+  width: 100%;
+  height: 440px;
+  overflow: hidden;
+  background: var(--color-deep-plum);
+}
+
+.profileImg {
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.tapLeft, .tapRight {
+  position: absolute;
+  top: 0;
+  bottom: 80px;
+  width: 50%;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.tapLeft { left: 0; }
+.tapRight { right: 0; }
+
+.photoIndicators {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  gap: 4px;
+  z-index: 15;
+}
+
+.indicatorDot {
+  flex: 1;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: var(--radius-full);
+  transition: background 0.2s ease;
+}
+
+.indicatorActive {
+  background: #FFFFFF;
+}
+
+.floatingIntent {
+  position: absolute;
+  top: 24px;
+  left: 14px;
+  z-index: 15;
+}
+
+.photoGradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 36px 16px 14px;
+  background: linear-gradient(to top, rgba(26, 11, 46, 0.95) 0%, rgba(26, 11, 46, 0.6) 60%, transparent 100%);
+  z-index: 12;
+}
+
+.nameRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.userName {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-warm-cream);
+}
+
+.userAge {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.verifiedCheck {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #10B981;
+  color: #FFFFFF;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.locationRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.occupationText {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.intentNoteBox {
+  margin: 14px 16px 8px;
+  background: rgba(255, 90, 95, 0.08);
+  border-left: 3px solid var(--color-radiant-coral);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  padding: 10px 14px;
+  position: relative;
+}
+
+.intentQuoteIcon {
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font-size: 18px;
+  color: var(--color-radiant-coral);
+  opacity: 0.5;
+}
+
+.intentNoteText {
+  font-size: 13.5px;
+  color: var(--color-warm-cream);
+  line-height: 1.45;
+  padding-left: 12px;
+  margin: 0;
+}
+
+.bioSection {
+  padding: 10px 16px;
+}
+
+.bioText {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.promptsList {
+  padding: 8px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.promptCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.promptQuestion {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-sunset-amber);
+  margin-bottom: 6px;
+}
+
+.promptAnswer {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--color-warm-cream);
+  line-height: 1.4;
+  margin: 0 0 10px;
+}
+
+.reactBtn {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 90, 95, 0.12);
+  border: 1px solid rgba(255, 90, 95, 0.3);
+  color: var(--color-radiant-coral);
+  border-radius: var(--radius-full);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reactBtn:hover {
+  background: rgba(255, 90, 95, 0.2);
+  transform: translateY(-1px);
+}
+
+.actionControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 8px 0 16px;
+}
+
+.actionBtn {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  border: none;
+}
+
+.actionBtn:hover {
+  transform: scale(1.12);
+}
+
+.actionBtn:active {
+  transform: scale(0.94);
+}
+
+.passBtn {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+}
+
+.passBtn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+  border-color: #EF4444;
+}
+
+.sparkBtn {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 178, 56, 0.15);
+  color: var(--color-sunset-amber);
+  border: 1px solid var(--color-sunset-amber);
+  font-size: 20px;
+}
+
+.sparkBtn:hover {
+  background: var(--color-sunset-amber);
+  color: var(--color-deep-plum);
+}
+
+.likeBtn {
+  background: var(--color-radiant-coral);
+  color: #FFFFFF;
+  box-shadow: 0 8px 24px rgba(255, 90, 95, 0.45);
+}
+
+.likeBtn:hover {
+  background: #FF4248;
+}
+
+.swipeStampLike, .swipeStampPass {
+  position: absolute;
+  top: 40px;
+  z-index: 25;
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.swipeStampLike {
+  right: 20px;
+  color: #10B981;
+  border: 3px solid #10B981;
+  background: rgba(16, 185, 129, 0.2);
+  transform: rotate(12deg);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+}
+
+.swipeStampPass {
+  left: 20px;
+  color: #EF4444;
+  border: 3px solid #EF4444;
+  background: rgba(239, 68, 68, 0.2);
+  transform: rotate(-12deg);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+}

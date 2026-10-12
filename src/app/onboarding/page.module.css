@@ -1,0 +1,334 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 16px 20px 24px;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.topRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.stepCounter {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-radiant-coral);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.skipBtn {
+  background: none;
+  border: none;
+  color: var(--color-text-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.progressBar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--color-radiant-coral);
+  transition: width 0.3s ease;
+}
+
+.stepBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.stepContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  animation: fadeIn 0.25s ease-out;
+}
+
+.brandBadge {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 90, 95, 0.15);
+  border: 1px solid var(--color-radiant-coral);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.symbol {
+  font-size: 24px;
+  color: var(--color-radiant-coral);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-warm-cream);
+  margin-bottom: 6px;
+}
+
+.tagline {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--color-radiant-coral);
+  margin-bottom: 12px;
+}
+
+.description {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.pillars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 32px;
+  background: var(--color-plum-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 16px;
+}
+
+.pillar {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pillar span {
+  font-size: 20px;
+}
+
+.pillar p {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pillar strong {
+  color: var(--color-warm-cream);
+}
+
+.stepTitle {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--color-warm-cream);
+  margin-bottom: 6px;
+}
+
+.stepDesc {
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+  margin-bottom: 20px;
+}
+
+.fieldGroup {
+  margin-bottom: 18px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-warm-cream);
+  margin-bottom: 6px;
+}
+
+.fieldHint {
+  display: block;
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  margin-top: 4px;
+}
+
+.dateInput, .selectInput {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--color-plum-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-warm-cream);
+  font-size: 14px;
+  outline: none;
+}
+
+.dateInput:focus, .selectInput:focus {
+  border-color: var(--color-radiant-coral);
+}
+
+.phoneInputRow {
+  display: flex;
+  align-items: center;
+  background: var(--color-plum-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.prefix {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--color-warm-cream);
+  border-right: 1px solid var(--color-border);
+}
+
+.phoneInput {
+  flex: 1;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-warm-cream);
+  font-size: 14px;
+}
+
+.intentList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.intentOption {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--color-plum-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.intentOptionActive {
+  border-color: var(--color-radiant-coral);
+  background: rgba(255, 90, 95, 0.1);
+}
+
+.intentIcon {
+  font-size: 24px;
+}
+
+.intentInfo strong {
+  display: block;
+  font-size: 14px;
+  color: var(--color-warm-cream);
+  margin-bottom: 2px;
+}
+
+.intentInfo p {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.photoUploadBox {
+  margin-bottom: 24px;
+}
+
+.photoPreviewWrapper {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 2px solid var(--color-radiant-coral);
+}
+
+.uploadedImg {
+  object-fit: cover;
+}
+
+.photoBadge {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  background: var(--color-deep-plum);
+  border: 1px solid var(--color-radiant-coral);
+  color: var(--color-radiant-coral);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.uploadPlaceholder {
+  width: 100%;
+  height: 240px;
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--color-border);
+  background: var(--color-plum-surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.uploadPlaceholder span {
+  font-size: 36px;
+  margin-bottom: 8px;
+}
+
+.promptTextarea {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--color-plum-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-warm-cream);
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+}
+
+.promptTextarea:focus {
+  border-color: var(--color-radiant-coral);
+}
+
+.btnRow {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.btnRow button {
+  flex: 1;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}

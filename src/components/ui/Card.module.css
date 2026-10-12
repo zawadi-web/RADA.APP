@@ -1,0 +1,26 @@
+.card {
+  background-color: var(--rada-surface-plum);
+  border: 1px solid var(--rada-border-plum);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: var(--rada-shadow-sm);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.elevated {
+  background-color: var(--rada-surface-elevated);
+  box-shadow: var(--rada-shadow-md);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.interactive {
+  cursor: pointer;
+}
+
+.interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--rada-shadow-lg);
+  border-color: var(--rada-border-highlight);
+}
