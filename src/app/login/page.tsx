@@ -560,11 +560,17 @@ export default function LoginPage() {
 
         {/* Discreet Legal Footer */}
         <div style={{ marginTop: "20px", textAlign: "center", borderTop: "1px solid rgba(255, 255, 255, 0.06)", paddingTop: "14px" }}>
-          <p style={{ fontSize: "11px", color: "rgba(232, 244, 240, 0.45)", margin: 0 }}>
+          <p style={{ fontSize: "11px", color: "rgba(232, 244, 240, 0.45)", margin: "0 0 10px" }}>
             By continuing, you agree to Rada&apos;s{" "}
             <Link href="/terms" style={{ color: "#38BCA0", textDecoration: "underline" }}>
               Terms of Service &amp; Privacy Policy
             </Link>.
+          </p>
+          <p style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.5)", margin: 0 }}>
+            New to Rada?{" "}
+            <Link href="/onboarding" style={{ color: "#38BCA0", fontWeight: 600, textDecoration: "none" }}>
+              Take the Onboarding Tour →
+            </Link>
           </p>
         </div>
       </div>

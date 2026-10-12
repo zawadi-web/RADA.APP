@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useRada } from "@/lib/rada-context";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { IntentType } from "@/lib/types";
@@ -278,6 +279,15 @@ export default function OnboardingPage() {
           <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "14px", lineHeight: 1.6 }}>
             Google keeps you signed in automatically — no repeated logins.
           </p>
+
+          <div style={{ marginTop: "24px", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.1)", width: "100%" }}>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: 0 }}>
+              Already have an account?{" "}
+              <Link href="/login" style={{ color: "#38BCA0", fontWeight: 700, textDecoration: "none" }}>
+                Sign In →
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     ),

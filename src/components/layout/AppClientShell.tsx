@@ -481,8 +481,8 @@ function CoinPurchaseModalInner() {
   );
 }
 
-// ── 4. ONBOARDING GATE ────────────────────────────────────────────────────────
-// Redirects new un-onboarded visitors to /onboarding
+// ── 4. AUTH & ONBOARDING GATE ────────────────────────────────────────────────
+// Redirects unauthenticated visitors to /login
 function OnboardingGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -497,7 +497,7 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
       const done = localStorage.getItem("rada_onboarded");
       const hasValidUser = currentUser?.fullName && (!currentUser.id?.startsWith("user-me") || currentUser.photos?.length > 0);
       if (!done && !hasValidUser && !isPublicRoute) {
-        router.replace("/onboarding");
+        router.replace("/login");
         return;
       }
     } catch { /* ignore */ }
