@@ -1,25 +1,39 @@
 {
+  "id": "/",
   "name": "Rada — Intentional Kenyan Dating",
   "short_name": "Rada",
   "description": "Kenya's intentional dating platform. Know the intention before you catch feelings.",
-  "start_url": "/discover",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#080D14",
-  "theme_color": "#080D14",
+  "background_color": "#09090B",
+  "theme_color": "#09090B",
   "orientation": "portrait",
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "categories": ["social", "lifestyle"]
 }
+
