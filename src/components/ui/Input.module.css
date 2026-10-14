@@ -15,22 +15,22 @@
   font-family: var(--font-heading);
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--rada-cream);
+  color: var(--rada-pearl);
 }
 
 .charCount {
   font-size: 0.75rem;
-  color: var(--rada-cream-muted);
+  color: var(--rada-pearl-muted);
 }
 
 .input,
 .select,
 .textarea {
   width: 100%;
-  background-color: var(--rada-surface-elevated);
-  border: 1px solid var(--rada-border-plum);
+  background-color: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-md);
-  color: var(--rada-cream);
+  color: var(--rada-pearl);
   font-family: var(--font-body);
   font-size: 0.9375rem;
   padding: 12px 16px;
@@ -42,14 +42,14 @@
 .input:focus,
 .select:focus,
 .textarea:focus {
-  border-color: var(--rada-coral);
+  border-color: var(--rada-gold);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 90, 95, 0.2);
+  box-shadow: 0 0 0 3px var(--rada-gold-subtle);
 }
 
 .input::placeholder,
 .textarea::placeholder {
-  color: rgba(253, 251, 247, 0.4);
+  color: var(--rada-pearl-dim);
 }
 
 .textarea {
@@ -75,14 +75,14 @@
   right: 14px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--rada-cream-muted);
+  color: var(--rada-pearl-muted);
   pointer-events: none;
   font-size: 1rem;
 }
 
 .option {
-  background-color: var(--rada-surface-plum);
-  color: var(--rada-cream);
+  background-color: var(--rada-surface);
+  color: var(--rada-pearl);
 }
 
 .hasError {
@@ -97,6 +97,6 @@
 
 .helperText {
   font-size: 0.8125rem;
-  color: var(--rada-cream-muted);
+  color: var(--rada-pearl-muted);
   opacity: 0.8;
 }

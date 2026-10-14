@@ -10,6 +10,7 @@ interface EmptyStateProps {
   description: string;
   actionLabel?: string;
   onAction?: () => void;
+  action?: { label: string; onClick: () => void };
   secondaryActionLabel?: string;
   onSecondaryAction?: () => void;
 }
@@ -20,9 +21,13 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   description,
   actionLabel,
   onAction,
+  action,
   secondaryActionLabel,
   onSecondaryAction,
 }) => {
+  const resolvedActionLabel = actionLabel || action?.label;
+  const resolvedOnAction = onAction || action?.onClick;
+
   return (
     <div className={styles.container}>
       <div className={styles.iconCircle}>
@@ -31,11 +36,11 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
       <h3 className={styles.title}>{title}</h3>
       <p className={styles.description}>{description}</p>
       
-      {(actionLabel || secondaryActionLabel) && (
+      {(resolvedActionLabel || secondaryActionLabel) && (
         <div className={styles.actions}>
-          {actionLabel && (
-            <Button variant="primary" onClick={onAction}>
-              {actionLabel}
+          {resolvedActionLabel && (
+            <Button variant="primary" onClick={resolvedOnAction}>
+              {resolvedActionLabel}
             </Button>
           )}
           {secondaryActionLabel && (

@@ -16,19 +16,19 @@
   font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 800;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
   margin-bottom: 2px;
 }
 
 .subtitle {
   font-size: 13px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
 }
 
 .activeCountBadge {
-  background: rgba(255, 90, 95, 0.15);
-  border: 1px solid rgba(255, 90, 95, 0.3);
-  color: var(--color-radiant-coral);
+  background: var(--rada-gold-subtle);
+  border: 1px solid var(--rada-border-teal);
+  color: var(--rada-gold);
   padding: 4px 10px;
   border-radius: var(--radius-full);
   font-size: 11px;
@@ -44,7 +44,7 @@
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: var(--color-text-tertiary);
+  color: var(--rada-pearl-dim);
   margin-bottom: 10px;
 }
 
@@ -92,14 +92,14 @@
 }
 
 .freshRing {
-  border: 2px solid var(--color-radiant-coral);
-  box-shadow: 0 0 10px rgba(255, 90, 95, 0.3);
+  border: 2px solid var(--rada-gold);
+  box-shadow: 0 0 10px var(--rada-gold-subtle);
 }
 
 .urgentRing {
-  border: 2px dashed var(--color-sunset-amber);
-  box-shadow: 0 0 10px rgba(255, 178, 56, 0.3);
-  animation: pulseAmber 2s infinite;
+  border: 2px dashed var(--rada-gold);
+  box-shadow: 0 0 10px var(--rada-gold-subtle);
+  animation: pulseGold 2s infinite;
 }
 
 .avatarImg {
@@ -112,9 +112,9 @@
 .momentumBadge {
   position: absolute;
   bottom: -4px;
-  background: var(--color-deep-plum);
-  border: 1px solid var(--color-radiant-coral);
-  color: var(--color-radiant-coral);
+  background: var(--rada-bg);
+  border: 1px solid var(--rada-border-teal);
+  color: var(--rada-gold);
   font-size: 9px;
   font-weight: 800;
   padding: 1px 6px;
@@ -122,29 +122,30 @@
 }
 
 .urgentBadge {
-  border-color: var(--color-sunset-amber);
-  color: var(--color-sunset-amber);
+  border-color: var(--rada-gold);
+  color: var(--rada-gold);
 }
 
 .radarName {
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
 }
 
 .radarArea {
   font-size: 10.5px;
-  color: var(--color-text-tertiary);
+  color: var(--rada-pearl-muted);
 }
 
 .chatSection {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: var(--color-plum-surface);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-2xl);
   overflow: hidden;
+  box-shadow: var(--rada-shadow-sm);
 }
 
 .chatHeader {
@@ -152,8 +153,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid var(--color-border);
+  background: var(--rada-surface-raised);
+  border-bottom: 1px solid var(--rada-border);
   position: relative;
 }
 
@@ -168,7 +169,7 @@
   height: 40px;
   border-radius: 50%;
   overflow: hidden;
-  border: 2px solid var(--color-radiant-coral);
+  border: 2px solid var(--rada-gold);
 }
 
 .nameBadgeRow {
@@ -180,12 +181,13 @@
 
 .partnerName {
   font-size: 14px;
-  color: var(--color-warm-cream);
+  font-weight: 700;
+  color: var(--rada-pearl);
 }
 
 .partnerLocation {
   font-size: 11px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
 }
 
 .headerActions {
@@ -195,7 +197,7 @@
 .safetyBtn {
   background: none;
   border: none;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   font-size: 18px;
   cursor: pointer;
   padding: 6px;
@@ -205,10 +207,10 @@
   position: absolute;
   right: 0;
   top: 100%;
-  background: var(--color-deep-plum);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-md);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--rada-shadow-lg);
   display: flex;
   flex-direction: column;
   min-width: 150px;
@@ -222,22 +224,23 @@
   border: none;
   text-align: left;
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   cursor: pointer;
 }
 
 .blockBtn:hover, .reportBtn:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(239, 68, 68, 0.12);
   color: #EF4444;
 }
 
 .momentumStrip {
-  background: rgba(255, 178, 56, 0.1);
-  border-bottom: 1px solid rgba(255, 178, 56, 0.2);
+  background: var(--rada-gold-subtle);
+  border-bottom: 1px solid var(--rada-border-teal);
   padding: 6px 12px;
   font-size: 11.5px;
-  color: var(--color-sunset-amber);
+  color: var(--rada-gold);
   text-align: center;
+  font-weight: 600;
 }
 
 .messagesList {
@@ -253,12 +256,12 @@
 
 .systemMessage {
   align-self: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   padding: 6px 14px;
   border-radius: var(--radius-full);
   font-size: 11px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   text-align: center;
   max-width: 90%;
 }
@@ -286,14 +289,17 @@
 }
 
 .bubbleMe {
-  background: var(--color-radiant-coral);
-  color: #FFFFFF;
+  background: var(--rada-gold-gradient);
+  color: #0A0A0C;
+  font-weight: 500;
   border-bottom-right-radius: 2px;
+  box-shadow: 0 2px 8px var(--rada-gold-subtle);
 }
 
 .bubblePartner {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-warm-cream);
+  background: var(--rada-surface-raised);
+  color: var(--rada-pearl);
+  border: 1px solid var(--rada-border);
   border-bottom-left-radius: 2px;
 }
 
@@ -304,7 +310,7 @@
 .msgTime {
   display: block;
   font-size: 9.5px;
-  opacity: 0.7;
+  opacity: 0.75;
   text-align: right;
 }
 
@@ -314,7 +320,8 @@
   padding: 8px 12px;
   overflow-x: auto;
   scrollbar-width: none;
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--rada-surface-raised);
+  border-top: 1px solid var(--rada-border);
 }
 
 .icebreakers::-webkit-scrollbar {
@@ -322,44 +329,44 @@
 }
 
 .chip {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-full);
   padding: 5px 12px;
   font-size: 11px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .chip:hover {
-  background: rgba(255, 90, 95, 0.15);
-  color: var(--color-radiant-coral);
-  border-color: var(--color-radiant-coral);
+  background: var(--rada-gold-subtle);
+  color: var(--rada-gold);
+  border-color: var(--rada-border-teal);
 }
 
 .inputBar {
   display: flex;
   gap: 10px;
   padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.02);
-  border-top: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  border-top: 1px solid var(--rada-border);
 }
 
 .textInput {
   flex: 1;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-md);
   padding: 10px 14px;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
   font-size: 13.5px;
   outline: none;
 }
 
 .textInput:focus {
-  border-color: var(--color-radiant-coral);
+  border-color: var(--rada-gold);
 }
 
 .sendButton {
@@ -369,12 +376,12 @@
 .noMatchSelected {
   padding: 40px 20px;
   text-align: center;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   font-size: 14px;
 }
 
-@keyframes pulseAmber {
-  0% { box-shadow: 0 0 0 0 rgba(255, 178, 56, 0.4); }
-  70% { box-shadow: 0 0 0 6px rgba(255, 178, 56, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 178, 56, 0); }
+@keyframes pulseGold {
+  0% { box-shadow: 0 0 0 0 rgba(197, 155, 39, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(197, 155, 39, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(197, 155, 39, 0); }
 }

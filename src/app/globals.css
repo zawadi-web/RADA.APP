@@ -9,7 +9,7 @@
 }
 
 html, body {
-  height: 100%;
+  min-height: 100%;
   width: 100%;
   background-color: var(--rada-bg);
   color: var(--rada-pearl);
@@ -20,6 +20,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -44,8 +45,8 @@ button {
 }
 
 button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-  outline: 2px solid var(--rada-teal);
-  outline-offset: 3px;
+  outline: 2px solid var(--rada-gold);
+  outline-offset: 2px;
   border-radius: var(--radius-sm);
 }
 
@@ -76,8 +77,11 @@ button, a.nav-link, .touch-target {
   display: flex;
   flex-direction: column;
   position: relative;
-  background-color: var(--rada-bg-plum);
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.4);
+  background-color: var(--rada-bg);
+  border-left: 1px solid var(--rada-border);
+  border-right: 1px solid var(--rada-border);
+  box-shadow: var(--rada-shadow-lg);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .rada-main-content {
@@ -113,7 +117,7 @@ button, a.nav-link, .touch-target {
 
 .text-muted {
   color: var(--rada-cream-muted);
-  opacity: 0.72;
+  opacity: 0.85;
 }
 
 .text-caption {
@@ -123,4 +127,24 @@ button, a.nav-link, .touch-target {
 
 .text-bold {
   font-weight: 600;
+}
+
+/* Gold Accent Helpers */
+.gold-text {
+  color: var(--rada-gold);
+}
+
+.gold-gradient-text {
+  background: var(--rada-gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-badge {
+  background: var(--rada-gold-subtle);
+  border: 1px solid var(--rada-border-teal);
+  color: var(--rada-gold);
+  border-radius: var(--radius-full);
+  font-weight: 700;
+  font-size: 0.75rem;
 }

@@ -83,7 +83,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   // ── Step Renderer ──────────────────────────────────────────────────────────
   const card: React.CSSProperties = {
     position: "fixed", inset: 0, zIndex: 9000,
-    background: "linear-gradient(160deg, #0D0520 0%, #1A0B2E 60%, #2D0A3E 100%)",
+    background: "var(--rada-bg)",
+    color: "var(--rada-pearl)",
     display: "flex", flexDirection: "column", alignItems: "center",
     padding: "0 0 32px",
     overflowY: "auto",
@@ -99,12 +100,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
   const pill = (active: boolean): React.CSSProperties => ({
     padding: "14px 16px",
     borderRadius: "14px",
-    border: `2px solid ${active ? "#FF6B8A" : "rgba(255,255,255,0.1)"}`,
-    background: active ? "rgba(255,107,138,0.12)" : "rgba(255,255,255,0.04)",
+    border: `2px solid ${active ? "var(--rada-gold)" : "var(--rada-border)"}`,
+    background: active ? "var(--rada-gold-subtle)" : "var(--rada-surface)",
     cursor: "pointer",
     display: "flex", alignItems: "center", gap: "12px",
     transition: "all 0.2s",
-    color: "#FFF8F0",
+    color: "var(--rada-pearl)",
     marginBottom: "10px",
     textAlign: "left" as const,
     width: "100%",
@@ -112,8 +113,8 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
 
   const stepTitle = (t: string, sub: string) => (
     <div style={{ marginBottom: "28px" }}>
-      <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#FFF8F0", margin: "0 0 8px", lineHeight: 1.2 }}>{t}</h1>
-      <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", margin: 0 }}>{sub}</p>
+      <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 8px", lineHeight: 1.2, letterSpacing: "-0.02em" }}>{t}</h1>
+      <p style={{ fontSize: "14px", color: "var(--rada-pearl-muted)", margin: 0 }}>{sub}</p>
     </div>
   );
 
@@ -123,12 +124,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
       disabled={disabled}
       style={{
         width: "100%", padding: "16px", borderRadius: "16px", border: "none",
-        background: disabled ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg, #FF6B8A, #FF8C42)",
-        color: disabled ? "rgba(255,255,255,0.3)" : "#fff",
-        fontSize: "16px", fontWeight: 700, cursor: disabled ? "default" : "pointer",
+        background: disabled ? "var(--rada-surface)" : "var(--rada-gold-gradient)",
+        color: disabled ? "var(--rada-pearl-muted)" : "#0A0A0C",
+        fontSize: "15px", fontWeight: 800, cursor: disabled ? "default" : "pointer",
         marginTop: "auto", marginBottom: "0",
         transition: "all 0.2s",
-        boxShadow: disabled ? "none" : "0 4px 20px rgba(255,107,138,0.35)",
+        boxShadow: disabled ? "none" : "0 4px 18px rgba(197, 155, 39, 0.35)",
       }}
     >
       {label}
@@ -227,7 +228,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
           <button key={g.id} style={pill(gender === g.id)} onClick={() => setGender(g.id)}>
             <span style={{ fontSize: "28px" }}>{g.emoji}</span>
             <span style={{ fontSize: "17px", fontWeight: 600 }}>{g.label}</span>
-            {gender === g.id && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+            {gender === g.id && <span style={{ marginLeft: "auto", color: "var(--rada-gold)", fontWeight: 800 }}>✓</span>}
           </button>
         ))}
       </div>
@@ -256,12 +257,12 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
             >
               <span style={{ fontSize: "28px" }}>{g.emoji}</span>
               <span style={{ fontSize: "17px", fontWeight: 600 }}>{g.label}</span>
-              {selected && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+              {selected && <span style={{ marginLeft: "auto", color: "var(--rada-gold)", fontWeight: 800 }}>✓</span>}
             </button>
           );
         })}
       </div>
-      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "4px" }}>You can select more than one.</p>
+      <p style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "4px" }}>You can select more than one.</p>
       <div style={{ flex: 1 }} />
       {nextBtn("Continue →", () => setStep(5), interestedIn.length === 0)}
       {skipBtn(() => setStep(5))}
@@ -278,9 +279,9 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
             <span style={{ fontSize: "26px" }}>{i.emoji}</span>
             <div style={{ textAlign: "left" }}>
               <div style={{ fontSize: "15px", fontWeight: 700 }}>{i.label}</div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>{i.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", marginTop: "2px" }}>{i.desc}</div>
             </div>
-            {intention === i.id && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+            {intention === i.id && <span style={{ marginLeft: "auto", color: "var(--rada-gold)", fontWeight: 800 }}>✓</span>}
           </button>
         ))}
       </div>
@@ -297,11 +298,11 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
         {[0, 1, 2].map((i) => (
           <label key={i} style={{
             aspectRatio: "3/4", borderRadius: "14px",
-            border: `2px dashed ${photos[i] ? "#FF6B8A" : "rgba(255,255,255,0.15)"}`,
+            border: `2px dashed ${photos[i] ? "var(--rada-gold)" : "var(--rada-border)"}`,
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: photos[i] ? "default" : "pointer",
             overflow: "hidden", position: "relative",
-            background: photos[i] ? "transparent" : "rgba(255,255,255,0.03)",
+            background: photos[i] ? "transparent" : "var(--rada-surface)",
           }}>
             {photos[i] ? (
               <>
@@ -402,10 +403,10 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
                 ←
               </button>
             )}
-            <div style={{ flex: 1, height: "4px", background: "rgba(255,255,255,0.1)", borderRadius: "2px", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg, #FF6B8A, #FF8C42)", borderRadius: "2px", transition: "width 0.4s ease" }} />
+            <div style={{ flex: 1, height: "4px", background: "var(--rada-surface)", border: "1px solid var(--rada-border)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progress}%`, background: "var(--rada-gold-gradient)", borderRadius: "2px", transition: "width 0.4s ease" }} />
             </div>
-            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", flexShrink: 0 }}>
+            <span style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", flexShrink: 0 }}>
               {currentStep}/{totalSteps}
             </span>
           </div>
@@ -416,7 +417,7 @@ export const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ onComplete }) =>
       {step === 0 && !authUser && (
         <div style={{ padding: "40px 24px 0" }}>
           <div style={{ textAlign: "center" }}>
-            <span style={{ fontSize: "28px", fontWeight: 800, color: "#FFF8F0", letterSpacing: "-0.5px" }}>✦ Rada</span>
+            <span style={{ fontSize: "28px", fontWeight: 800, color: "var(--rada-pearl)", letterSpacing: "-0.5px" }}>✦ Rada</span>
           </div>
         </div>
       )}

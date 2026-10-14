@@ -1,94 +1,97 @@
 /* ==========================================================================
-   RADA DESIGN SYSTEM TOKENS — "The Social Orbit"
-   Tagline: "Know the intention before you catch feelings."
-   
-   NEW ART DIRECTION: Midnight Ink × Mineral Teal × Soft Pearl × Electric Lime
-   — Sophisticated, editorial, warm discovery experience
-   — Distinct from coral/purple (Pendo) palette
+   RADA DESIGN SYSTEM TOKENS — "Noir, Blanc & Or"
+   High-Fashion Luxury Aesthetics: Monochromatic White & Black with Gold Tint
+   First-Class Light Mode & Dark Mode Optional Display
    ========================================================================== */
 
 :root {
-  /* --- MIDNIGHT INK — Primary Backgrounds --- */
-  --rada-bg:             #080D14;   /* Deep midnight ink — primary background */
-  --rada-bg-alt:         #0D1520;   /* Slightly lighter surface */
-  --rada-surface:        #111B26;   /* Card surfaces */
-  --rada-surface-raised: #182433;   /* Elevated cards, modals */
-  --rada-surface-glass:  rgba(13, 21, 32, 0.88);
+  --rada-theme-mode: light;
 
-  /* --- MINERAL TEAL — Primary Brand Accent --- */
-  --rada-teal:           #38BCA0;   /* Mineral teal (primary actions, active states) */
-  --rada-teal-hover:     #2A9D8F;   /* Teal pressed */
-  --rada-teal-subtle:    rgba(56, 188, 160, 0.14);
-  --rada-teal-glow:      rgba(56, 188, 160, 0.3);
+  /* --- LIGHT MODE: Crisp Pure White & Jet Black with Gold Accent --- */
+  --rada-bg:             #FFFFFF;   /* Crisp Pure White */
+  --rada-bg-alt:         #F7F7F9;   /* Subtle Alabaster / Chalk */
+  --rada-surface:        #FFFFFF;   /* Pure White Card Surface */
+  --rada-surface-raised: #F4F4F7;   /* Elevated Card / Modals */
+  --rada-surface-glass:  rgba(255, 255, 255, 0.94);
 
-  /* --- SOFT PEARL — Text & Light Tones --- */
-  --rada-pearl:          #E8F4F0;   /* Soft pearl (primary text on dark) */
-  --rada-pearl-muted:    rgba(232, 244, 240, 0.55);
-  --rada-pearl-dim:      rgba(232, 244, 240, 0.25);
+  /* --- NOIR & BLANC TEXT --- */
+  --rada-pearl:          #0A0A0C;   /* Deepest Jet Black (Primary Text) */
+  --rada-pearl-muted:    #5E5E68;   /* Refined Charcoal Muted Text */
+  --rada-pearl-dim:      #8E8E98;   /* Soft Subtext */
 
-  /* --- ELECTRIC LIME — Accent / Highlight --- */
-  --rada-lime:           #B8F542;   /* Restrained electric lime (special badges) */
-  --rada-lime-subtle:    rgba(184, 245, 66, 0.12);
+  /* --- CHAMPAGNE GOLD ACCENT (Opulent, Bespoke, Warm) --- */
+  --rada-gold:           #C59B27;   /* Warm Rich Champagne Gold */
+  --rada-gold-hover:     #AA8318;   /* Deeper Burnished Gold */
+  --rada-gold-subtle:    rgba(197, 155, 39, 0.12);
+  --rada-gold-glow:      0 0 20px rgba(197, 155, 39, 0.25);
+  --rada-gold-gradient:  linear-gradient(135deg, #F5E5B8 0%, #D4AF37 50%, #9E7D23 100%);
+  --rada-gold-text:      #8B6810;
 
-  /* --- ORBITAL GOLD — VIP / Super Spark --- */
-  --rada-gold:           #E8C547;   /* Orbital gold (VIP, super spark) */
-  --rada-gold-hover:     #D4B23E;
-  --rada-gold-subtle:    rgba(232, 197, 71, 0.14);
+  /* Aliasing legacy teal & lime to gold */
+  --rada-teal:           #C59B27;
+  --rada-teal-hover:     #AA8318;
+  --rada-teal-subtle:    rgba(197, 155, 39, 0.12);
+  --rada-teal-glow:      rgba(197, 155, 39, 0.25);
 
-  /* --- LUXURY & OPULENCE TOKENS --- */
-  --rada-obsidian:       #07020D;   /* Ultra-deep obsidian */
-  --rada-amethyst:       #150C24;   /* Velvet deep amethyst */
-  --rada-champagne:      #D4AF37;   /* Champagne gold */
-  --rada-champagne-light:#F7E39C;   /* Pale champagne reflection */
-  --rada-champagne-dark: #A67C14;   /* Deep burnished gold */
-  --rada-gold-gradient:  linear-gradient(135deg, #FBE8A6 0%, #D4AF37 50%, #9B700F 100%);
-  --rada-rose-coral:     #FF3366;   /* Royal rose coral */
-  --rada-rose-gradient:  linear-gradient(135deg, #FF5E7E 0%, #FF2A54 100%);
-  --rada-luxury-glass:   rgba(17, 10, 29, 0.75);
-  --rada-luxury-border:  rgba(212, 175, 55, 0.22);
-  --rada-luxury-glow:    0 0 28px rgba(212, 175, 55, 0.25);
+  --rada-lime:           #C59B27;
+  --rada-lime-subtle:    rgba(197, 155, 39, 0.12);
+
+  /* Luxury Accents */
+  --rada-obsidian:       #0A0A0C;
+  --rada-amethyst:       #18181B;
+  --rada-champagne:      #D4AF37;
+  --rada-champagne-light:#FBF3D6;
+  --rada-champagne-dark: #8C6A18;
+  --rada-rose-coral:     #C59B27;
+  --rada-rose-gradient:  linear-gradient(135deg, #F5E5B8 0%, #D4AF37 100%);
+  --rada-luxury-glass:   rgba(255, 255, 255, 0.92);
+  --rada-luxury-border:  rgba(197, 155, 39, 0.35);
+  --rada-luxury-glow:    0 8px 32px rgba(197, 155, 39, 0.16);
 
   /* --- BORDERS --- */
-  --rada-border:         rgba(232, 244, 240, 0.07);
-  --rada-border-teal:    rgba(56, 188, 160, 0.22);
-  --rada-border-focus:   rgba(212, 175, 55, 0.6);
+  --rada-border:         rgba(0, 0, 0, 0.08);
+  --rada-border-teal:    rgba(197, 155, 39, 0.32);
+  --rada-border-focus:   #C59B27;
 
   /* --- FUNCTIONAL STATUS --- */
-  --rada-success:        #34D399;
-  --rada-success-subtle: rgba(52, 211, 153, 0.14);
-  --rada-danger:         #F87171;
-  --rada-danger-subtle:  rgba(248, 113, 113, 0.14);
+  --rada-success:        #10B981;
+  --rada-success-subtle: rgba(16, 185, 129, 0.12);
+  --rada-danger:         #EF4444;
+  --rada-danger-subtle:  rgba(239, 68, 68, 0.12);
 
-  /* --- LEGACY ALIASES (keep older modules working) --- */
-  --color-deep-plum:     #120A24;
-  --color-plum-surface:  #180D2C;
-  --color-warm-cream:    #E8F4F0;
-  --color-radiant-coral: #38BCA0;
-  --color-sunset-amber:  #E8C547;
-  --color-border:        rgba(232, 244, 240, 0.08);
-  --color-text-secondary: rgba(232, 244, 240, 0.55);
+  /* --- LEGACY ALIASES (Full Compatibility) --- */
+  --color-deep-plum:     #FFFFFF;
+  --color-plum-surface:  #F7F7F9;
+  --color-warm-cream:    #0A0A0C;
+  --color-radiant-coral: #C59B27;
+  --color-sunset-amber:  #D4AF37;
+  --color-border:        rgba(0, 0, 0, 0.08);
+  --color-text-secondary:#5E5E68;
+  --color-text-tertiary: #8E8E98;
 
   --rada-bg-plum:        var(--rada-bg);
   --rada-surface-plum:   var(--rada-surface);
   --rada-surface-elevated: var(--rada-surface-raised);
   --rada-border-plum:    var(--rada-border);
   --rada-border-highlight: var(--rada-border-teal);
-  --rada-coral:          var(--rada-teal);      /* redirect legacy coral → teal */
-  --rada-coral-hover:    var(--rada-teal-hover);
-  --rada-coral-subtle:   var(--rada-teal-subtle);
+  --rada-coral:          var(--rada-gold);
+  --rada-coral-hover:    var(--rada-gold-hover);
+  --rada-coral-subtle:   var(--rada-gold-subtle);
   --rada-amber:          var(--rada-gold);
   --rada-amber-hover:    var(--rada-gold-hover);
   --rada-amber-subtle:   var(--rada-gold-subtle);
   --rada-cream:          var(--rada-pearl);
   --rada-cream-muted:    var(--rada-pearl-muted);
+  --rada-charcoal:       #0A0A0C;
+  --rada-slate:          #5E5E68;
+  --rada-slate-subtle:   rgba(0, 0, 0, 0.05);
 
   /* --- SHADOWS --- */
-  --rada-shadow-sm:       0 2px 8px rgba(0,0,0,0.35);
-  --rada-shadow-md:       0 8px 24px rgba(0,0,0,0.45);
-  --rada-shadow-lg:       0 16px 48px rgba(0,0,0,0.6);
-  --rada-shadow-glow-teal: 0 0 24px rgba(56, 188, 160, 0.35);
-  --rada-shadow-glow-gold: 0 0 24px rgba(232, 197, 71, 0.35);
-  /* Legacy aliases */
+  --rada-shadow-sm:       0 2px 8px rgba(0, 0, 0, 0.05);
+  --rada-shadow-md:       0 8px 24px rgba(0, 0, 0, 0.08);
+  --rada-shadow-lg:       0 18px 48px rgba(0, 0, 0, 0.12);
+  --rada-shadow-glow-teal: 0 0 20px rgba(197, 155, 39, 0.25);
+  --rada-shadow-glow-gold: 0 0 24px rgba(197, 155, 39, 0.3);
   --rada-shadow-glow-coral: var(--rada-shadow-glow-teal);
   --rada-shadow-glow-amber: var(--rada-shadow-glow-gold);
 
@@ -101,6 +104,7 @@
   --radius-md:   14px;
   --radius-lg:   20px;
   --radius-xl:   28px;
+  --radius-2xl:  32px;
   --radius-full: 9999px;
 
   /* --- MOTION --- */
@@ -112,8 +116,98 @@
   /* --- TOUCH --- */
   --touch-target-min: 44px;
 
-  /* --- ORBITAL GRID (decorative motif sizes) --- */
+  /* --- ORBITAL SIZES --- */
   --orbit-1: 280px;
   --orbit-2: 480px;
   --orbit-3: 680px;
+}
+
+[data-theme="dark"] {
+  --rada-theme-mode: dark;
+
+  /* --- DARK MODE: Rich Noir Obsidian with Radiant Gold --- */
+  --rada-bg:             #09090B;   /* Deepest Obsidian Jet Black */
+  --rada-bg-alt:         #111114;   /* Smoked Noir Surface */
+  --rada-surface:        #151518;   /* Card Surface */
+  --rada-surface-raised: #1C1C21;   /* Raised Surface / Modals */
+  --rada-surface-glass:  rgba(15, 15, 18, 0.88);
+
+  /* --- PURE WHITE TEXT --- */
+  --rada-pearl:          #FFFFFF;   /* Pure Crisp White */
+  --rada-pearl-muted:    rgba(255, 255, 255, 0.65);
+  --rada-pearl-dim:      rgba(255, 255, 255, 0.35);
+
+  /* --- RADIANT GOLD ACCENT --- */
+  --rada-gold:           #E5C158;   /* Luminous Warm Gold */
+  --rada-gold-hover:     #F3D072;
+  --rada-gold-subtle:    rgba(229, 193, 88, 0.14);
+  --rada-gold-glow:      0 0 24px rgba(229, 193, 88, 0.35);
+  --rada-gold-gradient:  linear-gradient(135deg, #FBE8A6 0%, #D4AF37 50%, #9B700F 100%);
+  --rada-gold-text:      #FBE8A6;
+
+  --rada-teal:           #E5C158;
+  --rada-teal-hover:     #F3D072;
+  --rada-teal-subtle:    rgba(229, 193, 88, 0.14);
+  --rada-teal-glow:      rgba(229, 193, 88, 0.35);
+
+  --rada-lime:           #E5C158;
+  --rada-lime-subtle:    rgba(229, 193, 88, 0.14);
+
+  --rada-obsidian:       #050506;
+  --rada-amethyst:       #121215;
+  --rada-champagne:      #E5C158;
+  --rada-champagne-light:#FDEEB3;
+  --rada-champagne-dark: #8B6A14;
+  --rada-rose-coral:     #E5C158;
+  --rada-rose-gradient:  linear-gradient(135deg, #FBE8A6 0%, #D4AF37 100%);
+  --rada-luxury-glass:   rgba(20, 20, 24, 0.85);
+  --rada-luxury-border:  rgba(229, 193, 88, 0.3);
+  --rada-luxury-glow:    0 0 32px rgba(229, 193, 88, 0.25);
+
+  /* --- BORDERS --- */
+  --rada-border:         rgba(255, 255, 255, 0.10);
+  --rada-border-teal:    rgba(229, 193, 88, 0.35);
+  --rada-border-focus:   #E5C158;
+
+  /* --- FUNCTIONAL STATUS --- */
+  --rada-success:        #34D399;
+  --rada-success-subtle: rgba(52, 211, 153, 0.14);
+  --rada-danger:         #F87171;
+  --rada-danger-subtle:  rgba(248, 113, 113, 0.14);
+
+  /* --- LEGACY ALIASES --- */
+  --color-deep-plum:     #09090B;
+  --color-plum-surface:  #151518;
+  --color-warm-cream:    #FFFFFF;
+  --color-radiant-coral: #E5C158;
+  --color-sunset-amber:  #E5C158;
+  --color-border:        rgba(255, 255, 255, 0.10);
+  --color-text-secondary:rgba(255, 255, 255, 0.65);
+  --color-text-tertiary: rgba(255, 255, 255, 0.35);
+
+  --rada-bg-plum:        var(--rada-bg);
+  --rada-surface-plum:   var(--rada-surface);
+  --rada-surface-elevated: var(--rada-surface-raised);
+  --rada-border-plum:    var(--rada-border);
+  --rada-border-highlight: var(--rada-border-teal);
+  --rada-coral:          var(--rada-gold);
+  --rada-coral-hover:    var(--rada-gold-hover);
+  --rada-coral-subtle:   var(--rada-gold-subtle);
+  --rada-amber:          var(--rada-gold);
+  --rada-amber-hover:    var(--rada-gold-hover);
+  --rada-amber-subtle:   var(--rada-gold-subtle);
+  --rada-cream:          var(--rada-pearl);
+  --rada-cream-muted:    var(--rada-pearl-muted);
+  --rada-charcoal:       #09090B;
+  --rada-slate:          rgba(255, 255, 255, 0.65);
+  --rada-slate-subtle:   rgba(255, 255, 255, 0.08);
+
+  /* --- SHADOWS --- */
+  --rada-shadow-sm:       0 2px 8px rgba(0, 0, 0, 0.6);
+  --rada-shadow-md:       0 8px 24px rgba(0, 0, 0, 0.7);
+  --rada-shadow-lg:       0 18px 48px rgba(0, 0, 0, 0.85);
+  --rada-shadow-glow-teal: 0 0 24px rgba(229, 193, 88, 0.35);
+  --rada-shadow-glow-gold: 0 0 24px rgba(229, 193, 88, 0.35);
+  --rada-shadow-glow-coral: var(--rada-shadow-glow-teal);
+  --rada-shadow-glow-amber: var(--rada-shadow-glow-gold);
 }

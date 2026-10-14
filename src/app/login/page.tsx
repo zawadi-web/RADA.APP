@@ -166,8 +166,8 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: "100vh",
-      background: "#080D14",
-      color: "#E8F4F0",
+      background: "var(--rada-bg)",
+      color: "var(--rada-pearl)",
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
@@ -184,20 +184,20 @@ export default function LoginPage() {
         textAlign: "center",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "6px" }}>
-          <span style={{ color: "#38BCA0", fontSize: "24px" }}>✦</span>
+          <span style={{ color: "var(--rada-gold)", fontSize: "24px" }}>✦</span>
           <span style={{
             fontFamily: "var(--font-heading, 'Plus Jakarta Sans')",
             fontSize: "28px",
             fontWeight: 800,
             letterSpacing: "-0.02em",
-            color: "#E8F4F0",
+            color: "var(--rada-pearl)",
           }}>
             Rada
           </span>
         </div>
         <p style={{
           fontSize: "13px",
-          color: "rgba(232, 244, 240, 0.55)",
+          color: "var(--rada-pearl-muted)",
           margin: 0,
           fontWeight: 400,
         }}>
@@ -209,18 +209,18 @@ export default function LoginPage() {
       <div style={{
         width: "100%",
         maxWidth: "420px",
-        background: "linear-gradient(180deg, #180D2C 0%, #110822 100%)",
-        border: "1px solid rgba(232, 244, 240, 0.08)",
+        background: "var(--rada-surface)",
+        border: "1px solid var(--rada-border)",
         borderRadius: "24px",
         padding: "28px 22px",
-        boxShadow: "0 16px 36px rgba(0, 0, 0, 0.55)",
+        boxShadow: "var(--rada-shadow-lg)",
       }}>
         {/* Modern Segmented Tab Switcher */}
         <div style={{
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
           gap: "4px",
-          background: "rgba(255, 255, 255, 0.05)",
+          background: "var(--rada-surface-raised)",
           borderRadius: "14px",
           padding: "4px",
           marginBottom: "22px",
@@ -232,10 +232,11 @@ export default function LoginPage() {
               padding: "10px",
               borderRadius: "11px",
               fontSize: "13px",
-              fontWeight: 600,
-              background: activeTab === "signin" ? "#22133D" : "transparent",
-              color: activeTab === "signin" ? "#E8F4F0" : "rgba(232, 244, 240, 0.5)",
-              border: activeTab === "signin" ? "1px solid rgba(56, 188, 160, 0.25)" : "1px solid transparent",
+              fontWeight: 700,
+              background: activeTab === "signin" ? "var(--rada-surface)" : "transparent",
+              color: activeTab === "signin" ? "var(--rada-pearl)" : "var(--rada-pearl-muted)",
+              border: activeTab === "signin" ? "1px solid var(--rada-border-teal)" : "1px solid transparent",
+              boxShadow: activeTab === "signin" ? "var(--rada-shadow-sm)" : "none",
               transition: "all 0.18s ease",
               cursor: "pointer",
             }}
@@ -249,10 +250,11 @@ export default function LoginPage() {
               padding: "10px",
               borderRadius: "11px",
               fontSize: "13px",
-              fontWeight: 600,
-              background: activeTab === "register" ? "#22133D" : "transparent",
-              color: activeTab === "register" ? "#E8F4F0" : "rgba(232, 244, 240, 0.5)",
-              border: activeTab === "register" ? "1px solid rgba(56, 188, 160, 0.25)" : "1px solid transparent",
+              fontWeight: 700,
+              background: activeTab === "register" ? "var(--rada-surface)" : "transparent",
+              color: activeTab === "register" ? "var(--rada-pearl)" : "var(--rada-pearl-muted)",
+              border: activeTab === "register" ? "1px solid var(--rada-border-teal)" : "1px solid transparent",
+              boxShadow: activeTab === "register" ? "var(--rada-shadow-sm)" : "none",
               transition: "all 0.18s ease",
               cursor: "pointer",
             }}
@@ -269,7 +271,7 @@ export default function LoginPage() {
             marginBottom: "16px",
             background: "rgba(248, 113, 113, 0.12)",
             border: "1px solid rgba(248, 113, 113, 0.35)",
-            color: "#FCA5A5",
+            color: "#EF4444",
             fontSize: "12px",
             lineHeight: 1.4,
           }}>
@@ -281,9 +283,9 @@ export default function LoginPage() {
             padding: "10px 14px",
             borderRadius: "12px",
             marginBottom: "16px",
-            background: "rgba(56, 188, 160, 0.12)",
-            border: "1px solid rgba(56, 188, 160, 0.35)",
-            color: "#38BCA0",
+            background: "var(--rada-gold-subtle)",
+            border: "1px solid var(--rada-border-teal)",
+            color: "var(--rada-gold)",
             fontSize: "12px",
             lineHeight: 1.4,
           }}>
@@ -295,7 +297,7 @@ export default function LoginPage() {
         {activeTab === "signin" && (
           <form onSubmit={handleLogin} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
             <div>
-              <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "6px" }}>
+              <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "6px" }}>
                 Email
               </label>
               <input
@@ -308,9 +310,9 @@ export default function LoginPage() {
                   width: "100%",
                   padding: "12px 14px",
                   borderRadius: "12px",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(232, 244, 240, 0.12)",
-                  color: "#E8F4F0",
+                  background: "var(--rada-surface-raised)",
+                  border: "1px solid var(--rada-border)",
+                  color: "var(--rada-pearl)",
                   fontSize: "14px",
                   outline: "none",
                 }}
@@ -319,7 +321,7 @@ export default function LoginPage() {
 
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)" }}>
+                <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)" }}>
                   Password
                 </label>
                 <button
@@ -333,11 +335,12 @@ export default function LoginPage() {
                   }}
                   style={{
                     fontSize: "12px",
-                    color: "#38BCA0",
+                    color: "var(--rada-gold)",
                     background: "none",
                     border: "none",
                     cursor: "pointer",
                     padding: 0,
+                    fontWeight: 600,
                   }}
                 >
                   Forgot Password?
@@ -353,9 +356,9 @@ export default function LoginPage() {
                   width: "100%",
                   padding: "12px 14px",
                   borderRadius: "12px",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(232, 244, 240, 0.12)",
-                  color: "#E8F4F0",
+                  background: "var(--rada-surface-raised)",
+                  border: "1px solid var(--rada-border)",
+                  color: "var(--rada-pearl)",
                   fontSize: "14px",
                   outline: "none",
                 }}
@@ -370,12 +373,12 @@ export default function LoginPage() {
                 padding: "13px",
                 borderRadius: "12px",
                 border: "none",
-                background: "linear-gradient(135deg, #38BCA0 0%, #2A9D8F 100%)",
-                color: "#080D14",
-                fontWeight: 700,
+                background: "var(--rada-gold-gradient)",
+                color: "#0A0A0C",
+                fontWeight: 800,
                 fontSize: "14px",
                 cursor: loading ? "not-allowed" : "pointer",
-                boxShadow: "0 4px 16px rgba(56, 188, 160, 0.35)",
+                boxShadow: "0 4px 16px var(--rada-gold-subtle)",
                 marginTop: "4px",
                 opacity: loading ? 0.7 : 1,
                 transition: "all 0.2s ease",
@@ -390,7 +393,7 @@ export default function LoginPage() {
         {activeTab === "register" && (
           <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column", gap: "13px" }}>
             <div>
-              <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+              <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                 Full Name
               </label>
               <input
@@ -403,9 +406,9 @@ export default function LoginPage() {
                   width: "100%",
                   padding: "11px 13px",
                   borderRadius: "12px",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(232, 244, 240, 0.12)",
-                  color: "#E8F4F0",
+                  background: "var(--rada-surface-raised)",
+                  border: "1px solid var(--rada-border)",
+                  color: "var(--rada-pearl)",
                   fontSize: "14px",
                   outline: "none",
                 }}
@@ -413,7 +416,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+              <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                 Email
               </label>
               <input
@@ -426,9 +429,9 @@ export default function LoginPage() {
                   width: "100%",
                   padding: "11px 13px",
                   borderRadius: "12px",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(232, 244, 240, 0.12)",
-                  color: "#E8F4F0",
+                  background: "var(--rada-surface-raised)",
+                  border: "1px solid var(--rada-border)",
+                  color: "var(--rada-pearl)",
                   fontSize: "14px",
                   outline: "none",
                 }}
@@ -436,7 +439,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+              <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                 Password (min 8 characters)
               </label>
               <input
@@ -449,9 +452,9 @@ export default function LoginPage() {
                   width: "100%",
                   padding: "11px 13px",
                   borderRadius: "12px",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  border: "1px solid rgba(232, 244, 240, 0.12)",
-                  color: "#E8F4F0",
+                  background: "var(--rada-surface-raised)",
+                  border: "1px solid var(--rada-border)",
+                  color: "var(--rada-pearl)",
                   fontSize: "14px",
                   outline: "none",
                 }}
@@ -460,7 +463,7 @@ export default function LoginPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
               <div>
-                <label style={{ fontSize: "11px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+                <label style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                   I am a
                 </label>
                 <select
@@ -470,9 +473,9 @@ export default function LoginPage() {
                     width: "100%",
                     padding: "10px",
                     borderRadius: "10px",
-                    background: "#180D2C",
-                    border: "1px solid rgba(232, 244, 240, 0.12)",
-                    color: "#E8F4F0",
+                    background: "var(--rada-surface-raised)",
+                    border: "1px solid var(--rada-border)",
+                    color: "var(--rada-pearl)",
                     fontSize: "13px",
                     outline: "none",
                   }}
@@ -483,7 +486,7 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label style={{ fontSize: "11px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+                <label style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                   Intent
                 </label>
                 <select
@@ -493,9 +496,9 @@ export default function LoginPage() {
                     width: "100%",
                     padding: "10px",
                     borderRadius: "10px",
-                    background: "#180D2C",
-                    border: "1px solid rgba(232, 244, 240, 0.12)",
-                    color: "#E8F4F0",
+                    background: "var(--rada-surface-raised)",
+                    border: "1px solid var(--rada-border)",
+                    color: "var(--rada-pearl)",
                     fontSize: "13px",
                     outline: "none",
                   }}
@@ -513,10 +516,10 @@ export default function LoginPage() {
                 id="termsCheck"
                 checked={acceptedTerms}
                 onChange={(e) => setAcceptedTerms(e.target.checked)}
-                style={{ marginTop: "3px", accentColor: "#38BCA0" }}
+                style={{ marginTop: "3px", accentColor: "var(--rada-gold)" }}
               />
-              <label htmlFor="termsCheck" style={{ fontSize: "11px", color: "rgba(232, 244, 240, 0.55)", lineHeight: 1.4 }}>
-                I agree to the <Link href="/terms" style={{ color: "#38BCA0", textDecoration: "underline" }} target="_blank">Terms of Service &amp; Privacy Policy</Link>.
+              <label htmlFor="termsCheck" style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", lineHeight: 1.4 }}>
+                I agree to the <Link href="/terms" style={{ color: "var(--rada-gold)", textDecoration: "underline" }} target="_blank">Terms of Service &amp; Privacy Policy</Link>.
               </label>
             </div>
 
@@ -528,12 +531,12 @@ export default function LoginPage() {
                 padding: "13px",
                 borderRadius: "12px",
                 border: "none",
-                background: "linear-gradient(135deg, #38BCA0 0%, #2A9D8F 100%)",
-                color: "#080D14",
-                fontWeight: 700,
+                background: "var(--rada-gold-gradient)",
+                color: "#0A0A0C",
+                fontWeight: 800,
                 fontSize: "14px",
                 cursor: loading ? "not-allowed" : "pointer",
-                boxShadow: "0 4px 16px rgba(56, 188, 160, 0.35)",
+                boxShadow: "0 4px 16px var(--rada-gold-subtle)",
                 marginTop: "4px",
                 opacity: loading ? 0.7 : 1,
               }}
@@ -545,9 +548,9 @@ export default function LoginPage() {
 
         {/* Divider */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", margin: "18px 0" }}>
-          <div style={{ flex: 1, height: "1px", background: "rgba(255, 255, 255, 0.08)" }} />
-          <span style={{ fontSize: "11px", color: "rgba(232, 244, 240, 0.35)", letterSpacing: "0.05em" }}>OR</span>
-          <div style={{ flex: 1, height: "1px", background: "rgba(255, 255, 255, 0.08)" }} />
+          <div style={{ flex: 1, height: "1px", background: "var(--rada-border)" }} />
+          <span style={{ fontSize: "11px", color: "var(--rada-pearl-dim)", letterSpacing: "0.05em" }}>OR</span>
+          <div style={{ flex: 1, height: "1px", background: "var(--rada-border)" }} />
         </div>
 
         {/* Google OAuth Button */}
@@ -559,16 +562,16 @@ export default function LoginPage() {
         />
 
         {/* Discreet Legal Footer */}
-        <div style={{ marginTop: "20px", textAlign: "center", borderTop: "1px solid rgba(255, 255, 255, 0.06)", paddingTop: "14px" }}>
-          <p style={{ fontSize: "11px", color: "rgba(232, 244, 240, 0.45)", margin: "0 0 10px" }}>
+        <div style={{ marginTop: "20px", textAlign: "center", borderTop: "1px solid var(--rada-border)", paddingTop: "14px" }}>
+          <p style={{ fontSize: "11px", color: "var(--rada-pearl-dim)", margin: "0 0 10px" }}>
             By continuing, you agree to Rada&apos;s{" "}
-            <Link href="/terms" style={{ color: "#38BCA0", textDecoration: "underline" }}>
+            <Link href="/terms" style={{ color: "var(--rada-gold)", textDecoration: "underline" }}>
               Terms of Service &amp; Privacy Policy
             </Link>.
           </p>
-          <p style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.5)", margin: 0 }}>
+          <p style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", margin: 0 }}>
             New to Rada?{" "}
-            <Link href="/onboarding" style={{ color: "#38BCA0", fontWeight: 600, textDecoration: "none" }}>
+            <Link href="/onboarding" style={{ color: "var(--rada-gold)", fontWeight: 700, textDecoration: "none" }}>
               Take the Onboarding Tour →
             </Link>
           </p>
@@ -587,7 +590,7 @@ export default function LoginPage() {
           padding: "16px",
         }} role="dialog" aria-modal="true">
           <div
-            style={{ position: "absolute", inset: 0, background: "rgba(8, 13, 20, 0.88)", backdropFilter: "blur(12px)" }}
+            style={{ position: "absolute", inset: 0, background: "rgba(0, 0, 0, 0.75)", backdropFilter: "blur(8px)" }}
             onClick={() => setShowForgotModal(false)}
           />
           <div style={{
@@ -595,19 +598,19 @@ export default function LoginPage() {
             zIndex: 10601,
             width: "100%",
             maxWidth: "380px",
-            background: "linear-gradient(180deg, #180D2C 0%, #110822 100%)",
-            border: "1px solid rgba(56, 188, 160, 0.25)",
+            background: "var(--rada-surface-raised)",
+            border: "1px solid var(--rada-border)",
             borderRadius: "22px",
             padding: "24px 20px",
-            boxShadow: "0 24px 48px rgba(0, 0, 0, 0.7)",
-            color: "#E8F4F0",
+            boxShadow: "var(--rada-shadow-lg)",
+            color: "var(--rada-pearl)",
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "14px" }}>
               <div>
-                <span style={{ fontSize: "11px", color: "#38BCA0", fontWeight: 700, letterSpacing: "0.06em" }}>
+                <span style={{ fontSize: "11px", color: "var(--rada-gold)", fontWeight: 700, letterSpacing: "0.08em" }}>
                   ✦ PASSWORD RECOVERY
                 </span>
-                <h3 style={{ fontSize: "18px", fontWeight: 800, margin: "2px 0 0", color: "#E8F4F0" }}>
+                <h3 style={{ fontSize: "18px", fontWeight: 800, margin: "2px 0 0", color: "var(--rada-pearl)" }}>
                   {forgotStep === 1 ? "Reset Password" : "Enter Verification Code"}
                 </h3>
               </div>
@@ -615,9 +618,9 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowForgotModal(false)}
                 style={{
-                  background: "rgba(255, 255, 255, 0.06)",
-                  border: "none",
-                  color: "#aaa",
+                  background: "var(--rada-surface)",
+                  border: "1px solid var(--rada-border)",
+                  color: "var(--rada-pearl-muted)",
                   width: "28px",
                   height: "28px",
                   borderRadius: "50%",
@@ -638,7 +641,7 @@ export default function LoginPage() {
               </div>
             )}
             {forgotSuccess && (
-              <div style={{ padding: "8px 12px", borderRadius: "10px", background: "rgba(56, 188, 160, 0.12)", border: "1px solid rgba(56, 188, 160, 0.35)", color: "#38BCA0", fontSize: "12px", marginBottom: "12px" }}>
+              <div style={{ padding: "8px 12px", borderRadius: "10px", background: "rgba(197, 155, 39, 0.12)", border: "1px solid rgba(197, 155, 39, 0.35)", color: "var(--rada-gold)", fontSize: "12px", marginBottom: "12px" }}>
                 {forgotSuccess}
               </div>
             )}
@@ -646,11 +649,11 @@ export default function LoginPage() {
             {/* Step 1: Input Email */}
             {forgotStep === 1 && (
               <form onSubmit={handleRequestResetCode} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                <p style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.6)", margin: 0, lineHeight: 1.4 }}>
+                <p style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", margin: 0, lineHeight: 1.4 }}>
                   Enter your registered email address. We will send you a 6-digit verification code.
                 </p>
                 <div>
-                  <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+                  <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                     Email
                   </label>
                   <input
@@ -663,9 +666,9 @@ export default function LoginPage() {
                       width: "100%",
                       padding: "11px",
                       borderRadius: "11px",
-                      background: "rgba(255, 255, 255, 0.05)",
-                      border: "1px solid rgba(232, 244, 240, 0.12)",
-                      color: "#E8F4F0",
+                      background: "var(--rada-surface)",
+                      border: "1px solid var(--rada-border)",
+                      color: "var(--rada-pearl)",
                       fontSize: "14px",
                       outline: "none",
                     }}
@@ -679,12 +682,12 @@ export default function LoginPage() {
                     padding: "12px",
                     borderRadius: "11px",
                     border: "none",
-                    background: "linear-gradient(135deg, #38BCA0 0%, #2A9D8F 100%)",
-                    color: "#080D14",
+                    background: "var(--rada-gold-gradient)",
+                    color: "#0A0A0C",
                     fontWeight: 700,
                     fontSize: "13px",
                     cursor: forgotLoading ? "not-allowed" : "pointer",
-                    boxShadow: "0 4px 14px rgba(56, 188, 160, 0.35)",
+                    boxShadow: "0 4px 14px rgba(197, 155, 39, 0.35)",
                     opacity: forgotLoading ? 0.7 : 1,
                   }}
                 >
@@ -697,12 +700,12 @@ export default function LoginPage() {
             {forgotStep === 2 && (
               <form onSubmit={handleConfirmResetPassword} style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {devDemoCode && (
-                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "rgba(56, 188, 160, 0.1)", border: "1px solid rgba(56, 188, 160, 0.25)", color: "#38BCA0", fontSize: "11px", textAlign: "center" }}>
+                  <div style={{ padding: "8px 10px", borderRadius: "8px", background: "rgba(197, 155, 39, 0.12)", border: "1px solid rgba(197, 155, 39, 0.25)", color: "var(--rada-gold)", fontSize: "11px", textAlign: "center" }}>
                     Verification Code: <strong>{devDemoCode}</strong>
                   </div>
                 )}
                 <div>
-                  <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+                  <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                     6-Digit Code
                   </label>
                   <input
@@ -716,9 +719,9 @@ export default function LoginPage() {
                       width: "100%",
                       padding: "11px",
                       borderRadius: "11px",
-                      background: "rgba(255, 255, 255, 0.05)",
-                      border: "1px solid rgba(232, 244, 240, 0.12)",
-                      color: "#E8F4F0",
+                      background: "var(--rada-surface)",
+                      border: "1px solid var(--rada-border)",
+                      color: "var(--rada-pearl)",
                       fontSize: "17px",
                       letterSpacing: "0.15em",
                       textAlign: "center",
@@ -727,7 +730,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: "12px", color: "rgba(232, 244, 240, 0.65)", display: "block", marginBottom: "4px" }}>
+                  <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "4px" }}>
                     New Password
                   </label>
                   <input
@@ -740,9 +743,9 @@ export default function LoginPage() {
                       width: "100%",
                       padding: "11px",
                       borderRadius: "11px",
-                      background: "rgba(255, 255, 255, 0.05)",
-                      border: "1px solid rgba(232, 244, 240, 0.12)",
-                      color: "#E8F4F0",
+                      background: "var(--rada-surface)",
+                      border: "1px solid var(--rada-border)",
+                      color: "var(--rada-pearl)",
                       fontSize: "14px",
                       outline: "none",
                     }}
@@ -756,12 +759,12 @@ export default function LoginPage() {
                     padding: "12px",
                     borderRadius: "11px",
                     border: "none",
-                    background: "linear-gradient(135deg, #38BCA0 0%, #2A9D8F 100%)",
-                    color: "#080D14",
+                    background: "var(--rada-gold-gradient)",
+                    color: "#0A0A0C",
                     fontWeight: 700,
                     fontSize: "13px",
                     cursor: forgotLoading ? "not-allowed" : "pointer",
-                    boxShadow: "0 4px 14px rgba(56, 188, 160, 0.35)",
+                    boxShadow: "0 4px 14px rgba(197, 155, 39, 0.35)",
                     opacity: forgotLoading ? 0.7 : 1,
                   }}
                 >
@@ -770,7 +773,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setForgotStep(1)}
-                  style={{ background: "none", border: "none", color: "rgba(232, 244, 240, 0.45)", fontSize: "12px", cursor: "pointer", padding: "4px" }}
+                  style={{ background: "none", border: "none", color: "var(--rada-pearl-muted)", fontSize: "12px", cursor: "pointer", padding: "4px" }}
                 >
                   ← Back to Email Step
                 </button>

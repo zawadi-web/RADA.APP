@@ -10,7 +10,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 4px 0 12px;
+  padding: 4px 0 14px;
 }
 
 .brandRow {
@@ -20,7 +20,7 @@
 }
 
 .brandSymbol {
-  color: var(--color-radiant-coral);
+  color: var(--rada-gold);
   font-size: 20px;
 }
 
@@ -29,23 +29,27 @@
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
 }
 
 .vipPill {
-  background: rgba(255, 178, 56, 0.15);
-  border: 1px solid var(--color-sunset-amber);
-  color: var(--color-sunset-amber);
+  background: var(--rada-gold-subtle);
+  border: 1px solid var(--rada-border-teal);
+  color: var(--rada-gold);
   border-radius: var(--radius-full);
   padding: 6px 14px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .vipPill:hover {
-  background: rgba(255, 178, 56, 0.25);
+  background: var(--rada-gold);
+  color: #0A0A0C;
   transform: translateY(-1px);
 }
 
@@ -68,11 +72,12 @@
 }
 
 .profileCard {
-  background: var(--color-plum-surface);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-2xl);
   overflow: hidden;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--rada-shadow-md);
+  transition: background-color 0.25s ease, border-color 0.25s ease;
 }
 
 .photoViewport {
@@ -80,7 +85,7 @@
   width: 100%;
   height: 440px;
   overflow: hidden;
-  background: var(--color-deep-plum);
+  background: #0A0A0C;
 }
 
 .profileImg {
@@ -135,8 +140,9 @@
   left: 0;
   right: 0;
   padding: 36px 16px 14px;
-  background: linear-gradient(to top, rgba(26, 11, 46, 0.95) 0%, rgba(26, 11, 46, 0.6) 60%, transparent 100%);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.45) 60%, transparent 100%);
   z-index: 12;
+  color: #FFFFFF;
 }
 
 .nameRow {
@@ -150,13 +156,13 @@
   font-family: var(--font-heading);
   font-size: 26px;
   font-weight: 800;
-  color: var(--color-warm-cream);
+  color: #FFFFFF;
 }
 
 .userAge {
   font-size: 22px;
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .verifiedCheck {
@@ -166,8 +172,8 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #10B981;
-  color: #FFFFFF;
+  background: var(--rada-gold);
+  color: #0A0A0C;
   font-size: 11px;
   font-weight: 800;
 }
@@ -181,13 +187,13 @@
 
 .occupationText {
   font-size: 13px;
-  color: var(--color-text-secondary);
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .intentNoteBox {
   margin: 14px 16px 8px;
-  background: rgba(255, 90, 95, 0.08);
-  border-left: 3px solid var(--color-radiant-coral);
+  background: var(--rada-gold-subtle);
+  border-left: 3px solid var(--rada-gold);
   border-radius: 0 var(--radius-md) var(--radius-md) 0;
   padding: 10px 14px;
   position: relative;
@@ -198,13 +204,13 @@
   top: 4px;
   left: 6px;
   font-size: 18px;
-  color: var(--color-radiant-coral);
-  opacity: 0.5;
+  color: var(--rada-gold);
+  opacity: 0.7;
 }
 
 .intentNoteText {
   font-size: 13.5px;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
   line-height: 1.45;
   padding-left: 12px;
   margin: 0;
@@ -216,7 +222,7 @@
 
 .bioText {
   font-size: 14px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   line-height: 1.5;
   margin: 0;
 }
@@ -229,8 +235,8 @@
 }
 
 .promptCard {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-lg);
   padding: 14px;
 }
@@ -241,14 +247,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-sunset-amber);
+  color: var(--rada-gold);
   margin-bottom: 6px;
 }
 
 .promptAnswer {
   font-size: 14px;
   font-style: italic;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
   line-height: 1.4;
   margin: 0 0 10px;
 }
@@ -256,9 +262,9 @@
 .reactBtn {
   display: inline-flex;
   align-items: center;
-  background: rgba(255, 90, 95, 0.12);
-  border: 1px solid rgba(255, 90, 95, 0.3);
-  color: var(--color-radiant-coral);
+  background: var(--rada-gold-subtle);
+  border: 1px solid var(--rada-border-teal);
+  color: var(--rada-gold);
   border-radius: var(--radius-full);
   padding: 5px 12px;
   font-size: 12px;
@@ -268,7 +274,8 @@
 }
 
 .reactBtn:hover {
-  background: rgba(255, 90, 95, 0.2);
+  background: var(--rada-gold);
+  color: #0A0A0C;
   transform: translateY(-1px);
 }
 
@@ -290,7 +297,7 @@
   font-size: 24px;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--rada-shadow-md);
   border: none;
 }
 
@@ -303,13 +310,13 @@
 }
 
 .passBtn {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-text-secondary);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  color: var(--rada-pearl-muted);
+  border: 1px solid var(--rada-border);
 }
 
 .passBtn:hover {
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.12);
   color: #EF4444;
   border-color: #EF4444;
 }
@@ -317,25 +324,26 @@
 .sparkBtn {
   width: 52px;
   height: 52px;
-  background: rgba(255, 178, 56, 0.15);
-  color: var(--color-sunset-amber);
-  border: 1px solid var(--color-sunset-amber);
+  background: var(--rada-gold-subtle);
+  color: var(--rada-gold);
+  border: 1px solid var(--rada-border-teal);
   font-size: 20px;
 }
 
 .sparkBtn:hover {
-  background: var(--color-sunset-amber);
-  color: var(--color-deep-plum);
+  background: var(--rada-gold);
+  color: #0A0A0C;
 }
 
 .likeBtn {
-  background: var(--color-radiant-coral);
-  color: #FFFFFF;
-  box-shadow: 0 8px 24px rgba(255, 90, 95, 0.45);
+  background: var(--rada-gold-gradient);
+  color: #0A0A0C;
+  box-shadow: 0 8px 24px var(--rada-gold-subtle);
 }
 
 .likeBtn:hover {
-  background: #FF4248;
+  transform: scale(1.12);
+  box-shadow: 0 10px 28px var(--rada-gold-subtle);
 }
 
 .swipeStampLike, .swipeStampPass {
@@ -357,16 +365,16 @@
   right: 20px;
   color: #10B981;
   border: 3px solid #10B981;
-  background: rgba(16, 185, 129, 0.2);
+  background: rgba(16, 185, 129, 0.15);
   transform: rotate(12deg);
-  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
 }
 
 .swipeStampPass {
   left: 20px;
   color: #EF4444;
   border: 3px solid #EF4444;
-  background: rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.15);
   transform: rotate(-12deg);
-  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
 }

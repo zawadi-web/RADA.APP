@@ -55,24 +55,24 @@ export default function GlobalError({
   return (
     <html>
       <body style={{
-        background: "#0D0520", margin: 0, display: "flex",
+        background: "#09090B", margin: 0, display: "flex",
         alignItems: "center", justifyContent: "center",
         minHeight: "100vh", fontFamily: "system-ui, sans-serif",
       }}>
-        <div style={{ textAlign: "center", color: "#FFF8F0", padding: "24px" }}>
-          <div style={{ fontSize: "40px", marginBottom: "16px" }}>✦</div>
+        <div style={{ textAlign: "center", color: "#FFFFFF", padding: "24px" }}>
+          <div style={{ fontSize: "40px", marginBottom: "16px", color: "#C59B27" }}>✦</div>
           <h2 style={{ fontSize: "18px", fontWeight: 700, margin: "0 0 8px" }}>
             Something went wrong
           </h2>
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", margin: "0 0 20px" }}>
+          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: "0 0 20px" }}>
             Rada ran into an issue. Try reloading.
           </p>
           <button
             onClick={() => reset()}
             style={{
               padding: "12px 24px", borderRadius: "12px", border: "none",
-              background: "linear-gradient(135deg, #FF6B8A, #FF8C42)",
-              color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer",
+              background: "linear-gradient(135deg, #E5C158, #C59B27)",
+              color: "#0A0A0C", fontSize: "14px", fontWeight: 700, cursor: "pointer",
             }}
           >
             Try again

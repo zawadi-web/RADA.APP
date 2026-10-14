@@ -211,7 +211,8 @@ export default function OnboardingPage() {
   // ── Styles ────────────────────────────────────────────────────────────────────
   const page: React.CSSProperties = {
     position: "fixed", inset: 0, zIndex: 100,
-    background: "linear-gradient(160deg, #0D0520 0%, #1A0B2E 60%, #2D0A3E 100%)",
+    background: "var(--rada-bg)",
+    color: "var(--rada-pearl)",
     display: "flex", flexDirection: "column", alignItems: "center",
     overflowY: "auto",
   };
@@ -223,31 +224,31 @@ export default function OnboardingPage() {
   };
   const pill = (active: boolean): React.CSSProperties => ({
     padding: "14px 16px", borderRadius: "14px",
-    border: `2px solid ${active ? "#FF6B8A" : "rgba(255,255,255,0.1)"}`,
-    background: active ? "rgba(255,107,138,0.12)" : "rgba(255,255,255,0.04)",
+    border: `2px solid ${active ? "var(--rada-gold)" : "var(--rada-border)"}`,
+    background: active ? "var(--rada-gold-subtle)" : "var(--rada-surface)",
     cursor: "pointer", display: "flex", alignItems: "center", gap: "12px",
-    transition: "all 0.2s", color: "#FFF8F0", marginBottom: "10px",
+    transition: "all 0.2s", color: "var(--rada-pearl)", marginBottom: "10px",
     textAlign: "left" as const, width: "100%",
   });
   const title = (t: string, sub: string) => (
     <div style={{ marginBottom: "28px" }}>
-      <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#FFF8F0", margin: "0 0 8px", lineHeight: 1.2 }}>{t}</h1>
-      <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", margin: 0 }}>{sub}</p>
+      <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 8px", lineHeight: 1.2, letterSpacing: "-0.02em" }}>{t}</h1>
+      <p style={{ fontSize: "14px", color: "var(--rada-pearl-muted)", margin: 0 }}>{sub}</p>
     </div>
   );
   const nextBtn = (label: string, onClick: () => void, disabled = false, id?: string) => (
     <button id={id} onClick={onClick} disabled={disabled} style={{
       width: "100%", padding: "16px", borderRadius: "16px", border: "none",
-      background: disabled ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg, #FF6B8A, #FF8C42)",
-      color: disabled ? "rgba(255,255,255,0.3)" : "#fff",
-      fontSize: "16px", fontWeight: 700, cursor: disabled ? "default" : "pointer",
+      background: disabled ? "var(--rada-surface)" : "var(--rada-gold-gradient)",
+      color: disabled ? "var(--rada-pearl-muted)" : "#0A0A0C",
+      fontSize: "15px", fontWeight: 800, cursor: disabled ? "default" : "pointer",
       marginTop: "auto", transition: "all 0.2s",
-      boxShadow: disabled ? "none" : "0 4px 20px rgba(255,107,138,0.35)",
+      boxShadow: disabled ? "none" : "0 4px 18px rgba(197, 155, 39, 0.35)",
     }}>{label}</button>
   );
   const skip = (onClick: () => void, id?: string) => (
     <button id={id} onClick={onClick} style={{
-      background: "none", border: "none", color: "rgba(255,255,255,0.35)",
+      background: "none", border: "none", color: "var(--rada-pearl-muted)",
       fontSize: "13px", cursor: "pointer", marginTop: "12px", textDecoration: "underline",
     }}>Skip for now</button>
   );
@@ -258,9 +259,9 @@ export default function OnboardingPage() {
     () => (
       <div style={inner}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
-          <div style={{ fontSize: "52px", marginBottom: "12px" }}>✦</div>
-          <h1 style={{ fontSize: "32px", fontWeight: 800, color: "#FFF8F0", margin: "0 0 10px" }}>Welcome to Rada</h1>
-          <p style={{ fontSize: "15px", color: "rgba(255,255,255,0.55)", lineHeight: 1.6, margin: "0 0 36px" }}>
+          <div style={{ fontSize: "44px", marginBottom: "12px", color: "var(--rada-gold)" }}>✦</div>
+          <h1 style={{ fontSize: "32px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 10px", letterSpacing: "-0.02em" }}>Welcome to Rada</h1>
+          <p style={{ fontSize: "15px", color: "var(--rada-pearl-muted)", lineHeight: 1.6, margin: "0 0 36px" }}>
             Kenya&apos;s intentional dating platform.<br />Know the intention before you catch feelings.
           </p>
           <div style={{ width: "100%" }}>
@@ -270,20 +271,20 @@ export default function OnboardingPage() {
             id="onboarding-skip-google"
             onClick={() => setStep(1)}
             style={{
-              background: "none", border: "none", color: "rgba(255,255,255,0.45)",
+              background: "none", border: "none", color: "var(--rada-pearl-muted)",
               fontSize: "13px", cursor: "pointer", marginTop: "16px", textDecoration: "underline",
             }}
           >
             Continue without Google →
           </button>
-          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "14px", lineHeight: 1.6 }}>
+          <p style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "14px", lineHeight: 1.6 }}>
             Google keeps you signed in automatically — no repeated logins.
           </p>
 
-          <div style={{ marginTop: "24px", paddingTop: "14px", borderTop: "1px solid rgba(255,255,255,0.1)", width: "100%" }}>
-            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", margin: 0 }}>
+          <div style={{ marginTop: "24px", paddingTop: "14px", borderTop: "1px solid var(--rada-border)", width: "100%" }}>
+            <p style={{ fontSize: "13px", color: "var(--rada-pearl-muted)", margin: 0 }}>
               Already have an account?{" "}
-              <Link href="/login" style={{ color: "#38BCA0", fontWeight: 700, textDecoration: "none" }}>
+              <Link href="/login" style={{ color: "var(--rada-gold)", fontWeight: 700, textDecoration: "none" }}>
                 Sign In →
               </Link>
             </p>
@@ -296,8 +297,8 @@ export default function OnboardingPage() {
       <div style={inner}>
         {title("What's your name?", "This is how you'll appear on Rada")}
         <input id="onboarding-name-input" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your first name" autoFocus
-          style={{ width: "100%", padding: "16px", background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: "14px", color: "#FFF8F0", fontSize: "18px", fontWeight: 500, outline: "none", boxSizing: "border-box" }} />
-        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "10px" }}>Only your first name is shown publicly.</p>
+          style={{ width: "100%", padding: "16px", background: "var(--rada-surface)", border: "1.5px solid var(--rada-border)", borderRadius: "14px", color: "var(--rada-pearl)", fontSize: "18px", fontWeight: 500, outline: "none", boxSizing: "border-box" }} />
+        <p style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "10px" }}>Only your first name is shown publicly.</p>
         <div style={{ flex: 1 }} />
         {nextBtn("Continue →", () => setStep(2), !name.trim(), "onboarding-name-next")}
       </div>
@@ -307,8 +308,8 @@ export default function OnboardingPage() {
       <div style={inner}>
         {title("How old are you?", "Your age is shown on your profile")}
         <input id="onboarding-age-input" type="number" value={age} onChange={(e) => setAge(e.target.value)} placeholder="e.g. 27" min="18" max="60" autoFocus
-          style={{ width: "100%", padding: "16px", background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: "14px", color: "#FFF8F0", fontSize: "28px", fontWeight: 700, outline: "none", textAlign: "center", boxSizing: "border-box" }} />
-        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "10px", textAlign: "center" }}>You must be 18+ to use Rada.</p>
+          style={{ width: "100%", padding: "16px", background: "var(--rada-surface)", border: "1.5px solid var(--rada-border)", borderRadius: "14px", color: "var(--rada-pearl)", fontSize: "28px", fontWeight: 700, outline: "none", textAlign: "center", boxSizing: "border-box" }} />
+        <p style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "10px", textAlign: "center" }}>You must be 18+ to use Rada.</p>
         <div style={{ flex: 1 }} />
         {nextBtn("Continue →", () => setStep(3), !age || parseInt(age) < 18, "onboarding-age-next")}
       </div>
@@ -321,7 +322,7 @@ export default function OnboardingPage() {
           <button key={g.id} id={`onboarding-gender-${g.id.toLowerCase()}`} style={pill(gender === g.id)} onClick={() => setGender(g.id)}>
             <span style={{ fontSize: "28px" }}>{g.emoji}</span>
             <span style={{ fontSize: "17px", fontWeight: 600 }}>{g.label}</span>
-            {gender === g.id && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+            {gender === g.id && <span style={{ marginLeft: "auto", color: "var(--rada-gold)", fontWeight: 800 }}>✓</span>}
           </button>
         ))}
         <div style={{ flex: 1 }} />
@@ -339,11 +340,11 @@ export default function OnboardingPage() {
             <button key={g.id} id={`onboarding-interest-${g.id.toLowerCase()}`} style={pill(sel)} onClick={() => setInterestedIn((p) => sel ? p.filter((x) => x !== g.id) : [...p, g.id])}>
               <span style={{ fontSize: "28px" }}>{g.emoji}</span>
               <span style={{ fontSize: "17px", fontWeight: 600 }}>{g.label}</span>
-              {sel && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+              {sel && <span style={{ marginLeft: "auto", color: "var(--rada-gold)", fontWeight: 800 }}>✓</span>}
             </button>
           );
         })}
-        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "4px" }}>You can select more than one.</p>
+        <p style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "4px" }}>You can select more than one.</p>
         <div style={{ flex: 1 }} />
         {nextBtn("Continue →", () => setStep(5), interestedIn.length === 0, "onboarding-interest-next")}
         {skip(() => setStep(5), "onboarding-interest-skip")}
@@ -358,9 +359,9 @@ export default function OnboardingPage() {
             <span style={{ fontSize: "26px" }}>{i.emoji}</span>
             <div style={{ textAlign: "left" }}>
               <div style={{ fontSize: "15px", fontWeight: 700 }}>{i.label}</div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>{i.desc}</div>
+              <div style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", marginTop: "2px" }}>{i.desc}</div>
             </div>
-            {intention === i.id && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+            {intention === i.id && <span style={{ marginLeft: "auto", color: "var(--rada-gold)", fontWeight: 800 }}>✓</span>}
           </button>
         ))}
         <div style={{ flex: 1 }} />
@@ -373,7 +374,7 @@ export default function OnboardingPage() {
         {title("Add your photos", "Up to 3 photos — first impressions matter")}
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "16px" }}>
           {[0, 1, 2].map((i) => (
-            <label key={i} style={{ aspectRatio: "3/4", borderRadius: "14px", border: `2px dashed ${photos[i] ? "#FF6B8A" : "rgba(255,255,255,0.15)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: photos[i] ? "default" : "pointer", overflow: "hidden", position: "relative", background: "rgba(255,255,255,0.03)" }}>
+            <label key={i} style={{ aspectRatio: "3/4", borderRadius: "14px", border: `2px dashed ${photos[i] ? "var(--rada-gold)" : "var(--rada-border)"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: photos[i] ? "default" : "pointer", overflow: "hidden", position: "relative", background: "var(--rada-surface)" }}>
               {photos[i] ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -382,8 +383,8 @@ export default function OnboardingPage() {
                     style={{ position: "absolute", top: "4px", right: "4px", background: "rgba(0,0,0,0.6)", border: "none", color: "#fff", borderRadius: "50%", width: "22px", height: "22px", cursor: "pointer", fontSize: "12px" }}>✕</button>
                 </>
               ) : (
-                <div style={{ textAlign: "center", color: "rgba(255,255,255,0.35)" }}>
-                  <div style={{ fontSize: "24px" }}>+</div>
+                <div style={{ textAlign: "center", color: "var(--rada-pearl-muted)" }}>
+                  <div style={{ fontSize: "24px", color: "var(--rada-gold)" }}>+</div>
                   <div style={{ fontSize: "10px", marginTop: "4px" }}>Photo {i + 1}</div>
                 </div>
               )}
@@ -391,7 +392,7 @@ export default function OnboardingPage() {
             </label>
           ))}
         </div>
-        <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>{photos.length === 0 ? "Profiles with photos get 8× more matches." : `${photos.length}/3 photo${photos.length > 1 ? "s" : ""} added ✓`}</p>
+        <p style={{ fontSize: "12px", color: "var(--rada-pearl-muted)" }}>{photos.length === 0 ? "Profiles with photos get 8× more matches." : `${photos.length}/3 photo${photos.length > 1 ? "s" : ""} added ✓`}</p>
         <div style={{ flex: 1 }} />
         {nextBtn(photos.length > 0 ? "Continue →" : "Skip for now →", () => setStep(7), false, "onboarding-photos-next")}
       </div>
@@ -400,9 +401,9 @@ export default function OnboardingPage() {
     () => (
       <div style={inner}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", textAlign: "center" }}>
-          <div style={{ fontSize: "52px", marginBottom: "16px" }}>📍</div>
-          <h1 style={{ fontSize: "26px", fontWeight: 800, color: "#FFF8F0", margin: "0 0 8px" }}>Where are you located?</h1>
-          <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.5)", margin: "0 0 20px" }}>Rada is active nationwide across all 47 counties in Kenya</p>
+          <div style={{ fontSize: "44px", marginBottom: "16px" }}>📍</div>
+          <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 8px", letterSpacing: "-0.02em" }}>Where are you located?</h1>
+          <p style={{ fontSize: "14px", color: "var(--rada-pearl-muted)", margin: "0 0 20px" }}>Rada is active nationwide across all 47 counties in Kenya</p>
 
           <button
             id="onboarding-location-enable"
@@ -414,9 +415,9 @@ export default function OnboardingPage() {
               width: "100%",
               padding: "15px",
               borderRadius: "14px",
-              border: "1.5px solid rgba(52,211,153,0.4)",
-              background: "linear-gradient(135deg, rgba(52,211,153,0.18), rgba(16,185,129,0.18))",
-              color: "#34D399",
+              border: "1.5px solid var(--rada-gold)",
+              background: "var(--rada-gold-subtle)",
+              color: "var(--rada-gold)",
               fontSize: "15px",
               fontWeight: 700,
               cursor: "pointer",
@@ -431,7 +432,7 @@ export default function OnboardingPage() {
           </button>
 
           <div style={{ width: "100%", textAlign: "left", marginBottom: "14px" }}>
-            <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.6)", marginBottom: "6px", fontWeight: 600 }}>
+            <label style={{ display: "block", fontSize: "12px", color: "var(--rada-pearl-muted)", marginBottom: "6px", fontWeight: 600 }}>
               County (47 Kenyan Counties)
             </label>
             <select
@@ -444,10 +445,10 @@ export default function OnboardingPage() {
               style={{
                 width: "100%",
                 padding: "13px 14px",
-                background: "#1E1235",
-                border: "1.5px solid rgba(255,255,255,0.15)",
+                background: "var(--rada-surface)",
+                border: "1.5px solid var(--rada-border)",
                 borderRadius: "12px",
-                color: "#FFF8F0",
+                color: "var(--rada-pearl)",
                 fontSize: "14px",
                 outline: "none",
                 cursor: "pointer",
@@ -455,7 +456,7 @@ export default function OnboardingPage() {
               }}
             >
               {KENYAN_COUNTIES.map((c) => (
-                <option key={c.value} value={c.label} style={{ background: "#1A0B2E", color: "#FFF8F0" }}>
+                <option key={c.value} value={c.label} style={{ background: "var(--rada-surface-raised)", color: "var(--rada-pearl)" }}>
                   {c.label}
                 </option>
               ))}
@@ -463,7 +464,7 @@ export default function OnboardingPage() {
           </div>
 
           <div style={{ width: "100%", textAlign: "left", marginBottom: "20px" }}>
-            <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.6)", marginBottom: "6px", fontWeight: 600 }}>
+            <label style={{ display: "block", fontSize: "12px", color: "var(--rada-pearl-muted)", marginBottom: "6px", fontWeight: 600 }}>
               Town / Sub-County
             </label>
             {getAreasForCounty(selectedCounty).length > 0 ? (
@@ -473,10 +474,10 @@ export default function OnboardingPage() {
                 style={{
                   width: "100%",
                   padding: "13px 14px",
-                  background: "#1E1235",
-                  border: "1.5px solid rgba(255,255,255,0.15)",
+                  background: "var(--rada-surface)",
+                  border: "1.5px solid var(--rada-border)",
                   borderRadius: "12px",
-                  color: "#FFF8F0",
+                  color: "var(--rada-pearl)",
                   fontSize: "14px",
                   outline: "none",
                   cursor: "pointer",
@@ -484,7 +485,7 @@ export default function OnboardingPage() {
                 }}
               >
                 {getAreasForCounty(selectedCounty).map((a) => (
-                  <option key={a.value} value={a.label} style={{ background: "#1A0B2E", color: "#FFF8F0" }}>
+                  <option key={a.value} value={a.label} style={{ background: "var(--rada-surface-raised)", color: "var(--rada-pearl)" }}>
                     {a.label}
                   </option>
                 ))}
@@ -498,10 +499,10 @@ export default function OnboardingPage() {
                 style={{
                   width: "100%",
                   padding: "13px 14px",
-                  background: "rgba(255,255,255,0.06)",
-                  border: "1.5px solid rgba(255,255,255,0.15)",
+                  background: "var(--rada-surface)",
+                  border: "1.5px solid var(--rada-border)",
                   borderRadius: "12px",
-                  color: "#FFF8F0",
+                  color: "var(--rada-pearl)",
                   fontSize: "14px",
                   outline: "none",
                   boxSizing: "border-box",
@@ -519,12 +520,12 @@ export default function OnboardingPage() {
             padding: "16px",
             borderRadius: "16px",
             border: "none",
-            background: "linear-gradient(135deg, #FF6B8A, #FF8C42)",
-            color: "#fff",
+            background: "var(--rada-gold-gradient)",
+            color: "#0A0A0C",
             fontSize: "16px",
-            fontWeight: 700,
+            fontWeight: 800,
             cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(255,107,138,0.35)",
+            boxShadow: "0 4px 18px rgba(197, 155, 39, 0.35)",
             marginBottom: "12px",
           }}
         >
@@ -542,17 +543,17 @@ export default function OnboardingPage() {
       {step > 0 && (
         <div style={{ width: "100%", maxWidth: "420px", padding: "20px 24px 8px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <button onClick={() => setStep((s) => Math.max(authUser ? 1 : 0, s - 1))} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: "20px", padding: 0 }}>←</button>
-            <div style={{ flex: 1, height: "4px", background: "rgba(255,255,255,0.1)", borderRadius: "2px", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progress}%`, background: "linear-gradient(90deg, #FF6B8A, #FF8C42)", borderRadius: "2px", transition: "width 0.4s ease" }} />
+            <button onClick={() => setStep((s) => Math.max(authUser ? 1 : 0, s - 1))} style={{ background: "none", border: "none", color: "var(--rada-pearl-muted)", cursor: "pointer", fontSize: "20px", padding: 0 }}>←</button>
+            <div style={{ flex: 1, height: "4px", background: "var(--rada-surface)", border: "1px solid var(--rada-border)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progress}%`, background: "var(--rada-gold-gradient)", borderRadius: "2px", transition: "width 0.4s ease" }} />
             </div>
-            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", flexShrink: 0 }}>{currentStep}/{totalSteps}</span>
+            <span style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", flexShrink: 0 }}>{currentStep}/{totalSteps}</span>
           </div>
         </div>
       )}
       {step === 0 && !authUser && (
         <div style={{ padding: "40px 24px 0", textAlign: "center" }}>
-          <span style={{ fontSize: "28px", fontWeight: 800, color: "#FFF8F0" }}>✦ Rada</span>
+          <span style={{ fontSize: "28px", fontWeight: 800, color: "var(--rada-pearl)" }}>✦ Rada</span>
         </div>
       )}
       {renderStep()}

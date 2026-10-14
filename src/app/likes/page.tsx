@@ -30,7 +30,7 @@ interface IncomingLike {
 }
 
 export default function LikesPage() {
-  const { dbUserId, currentUser, matches, setConversations, refreshMatches } = useRada();
+  const { dbUserId, currentUser, refreshMatches, openVipModal } = useRada();
   const { showToast } = useToast();
   const router = useRouter();
 
@@ -76,15 +76,11 @@ export default function LikesPage() {
       const data = await res.json();
 
       if (data.matched) {
-        const convId = data.conversationId || data.matchId;
         showToast?.(`🎉 You matched with ${like.sender.fullName.split(" ")[0]}!`, "success");
-        // Refresh matches so the chat appears
         await refreshMatches();
-        // Navigate straight to the conversation
         router.push(`/matches`);
       } else {
         showToast?.("Like sent!", "success");
-        // Remove from the list since it's no longer an unactioned like
         setLikes((prev) => prev.filter((l) => l.id !== like.id));
       }
     } catch {
@@ -109,7 +105,7 @@ export default function LikesPage() {
   const displayLikes = likes.filter((l) => !passed.has(l.id));
 
   return (
-    <main style={{ minHeight: "100vh", background: "#080D14", paddingBottom: "80px" }}>
+    <main style={{ minHeight: "100vh", background: "var(--rada-bg)", paddingBottom: "80px", color: "var(--rada-pearl)" }}>
       {/* Header */}
       <header style={{
         padding: "20px 20px 0",
@@ -121,27 +117,27 @@ export default function LikesPage() {
           <h1 style={{
             fontSize: "26px",
             fontWeight: 800,
-            color: "#E8F4F0",
+            color: "var(--rada-pearl)",
             margin: 0,
             letterSpacing: "-0.5px",
           }}>Who Liked You</h1>
           <p style={{
             fontSize: "13px",
-            color: "rgba(232,244,240,0.5)",
+            color: "var(--rada-pearl-muted)",
             margin: "4px 0 0",
           }}>
-            {isLoading ? "Loading…" : `${displayLikes.length} ${displayLikes.length === 1 ? "person" : "people"} on your radar`}
+            {isLoading ? "Loading…" : `${displayLikes.length} ${displayLikes.length === 1 ? "admirer" : "admirers"} on your radar`}
           </p>
         </div>
 
         <button onClick={fetchLikes} disabled={isLoading} style={{
-          background: "rgba(56,188,160,0.12)",
-          border: "1px solid rgba(56,188,160,0.3)",
-          color: "#38BCA0",
+          background: "var(--rada-gold-subtle)",
+          border: "1px solid var(--rada-border-teal)",
+          color: "var(--rada-gold)",
           borderRadius: "20px",
           padding: "6px 14px",
           fontSize: "12px",
-          fontWeight: 600,
+          fontWeight: 700,
           cursor: "pointer",
         }}>
           {isLoading ? "…" : "Refresh"}
@@ -152,103 +148,126 @@ export default function LikesPage() {
       {!isVip && displayLikes.length > 0 && (
         <div style={{
           margin: "16px 20px",
-          background: "linear-gradient(135deg, rgba(56,188,160,0.12), rgba(120,234,180,0.06))",
-          border: "1px solid rgba(56,188,160,0.25)",
+          background: "var(--rada-gold-subtle)",
+          border: "1px solid var(--rada-border-teal)",
           borderRadius: "14px",
           padding: "14px 16px",
           display: "flex",
           alignItems: "center",
+          justifyContent: "space-between",
           gap: "12px",
         }}>
-          <span style={{ fontSize: "22px" }}>✦</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: "13px", color: "#E8F4F0" }}>See who's ready for you</div>
-            <div style={{ fontSize: "12px", color: "rgba(232,244,240,0.5)", marginTop: "2px" }}>Reveal photos and match instantly · KES 250/wk via M-Pesa</div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: "14px", color: "var(--rada-pearl)" }}>
+              ✦ See all {displayLikes.length} people directly
+            </div>
+            <div style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", marginTop: "2px" }}>
+              Unblur profiles, skip the queue &amp; connect instantly.
+            </div>
           </div>
+          <button
+            onClick={openVipModal}
+            style={{
+              flexShrink: 0,
+              background: "var(--rada-gold-gradient)",
+              border: "none",
+              borderRadius: "20px",
+              padding: "8px 14px",
+              color: "#0A0A0C",
+              fontWeight: 800,
+              fontSize: "12px",
+              cursor: "pointer",
+              boxShadow: "0 4px 14px var(--rada-gold-subtle)",
+            }}
+          >
+            Upgrade VIP
+          </button>
         </div>
       )}
 
-      {/* Content */}
-      {isLoading ? (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", padding: "20px" }}>
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} style={{
-              borderRadius: "16px",
-              background: "rgba(255,255,255,0.04)",
-              height: "220px",
-              animation: "pulse 1.5s ease-in-out infinite",
-            }} />
-          ))}
-        </div>
-      ) : displayLikes.length === 0 ? (
-        <div style={{ padding: "60px 20px", textAlign: "center" }}>
+      {/* Grid of likes */}
+      {displayLikes.length === 0 ? (
+        <div style={{ padding: "40px 20px" }}>
           <EmptyState
-            icon="✦"
-            title="Your radar is quiet"
-            description="When people like your profile on Rada, they'll appear here. Keep your profile complete to attract intentional matches."
+            title="No new likes yet"
+            description="Your profile is rotating in active Nairobi orbits. Keep discovering to spark fresh connections!"
+            actionLabel="Explore Discover"
+            onAction={() => router.push("/discover")}
           />
         </div>
       ) : (
         <div style={{
+          padding: "16px 20px",
           display: "grid",
           gridTemplateColumns: "1fr 1fr",
-          gap: "12px",
-          padding: "20px",
+          gap: "14px",
         }}>
           {displayLikes.map((like) => {
             const sender = like.sender;
+            const primaryPhoto = sender.photos?.find((p) => p.isPrimary) || sender.photos?.[0];
+            const photoUrl = primaryPhoto?.url;
             const isActing = liking.has(like.id);
+
             return (
-              <div key={like.id} style={{
-                background: "rgba(255,255,255,0.03)",
-                border: "1px solid rgba(56,188,160,0.12)",
-                borderRadius: "16px",
-                overflow: "hidden",
-                transition: "opacity 0.3s",
-                opacity: passed.has(like.id) ? 0 : 1,
-              }}>
-                {/* Photo */}
-                <div style={{ position: "relative", aspectRatio: "3/4" }}>
-                  {sender.photos[0]?.url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
+              <div
+                key={like.id}
+                style={{
+                  background: "var(--rada-surface)",
+                  borderRadius: "18px",
+                  border: "1px solid var(--rada-border)",
+                  overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
+                  position: "relative",
+                  boxShadow: "var(--rada-shadow-sm)",
+                  transition: "transform 0.2s ease, border-color 0.2s ease",
+                }}
+              >
+                {/* Photo container */}
+                <div style={{
+                  position: "relative",
+                  width: "100%",
+                  aspectRatio: "3 / 4",
+                  background: "#0A0A0C",
+                  overflow: "hidden",
+                  cursor: !isVip ? "pointer" : "default",
+                }}
+                onClick={!isVip ? openVipModal : undefined}
+                >
+                  {photoUrl ? (
                     <img
-                      src={sender.photos[0].url}
-                      alt={isVip ? sender.fullName : "Admirer"}
+                      src={photoUrl}
+                      alt={isVip ? sender.fullName : "Blurred profile"}
                       style={{
                         width: "100%",
                         height: "100%",
                         objectFit: "cover",
-                        filter: isVip ? "none" : "blur(18px) brightness(0.6)",
+                        filter: !isVip ? "blur(18px)" : "none",
+                        transform: !isVip ? "scale(1.1)" : "none",
+                        transition: "filter 0.3s ease",
                       }}
                     />
                   ) : (
-                    <div
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: "radial-gradient(circle, #2D1445 0%, #0D0520 100%)",
-                        fontSize: "36px",
-                        fontWeight: 800,
-                        color: "#FFF8F0",
-                      }}
-                    >
-                      {sender.fullName.charAt(0).toUpperCase()}
+                    <div style={{
+                      width: "100%", height: "100%",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      color: "var(--rada-gold)", fontSize: "28px", fontWeight: 700,
+                    }}>
+                      ✦
                     </div>
                   )}
                   {/* Intent badge */}
-                  <div style={{ position: "absolute", top: "8px", left: "8px" }}>
+                  <div style={{ position: "absolute", top: "8px", left: "8px", zIndex: 10 }}>
                     <IntentBadge intent={like.sender.intent as "MARRIAGE" | "LONG_TERM" | "INTENTIONAL_DATING" | "SERIOUS_RELATIONSHIP" | "EXPLORING"} size="small" />
                   </div>
                   {/* Super Spark badge */}
                   {like.likeType === "SUPER_SPARK" && (
                     <div style={{
                       position: "absolute", top: "8px", right: "8px",
-                      background: "linear-gradient(135deg,#38BCA0,#78EAB4)",
+                      background: "var(--rada-gold-gradient)",
                       borderRadius: "10px", padding: "3px 8px",
-                      fontSize: "10px", fontWeight: 700, color: "#080D14",
+                      fontSize: "10px", fontWeight: 800, color: "#0A0A0C",
+                      zIndex: 10,
                     }}>✦ SPARK</div>
                   )}
                   {/* Lock overlay for free users */}
@@ -257,47 +276,50 @@ export default function LikesPage() {
                       position: "absolute", inset: 0,
                       display: "flex", flexDirection: "column",
                       alignItems: "center", justifyContent: "center", gap: "6px",
+                      background: "rgba(0, 0, 0, 0.45)",
+                      zIndex: 8,
                     }}>
                       <span style={{ fontSize: "24px" }}>🔒</span>
-                      <span style={{ fontSize: "11px", fontWeight: 600, color: "#E8F4F0" }}>Tap to reveal</span>
+                      <span style={{ fontSize: "11px", fontWeight: 700, color: "#FFFFFF" }}>Tap to reveal</span>
                     </div>
                   )}
                 </div>
 
                 {/* Info */}
-                <div style={{ padding: "10px 12px 12px" }}>
+                <div style={{ padding: "10px 12px 12px", display: "flex", flexDirection: "column", flex: 1 }}>
                   <div style={{
-                    fontWeight: 700, fontSize: "13px", color: "#E8F4F0",
+                    fontWeight: 700, fontSize: "13px", color: "var(--rada-pearl)",
                     marginBottom: "2px",
                   }}>
-                    {isVip ? `${sender.fullName.split(" ")[0]}, ${sender.age}` : `Admirer in ${sender.area}`}
+                    {isVip ? `${sender.fullName.split(" ")[0]}, ${sender.age}` : `Admirer in ${sender.area || "Nairobi"}`}
                   </div>
                   <LocationBadge area={sender.area} county={sender.county} />
 
                   {like.comment && (
                     <div style={{
                       marginTop: "8px",
-                      background: "rgba(56,188,160,0.08)",
-                      borderRadius: "8px",
+                      background: "var(--rada-gold-subtle)",
+                      borderLeft: "2px solid var(--rada-gold)",
+                      borderRadius: "0 6px 6px 0",
                       padding: "6px 8px",
                       fontSize: "11px",
-                      color: "rgba(232,244,240,0.7)",
+                      color: "var(--rada-pearl-muted)",
                       fontStyle: "italic",
                     }}>
-                      "{like.comment}"
+                      &ldquo;{like.comment}&rdquo;
                     </div>
                   )}
 
                   {/* Actions */}
-                  <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
+                  <div style={{ display: "flex", gap: "8px", marginTop: "auto", paddingTop: "10px" }}>
                     <button
                       onClick={() => handlePass(like.id)}
                       style={{
                         flex: "0 0 36px", height: "36px", borderRadius: "50%",
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        color: "rgba(255,255,255,0.5)",
-                        fontSize: "16px", cursor: "pointer",
+                        background: "var(--rada-surface-raised)",
+                        border: "1px solid var(--rada-border)",
+                        color: "var(--rada-pearl-muted)",
+                        fontSize: "14px", cursor: "pointer",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}
                       aria-label="Pass"
@@ -309,11 +331,11 @@ export default function LikesPage() {
                       style={{
                         flex: 1, height: "36px", borderRadius: "10px",
                         background: isVip
-                          ? "linear-gradient(135deg,#38BCA0,#2A9D8F)"
-                          : "rgba(255,255,255,0.06)",
-                        border: isVip ? "none" : "1px solid rgba(255,255,255,0.1)",
-                        color: isVip ? "#080D14" : "rgba(255,255,255,0.5)",
-                        fontWeight: 700, fontSize: "12px",
+                          ? "var(--rada-gold-gradient)"
+                          : "var(--rada-surface-raised)",
+                        border: isVip ? "none" : "1px solid var(--rada-border)",
+                        color: isVip ? "#0A0A0C" : "var(--rada-pearl-muted)",
+                        fontWeight: 800, fontSize: "12px",
                         cursor: (isActing || !isVip) ? "default" : "pointer",
                         opacity: isActing ? 0.7 : 1,
                       }}

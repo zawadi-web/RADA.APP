@@ -4,6 +4,8 @@
   min-height: 100vh;
   padding: 12px 16px 20px;
   gap: 16px;
+  background: var(--rada-bg);
+  color: var(--rada-pearl);
 }
 
 .header {
@@ -16,25 +18,32 @@
   font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 800;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
 }
 
 .editBtn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--color-border);
-  color: var(--color-warm-cream);
-  padding: 6px 12px;
+  background: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
+  color: var(--rada-pearl);
+  padding: 6px 14px;
   border-radius: var(--radius-full);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editBtn:hover {
+  border-color: var(--rada-border-teal);
+  color: var(--rada-gold);
 }
 
 .heroCard {
-  background: var(--color-plum-surface);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-2xl);
   padding: 18px 16px;
+  box-shadow: var(--rada-shadow-sm);
 }
 
 .avatarRow {
@@ -48,8 +57,9 @@
   width: 84px;
   height: 84px;
   border-radius: 50%;
-  border: 3px solid var(--color-radiant-coral);
+  border: 3px solid var(--rada-gold);
   overflow: hidden;
+  box-shadow: 0 0 16px var(--rada-gold-subtle);
 }
 
 .avatarImg {
@@ -62,8 +72,8 @@
   position: absolute;
   bottom: 2px;
   right: 2px;
-  background: #10B981;
-  color: #FFFFFF;
+  background: var(--rada-gold);
+  color: #0A0A0C;
   font-size: 10px;
   font-weight: 800;
   width: 18px;
@@ -72,7 +82,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-deep-plum);
+  border: 2px solid var(--rada-bg);
 }
 
 .heroText {
@@ -91,26 +101,26 @@
   font-family: var(--font-heading);
   font-size: 20px;
   font-weight: 800;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
   margin: 0;
 }
 
 .userAge {
   font-size: 16px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
 }
 
 .occupation {
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
 }
 
 .completionCard {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: rgba(255, 90, 95, 0.08);
-  border: 1px solid rgba(255, 90, 95, 0.25);
+  background: var(--rada-gold-subtle);
+  border: 1px solid var(--rada-border-teal);
   border-radius: var(--radius-xl);
   padding: 16px;
 }
@@ -131,6 +141,7 @@
 
 .ringBar {
   transition: stroke-dashoffset 0.5s ease;
+  stroke: var(--rada-gold);
 }
 
 .progressPercent {
@@ -138,19 +149,19 @@
   font-family: var(--font-heading);
   font-size: 18px;
   font-weight: 800;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
 }
 
 .completionDetails strong {
   display: block;
   font-size: 13.5px;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
   margin-bottom: 2px;
 }
 
 .completionDetails p {
   font-size: 11.5px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   line-height: 1.3;
   margin: 0 0 8px;
 }
@@ -163,27 +174,30 @@
 
 .checkItemDone {
   font-size: 10.5px;
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
+  background: var(--rada-gold-subtle);
+  color: var(--rada-gold);
+  border: 1px solid var(--rada-border-teal);
   padding: 2px 8px;
   border-radius: var(--radius-full);
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .checkItemTodo {
   font-size: 10.5px;
-  background: rgba(255, 178, 56, 0.15);
-  color: var(--color-sunset-amber);
+  background: var(--rada-surface-raised);
+  color: var(--rada-pearl-muted);
+  border: 1px solid var(--rada-border);
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-weight: 600;
 }
 
 .intentCard {
-  background: var(--color-plum-surface);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-xl);
   padding: 16px;
+  box-shadow: var(--rada-shadow-sm);
 }
 
 .intentHeader {
@@ -197,17 +211,17 @@
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--color-text-tertiary);
+  color: var(--rada-pearl-dim);
 }
 
 .changeIntentBtn {
-  background: none;
-  border: 1px solid var(--color-border);
-  color: var(--color-radiant-coral);
+  background: var(--rada-gold-subtle);
+  border: 1px solid var(--rada-border-teal);
+  color: var(--rada-gold);
   border-radius: var(--radius-full);
   padding: 4px 12px;
   font-size: 11.5px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
 }
 
@@ -219,8 +233,8 @@
 }
 
 .intentOptionBtn {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-md);
   padding: 10px 12px;
   text-align: left;
@@ -229,27 +243,28 @@
 }
 
 .intentOptionSelected {
-  border-color: var(--color-radiant-coral);
-  background: rgba(255, 90, 95, 0.1);
+  border-color: var(--rada-gold);
+  background: var(--rada-gold-subtle);
 }
 
 .intentOptionBtn strong {
   display: block;
   font-size: 13px;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
 }
 
 .intentOptionBtn p {
   font-size: 11px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   margin: 2px 0 0;
 }
 
 .vipCard {
-  background: linear-gradient(135deg, rgba(255, 178, 56, 0.12) 0%, rgba(26, 11, 46, 0.9) 100%);
-  border: 1px solid rgba(255, 178, 56, 0.35);
+  background: var(--rada-gold-subtle);
+  border: 1px solid var(--rada-border-teal);
   border-radius: var(--radius-xl);
   padding: 16px;
+  box-shadow: var(--rada-shadow-sm);
 }
 
 .vipHeader {
@@ -260,7 +275,7 @@
 }
 
 .vipBadge {
-  color: var(--color-sunset-amber);
+  color: var(--rada-gold);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.05em;
@@ -268,39 +283,41 @@
 
 .paymentMethod {
   font-size: 11px;
-  color: #34D399;
-  font-weight: 600;
+  color: #10B981;
+  font-weight: 700;
 }
 
 .vipTitle {
   font-family: var(--font-heading);
   font-size: 16px;
   font-weight: 700;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
   margin-bottom: 4px;
 }
 
 .vipDesc {
   font-size: 12px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   line-height: 1.4;
   margin-bottom: 12px;
 }
 
 .upgradeBtn {
-  background: var(--color-sunset-amber) !important;
-  color: var(--color-deep-plum) !important;
+  background: var(--rada-gold-gradient) !important;
+  color: #0A0A0C !important;
   font-weight: 800 !important;
+  box-shadow: 0 4px 16px var(--rada-gold-subtle) !important;
 }
 
 .safetyCard {
-  background: var(--color-plum-surface);
-  border: 1px solid var(--color-border);
+  background: var(--rada-surface);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-xl);
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  box-shadow: var(--rada-shadow-sm);
 }
 
 .safetyRow {
@@ -313,18 +330,19 @@
 .safetyRow strong {
   display: block;
   font-size: 13px;
-  color: var(--color-warm-cream);
+  color: var(--rada-pearl);
 }
 
 .safetyRow p {
   font-size: 11px;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
   margin: 2px 0 0;
 }
 
 .verifiedTag {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10B981;
+  background: var(--rada-gold-subtle);
+  color: var(--rada-gold);
+  border: 1px solid var(--rada-border-teal);
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
@@ -348,7 +366,7 @@
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(128, 128, 128, 0.25);
   transition: 0.3s;
   border-radius: 22px;
 }
@@ -366,7 +384,7 @@
 }
 
 input:checked + .slider {
-  background-color: var(--color-radiant-coral);
+  background-color: var(--rada-gold);
 }
 
 input:checked + .slider:before {
@@ -375,13 +393,13 @@ input:checked + .slider:before {
 
 .dangerZone {
   padding-top: 6px;
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--rada-border);
 }
 
 .pauseBtn {
   background: none;
   border: none;
-  color: var(--color-text-tertiary);
+  color: var(--rada-pearl-dim);
   font-size: 12px;
   cursor: pointer;
   padding: 4px 0;

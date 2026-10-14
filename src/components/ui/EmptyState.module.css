@@ -14,8 +14,8 @@
   width: 72px;
   height: 72px;
   border-radius: var(--radius-full);
-  background-color: var(--rada-surface-elevated);
-  border: 1px solid var(--rada-border-plum);
+  background-color: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -30,14 +30,13 @@
 .title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--rada-cream);
+  color: var(--rada-pearl);
   margin-bottom: 8px;
 }
 
 .description {
   font-size: 0.9375rem;
-  color: var(--rada-cream-muted);
-  opacity: 0.8;
+  color: var(--rada-pearl-muted);
   line-height: 1.5;
   margin-bottom: 24px;
 }

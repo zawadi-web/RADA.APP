@@ -32,25 +32,25 @@
 
 /* Specific Intent Styling */
 .marriage {
-  background-color: var(--rada-amber-subtle);
-  color: var(--rada-amber);
-  border-color: rgba(255, 178, 56, 0.35);
+  background-color: var(--rada-gold-subtle);
+  color: var(--rada-gold);
+  border-color: var(--rada-border-teal);
 }
 
 .longTerm {
-  background-color: var(--rada-coral-subtle);
-  color: var(--rada-coral);
-  border-color: rgba(255, 90, 95, 0.35);
+  background-color: var(--rada-gold-subtle);
+  color: var(--rada-gold);
+  border-color: var(--rada-border-teal);
 }
 
 .intentional {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: var(--rada-success);
-  border-color: rgba(16, 185, 129, 0.35);
+  background-color: var(--rada-slate-subtle);
+  color: var(--rada-pearl);
+  border-color: var(--rada-border);
 }
 
 .exploring {
-  background-color: rgba(168, 85, 247, 0.15);
-  color: #C084FC;
-  border-color: rgba(168, 85, 247, 0.35);
+  background-color: var(--rada-slate-subtle);
+  color: var(--rada-pearl-muted);
+  border-color: var(--rada-border);
 }

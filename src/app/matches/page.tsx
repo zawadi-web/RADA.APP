@@ -223,13 +223,13 @@ export default function MatchesPage() {
                           width: "56px",
                           height: "56px",
                           borderRadius: "50%",
-                          background: "linear-gradient(135deg, rgba(255,107,138,0.3), rgba(157,78,221,0.3))",
+                          background: "var(--rada-gold-gradient)",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
                           fontSize: "20px",
-                          fontWeight: 700,
-                          color: "#FFF8F0",
+                          fontWeight: 800,
+                          color: "#0A0A0C",
                         }}
                       >
                         {match.matchedWith.fullName.charAt(0).toUpperCase()}
@@ -273,13 +273,13 @@ export default function MatchesPage() {
                       width: "40px",
                       height: "40px",
                       borderRadius: "50%",
-                      background: "linear-gradient(135deg, rgba(255,107,138,0.3), rgba(157,78,221,0.3))",
+                      background: "var(--rada-gold-gradient)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: "16px",
-                      fontWeight: 700,
-                      color: "#FFF8F0",
+                      fontWeight: 800,
+                      color: "#0A0A0C",
                     }}
                   >
                     {activeMatch.matchedWith.fullName.charAt(0).toUpperCase()}
@@ -386,15 +386,15 @@ export default function MatchesPage() {
           {chatGate.requiresUnlock ? (
             <div style={{
               margin: "12px 14px", padding: "18px 16px", borderRadius: "18px",
-              background: "linear-gradient(135deg, rgba(212,175,55,0.14) 0%, rgba(21,12,36,0.9) 100%)",
-              border: "1px solid rgba(212, 175, 55, 0.4)",
-              textAlign: "center", boxShadow: "0 10px 30px rgba(0,0,0,0.6)",
+              background: "var(--rada-gold-subtle)",
+              border: "1px solid var(--rada-border-teal)",
+              textAlign: "center", boxShadow: "var(--rada-shadow-md)",
             }}>
               <div style={{ fontSize: "24px", marginBottom: "4px" }}>🔒 🪙</div>
-              <h4 style={{ fontSize: "15px", fontWeight: 800, color: "#FFF9EB", margin: "0 0 4px" }}>
+              <h4 style={{ fontSize: "15px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 4px" }}>
                 5 Free Messages Used
               </h4>
-              <p style={{ fontSize: "12px", color: "rgba(248,244,235,0.7)", margin: "0 0 14px", lineHeight: 1.4 }}>
+              <p style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", margin: "0 0 14px", lineHeight: 1.4 }}>
                 To keep conversation quality high and prevent spam, unlock unlimited chat with {activeMatch.matchedWith.fullName.split(" ")[0]} for <strong>10 Coins</strong>.
               </p>
               <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
@@ -415,9 +415,9 @@ export default function MatchesPage() {
                   }}
                   style={{
                     padding: "11px 18px", borderRadius: "12px", border: "none",
-                    background: "linear-gradient(135deg, #FBE8A6 0%, #D4AF37 100%)",
-                    color: "#07020D", fontWeight: 800, fontSize: "13px", cursor: "pointer",
-                    boxShadow: "0 4px 16px rgba(212,175,55,0.4)",
+                    background: "var(--rada-gold-gradient)",
+                    color: "#0A0A0C", fontWeight: 800, fontSize: "13px", cursor: "pointer",
+                    boxShadow: "0 4px 16px var(--rada-gold-subtle)",
                   }}
                 >
                   Unlock Unlimited Chat (10 Coins) ✦
@@ -427,8 +427,8 @@ export default function MatchesPage() {
                   onClick={openCoinModal}
                   style={{
                     padding: "11px 14px", borderRadius: "12px",
-                    background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)",
-                    color: "#FFF8EA", fontWeight: 600, fontSize: "12px", cursor: "pointer",
+                    background: "var(--rada-surface-raised)", border: "1px solid var(--rada-border)",
+                    color: "var(--rada-pearl)", fontWeight: 700, fontSize: "12px", cursor: "pointer",
                   }}
                 >
                   Get Coins

@@ -43,22 +43,23 @@ export default function DiscoverError({
 
   return (
     <div style={{
-      minHeight: "100vh", background: "#0D0520", display: "flex",
+      minHeight: "100vh", background: "var(--rada-bg)", display: "flex",
       flexDirection: "column", alignItems: "center", justifyContent: "center",
-      padding: "24px", color: "#FFF8F0", fontFamily: "system-ui, sans-serif",
+      padding: "24px", color: "var(--rada-pearl)", fontFamily: "system-ui, sans-serif",
     }}>
-      <div style={{ fontSize: "40px", marginBottom: "16px" }}>✦</div>
+      <div style={{ fontSize: "40px", marginBottom: "16px", color: "var(--rada-gold)" }}>✦</div>
       <h2 style={{ fontSize: "18px", fontWeight: 700, margin: "0 0 8px" }}>Radar glitch</h2>
-      <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", margin: "0 0 20px", textAlign: "center" }}>
+      <p style={{ fontSize: "13px", color: "var(--rada-pearl-muted)", margin: "0 0 20px", textAlign: "center" }}>
         Something went wrong loading Discover. Try again.
       </p>
       <button
         onClick={() => reset()}
         style={{
           padding: "12px 24px", borderRadius: "12px", border: "none",
-          background: "linear-gradient(135deg, #FF6B8A, #FF8C42)",
-          color: "#fff", fontSize: "14px", fontWeight: 700, cursor: "pointer",
+          background: "var(--rada-gold-gradient)",
+          color: "#0A0A0C", fontSize: "14px", fontWeight: 700, cursor: "pointer",
           marginBottom: "12px",
+          boxShadow: "0 4px 14px rgba(197, 155, 39, 0.3)",
         }}
       >
         Retry
@@ -66,7 +67,7 @@ export default function DiscoverError({
       <button
         onClick={() => router.push("/profile")}
         style={{
-          background: "none", border: "none", color: "rgba(255,255,255,0.4)",
+          background: "none", border: "none", color: "var(--rada-pearl-muted)",
           fontSize: "13px", cursor: "pointer",
         }}
       >

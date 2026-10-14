@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { useRada } from "@/lib/rada-context";
+import { useTheme } from "@/lib/theme-context";
 import { IntentType } from "@/lib/types";
 import { GoogleAuthButton } from "@/components/auth/GoogleAuthButton";
 import { useToast } from "@/components/ui/Toast";
@@ -44,18 +45,19 @@ const INTERESTED_IN_OPTIONS = [
 // ── Tiny bottom sheet modal ────────────────────────────────────────────────────
 const Sheet = ({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) => (
   <div style={{ position: "fixed", inset: 0, zIndex: 5000, display: "flex", flexDirection: "column" }}>
-    <div style={{ flex: 1, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} onClick={onClose} />
+    <div style={{ flex: 1, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(6px)" }} onClick={onClose} />
     <div style={{
-      background: "linear-gradient(160deg, #1A0B2E, #2D0A3E)",
+      background: "var(--rada-surface-raised)",
       borderRadius: "24px 24px 0 0",
-      border: "1px solid rgba(255,255,255,0.1)",
+      border: "1px solid var(--rada-border-teal)",
       borderBottom: "none",
       padding: "24px 20px 40px",
       maxHeight: "80vh", overflowY: "auto",
+      color: "var(--rada-pearl)",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-        <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "#FFF8F0" }}>{title}</h3>
-        <button onClick={onClose} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", fontSize: "20px", cursor: "pointer" }}>✕</button>
+        <h3 style={{ margin: 0, fontSize: "18px", fontWeight: 700, color: "var(--rada-pearl)" }}>{title}</h3>
+        <button onClick={onClose} style={{ background: "none", border: "none", color: "var(--rada-pearl-muted)", fontSize: "20px", cursor: "pointer" }}>✕</button>
       </div>
       {children}
     </div>
@@ -69,14 +71,14 @@ const EditRow = ({ label, value, onEdit }: { label: string; value: string; onEdi
     style={{
       width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between",
       padding: "14px 0", background: "none", border: "none",
-      borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+      borderBottom: "1px solid var(--rada-border)", cursor: "pointer",
       textAlign: "left",
     }}
   >
-    <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.45)" }}>{label}</span>
+    <span style={{ fontSize: "13px", color: "var(--rada-pearl-muted)" }}>{label}</span>
     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-      <span style={{ fontSize: "14px", fontWeight: 600, color: "#FFF8F0" }}>{value || "Add"}</span>
-      <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>›</span>
+      <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--rada-pearl)" }}>{value || "Add"}</span>
+      <span style={{ fontSize: "12px", color: "var(--rada-pearl-dim)" }}>›</span>
     </div>
   </button>
 );
@@ -88,6 +90,7 @@ export default function ProfilePage() {
     switchToProfile, savedTestProfiles, createTestProfile,
   } = useRada();
   const { showToast } = useToast();
+  const { theme, toggleTheme } = useTheme();
 
   const [activePhoto, setActivePhoto] = useState(0);
   const [editSheet, setEditSheet] = useState<string | null>(null);
@@ -325,16 +328,16 @@ export default function ProfilePage() {
   const s = {
     container: {
       minHeight: "100vh",
-      background: "#0D0520",
-      color: "#FFF8F0",
+      background: "var(--rada-bg)",
+      color: "var(--rada-pearl)",
       paddingBottom: "80px",
     } as React.CSSProperties,
 
     pillBtn: (active: boolean): React.CSSProperties => ({
       width: "100%", padding: "14px 16px", borderRadius: "12px",
-      border: `2px solid ${active ? "#FF6B8A" : "rgba(255,255,255,0.1)"}`,
-      background: active ? "rgba(255,107,138,0.12)" : "rgba(255,255,255,0.04)",
-      cursor: "pointer", color: "#FFF8F0",
+      border: `2px solid ${active ? "var(--rada-gold)" : "var(--rada-border)"}`,
+      background: active ? "var(--rada-gold-subtle)" : "var(--rada-surface-raised)",
+      cursor: "pointer", color: "var(--rada-pearl)",
       display: "flex", alignItems: "center", gap: "12px",
       marginBottom: "10px", fontSize: "15px", fontWeight: 600,
       textAlign: "left" as const,
@@ -344,7 +347,7 @@ export default function ProfilePage() {
   return (
     <main style={s.container}>
       {/* ── Photos Section ──────────────────────────────────────────────── */}
-      <div style={{ position: "relative", width: "100%", aspectRatio: "4/5", maxHeight: "420px", background: "#1A0B2E" }}>
+      <div style={{ position: "relative", width: "100%", aspectRatio: "4/5", maxHeight: "420px", background: "#0A0A0C" }}>
         {photos.length > 0 ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -425,8 +428,8 @@ export default function ProfilePage() {
                 width: "80px",
                 height: "105px",
                 borderRadius: "14px",
-                border: `2px solid ${hasPhoto ? (activePhoto === i ? "#FF6B8A" : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.1)"}`,
-                background: hasPhoto ? "#1A0B2E" : "rgba(255,255,255,0.03)",
+                border: `2px solid ${hasPhoto ? (activePhoto === i ? "var(--rada-gold)" : "var(--rada-border)") : "var(--rada-border)"}`,
+                background: hasPhoto ? "var(--rada-surface-raised)" : "var(--rada-surface)",
                 overflow: "hidden",
                 cursor: "pointer",
                 position: "relative",
@@ -592,6 +595,30 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* ── Appearance / Dark Mode Toggle ─────────────────────────────── */}
+      <div style={{ margin: "16px 20px 0", padding: "16px", background: "var(--rada-surface)", borderRadius: "16px", border: "1px solid var(--rada-border)", boxShadow: "var(--rada-shadow-sm)" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--rada-pearl)" }}>
+              {theme === "dark" ? "🌙 Dark Mode (Noir & Gold)" : "☀️ Light Mode (White & Gold)"}
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "3px" }}>
+              {theme === "dark" ? "Deep obsidian noir with luminous champagne gold" : "Crisp high-fashion white with warm champagne gold"}
+            </div>
+          </div>
+          <button
+            onClick={toggleTheme}
+            style={{
+              padding: "7px 14px", borderRadius: "20px", border: "1px solid var(--rada-border-teal)",
+              background: "var(--rada-gold-subtle)", color: "var(--rada-gold)",
+              fontWeight: 800, fontSize: "12px", cursor: "pointer",
+            }}
+          >
+            {theme === "dark" ? "Switch to Light ☀️" : "Switch to Dark 🌙"}
+          </button>
+        </div>
+      </div>
+
       {/* ── VIP Upgrade ─────────────────────────────────────────────────── */}
       {!currentUser.isVip && (
         <div style={{ margin: "16px 20px 0" }}>
@@ -599,9 +626,9 @@ export default function ProfilePage() {
             onClick={openVipModal}
             style={{
               width: "100%", padding: "16px", borderRadius: "16px", border: "none",
-              background: "linear-gradient(135deg, #FF8C42, #FFD700)",
-              color: "#1A0B2E", fontSize: "15px", fontWeight: 800, cursor: "pointer",
-              boxShadow: "0 4px 20px rgba(255,140,66,0.35)",
+              background: "var(--rada-gold-gradient)",
+              color: "#0A0A0C", fontSize: "15px", fontWeight: 800, cursor: "pointer",
+              boxShadow: "0 4px 20px var(--rada-gold-subtle)",
             }}
           >
             ✦ Upgrade to VIP — from KES 250/wk
@@ -609,13 +636,11 @@ export default function ProfilePage() {
         </div>
       )}
 
-
-
       {/* ── Danger Zone ─────────────────────────────────────────────────── */}
       <div style={{ margin: "24px 20px 0", display: "flex", gap: "10px" }}>
         <button
           onClick={resetOnboarding}
-          style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.4)", fontSize: "12px", cursor: "pointer" }}
+          style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid var(--rada-border)", background: "var(--rada-surface-raised)", color: "var(--rada-pearl-muted)", fontSize: "12px", cursor: "pointer" }}
         >
           Restart Setup
         </button>
@@ -627,9 +652,9 @@ export default function ProfilePage() {
           <input
             type="text" value={editName} onChange={(e) => setEditName(e.target.value)}
             placeholder="First name" autoFocus
-            style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: "12px", color: "#FFF8F0", fontSize: "17px", outline: "none", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "14px", background: "var(--rada-surface)", border: "1.5px solid var(--rada-border)", borderRadius: "12px", color: "var(--rada-pearl)", fontSize: "17px", outline: "none", boxSizing: "border-box" }}
           />
-          <button onClick={saveName} style={{ width: "100%", padding: "14px", marginTop: "16px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, #FF6B8A, #FF8C42)", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>Save</button>
+          <button onClick={saveName} style={{ width: "100%", padding: "14px", marginTop: "16px", borderRadius: "12px", border: "none", background: "var(--rada-gold-gradient)", color: "#0A0A0C", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 16px var(--rada-gold-subtle)" }}>Save</button>
         </Sheet>
       )}
 
@@ -638,9 +663,9 @@ export default function ProfilePage() {
           <input
             type="number" value={editAge} onChange={(e) => setEditAge(e.target.value)}
             placeholder="e.g. 27" min="18" max="60" autoFocus
-            style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: "12px", color: "#FFF8F0", fontSize: "28px", fontWeight: 700, outline: "none", textAlign: "center", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "14px", background: "var(--rada-surface)", border: "1.5px solid var(--rada-border)", borderRadius: "12px", color: "var(--rada-pearl)", fontSize: "28px", fontWeight: 700, outline: "none", textAlign: "center", boxSizing: "border-box" }}
           />
-          <button onClick={saveAge} disabled={!editAge || parseInt(editAge) < 18} style={{ width: "100%", padding: "14px", marginTop: "16px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, #FF6B8A, #FF8C42)", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>Save</button>
+          <button onClick={saveAge} disabled={!editAge || parseInt(editAge) < 18} style={{ width: "100%", padding: "14px", marginTop: "16px", borderRadius: "12px", border: "none", background: "var(--rada-gold-gradient)", color: "#0A0A0C", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 16px var(--rada-gold-subtle)" }}>Save</button>
         </Sheet>
       )}
 
@@ -650,10 +675,10 @@ export default function ProfilePage() {
             value={editBio} onChange={(e) => setEditBio(e.target.value)}
             placeholder="Say something real about yourself — what you're like, what you value…" autoFocus
             maxLength={200}
-            style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.06)", border: "1.5px solid rgba(255,255,255,0.15)", borderRadius: "12px", color: "#FFF8F0", fontSize: "14px", outline: "none", minHeight: "120px", resize: "none", boxSizing: "border-box", lineHeight: 1.6 }}
+            style={{ width: "100%", padding: "14px", background: "var(--rada-surface)", border: "1.5px solid var(--rada-border)", borderRadius: "12px", color: "var(--rada-pearl)", fontSize: "14px", outline: "none", minHeight: "120px", resize: "none", boxSizing: "border-box", lineHeight: 1.6 }}
           />
-          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.35)", marginTop: "6px" }}>{editBio.length}/200</p>
-          <button onClick={saveBio} style={{ width: "100%", padding: "14px", marginTop: "8px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, #FF6B8A, #FF8C42)", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>Save</button>
+          <p style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "6px" }}>{editBio.length}/200</p>
+          <button onClick={saveBio} style={{ width: "100%", padding: "14px", marginTop: "8px", borderRadius: "12px", border: "none", background: "var(--rada-gold-gradient)", color: "#0A0A0C", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 16px var(--rada-gold-subtle)" }}>Save</button>
         </Sheet>
       )}
 
@@ -663,7 +688,7 @@ export default function ProfilePage() {
             <button key={g.id} style={s.pillBtn(editGender === g.id)} onClick={() => { setEditGender(g.id as "MAN" | "WOMAN" | "NON_BINARY"); saveGender(g.id); }}>
               <span style={{ fontSize: "26px" }}>{g.emoji}</span>
               <span>{g.label}</span>
-              {editGender === g.id && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+              {editGender === g.id && <span style={{ marginLeft: "auto", color: "var(--rada-gold)" }}>✓</span>}
             </button>
           ))}
         </Sheet>
@@ -677,11 +702,11 @@ export default function ProfilePage() {
               <button key={g.id} style={s.pillBtn(sel)} onClick={() => setEditInterestedIn((prev) => sel ? prev.filter((x) => x !== g.id) : [...prev, g.id])}>
                 <span style={{ fontSize: "26px" }}>{g.emoji}</span>
                 <span>{g.label}</span>
-                {sel && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+                {sel && <span style={{ marginLeft: "auto", color: "var(--rada-gold)" }}>✓</span>}
               </button>
             );
           })}
-          <button onClick={saveInterestedIn} style={{ width: "100%", padding: "14px", marginTop: "8px", borderRadius: "12px", border: "none", background: "linear-gradient(135deg, #FF6B8A, #FF8C42)", color: "#fff", fontSize: "15px", fontWeight: 700, cursor: "pointer" }}>Save Preferences</button>
+          <button onClick={saveInterestedIn} style={{ width: "100%", padding: "14px", marginTop: "8px", borderRadius: "12px", border: "none", background: "var(--rada-gold-gradient)", color: "#0A0A0C", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 16px var(--rada-gold-subtle)" }}>Save Preferences</button>
         </Sheet>
       )}
 
@@ -691,7 +716,7 @@ export default function ProfilePage() {
             <button key={i.id} style={s.pillBtn(editIntention === i.id)} onClick={() => { setEditIntention(i.id); saveIntention(i.id); }}>
               <span style={{ fontSize: "26px" }}>{i.emoji}</span>
               <span>{i.label}</span>
-              {editIntention === i.id && <span style={{ marginLeft: "auto", color: "#FF6B8A" }}>✓</span>}
+              {editIntention === i.id && <span style={{ marginLeft: "auto", color: "var(--rada-gold)" }}>✓</span>}
             </button>
           ))}
         </Sheet>
@@ -709,9 +734,9 @@ export default function ProfilePage() {
                 width: "100%",
                 padding: "14px 16px",
                 borderRadius: "14px",
-                border: "1.5px solid rgba(52,211,153,0.35)",
-                background: "linear-gradient(135deg, rgba(52,211,153,0.15), rgba(16,185,129,0.15))",
-                color: "#34D399",
+                border: "1.5px solid var(--rada-border-teal)",
+                background: "var(--rada-gold-subtle)",
+                color: "var(--rada-gold)",
                 fontSize: "14px",
                 fontWeight: 700,
                 cursor: isDetectingLocation ? "wait" : "pointer",
@@ -727,14 +752,14 @@ export default function ProfilePage() {
             </button>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px", margin: "4px 0" }}>
-              <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
-              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "1px" }}>or select manually</span>
-              <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+              <div style={{ flex: 1, height: "1px", background: "var(--rada-border)" }} />
+              <span style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", textTransform: "uppercase", letterSpacing: "1px" }}>or select manually</span>
+              <div style={{ flex: 1, height: "1px", background: "var(--rada-border)" }} />
             </div>
 
             {/* County Dropdown */}
             <div>
-              <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.6)", marginBottom: "6px", fontWeight: 600 }}>
+              <label style={{ display: "block", fontSize: "12px", color: "var(--rada-pearl-muted)", marginBottom: "6px", fontWeight: 600 }}>
                 County (47 Counties)
               </label>
               <select
@@ -747,10 +772,10 @@ export default function ProfilePage() {
                 style={{
                   width: "100%",
                   padding: "14px",
-                  background: "#1E1235",
-                  border: "1.5px solid rgba(255,255,255,0.15)",
+                  background: "var(--rada-surface)",
+                  border: "1.5px solid var(--rada-border)",
                   borderRadius: "12px",
-                  color: "#FFF8F0",
+                  color: "var(--rada-pearl)",
                   fontSize: "15px",
                   outline: "none",
                   cursor: "pointer",
@@ -758,7 +783,7 @@ export default function ProfilePage() {
                 }}
               >
                 {KENYAN_COUNTIES.map((c) => (
-                  <option key={c.value} value={c.label} style={{ background: "#1A0B2E", color: "#FFF8F0" }}>
+                  <option key={c.value} value={c.label} style={{ background: "var(--rada-surface-raised)", color: "var(--rada-pearl)" }}>
                     {c.label}
                   </option>
                 ))}
@@ -767,7 +792,7 @@ export default function ProfilePage() {
 
             {/* Area / Sub-county Dropdown or Input */}
             <div>
-              <label style={{ display: "block", fontSize: "12px", color: "rgba(255,255,255,0.6)", marginBottom: "6px", fontWeight: 600 }}>
+              <label style={{ display: "block", fontSize: "12px", color: "var(--rada-pearl-muted)", marginBottom: "6px", fontWeight: 600 }}>
                 Sub-County / Area / Town
               </label>
               {getAreasForCounty(editCounty).length > 0 ? (
@@ -778,10 +803,10 @@ export default function ProfilePage() {
                     style={{
                       width: "100%",
                       padding: "14px",
-                      background: "#1E1235",
-                      border: "1.5px solid rgba(255,255,255,0.15)",
+                      background: "var(--rada-surface)",
+                      border: "1.5px solid var(--rada-border)",
                       borderRadius: "12px",
-                      color: "#FFF8F0",
+                      color: "var(--rada-pearl)",
                       fontSize: "15px",
                       outline: "none",
                       cursor: "pointer",
@@ -789,11 +814,11 @@ export default function ProfilePage() {
                     }}
                   >
                     {getAreasForCounty(editCounty).map((a) => (
-                      <option key={a.value} value={a.label} style={{ background: "#1A0B2E", color: "#FFF8F0" }}>
+                      <option key={a.value} value={a.label} style={{ background: "var(--rada-surface-raised)", color: "var(--rada-pearl)" }}>
                         {a.label}
                       </option>
                     ))}
-                    <option value="_custom_" style={{ background: "#1A0B2E", color: "#FF8C42" }}>
+                    <option value="_custom_" style={{ background: "var(--rada-surface-raised)", color: "var(--rada-gold)" }}>
                       + Other town / area
                     </option>
                   </select>
@@ -806,10 +831,10 @@ export default function ProfilePage() {
                       style={{
                         width: "100%",
                         padding: "12px 14px",
-                        background: "rgba(255,255,255,0.06)",
-                        border: "1.5px solid rgba(255,255,255,0.15)",
+                        background: "var(--rada-surface)",
+                        border: "1.5px solid var(--rada-border)",
                         borderRadius: "12px",
-                        color: "#FFF8F0",
+                        color: "var(--rada-pearl)",
                         fontSize: "14px",
                         outline: "none",
                         boxSizing: "border-box",
@@ -826,10 +851,10 @@ export default function ProfilePage() {
                   style={{
                     width: "100%",
                     padding: "14px",
-                    background: "rgba(255,255,255,0.06)",
-                    border: "1.5px solid rgba(255,255,255,0.15)",
+                    background: "var(--rada-surface)",
+                    border: "1.5px solid var(--rada-border)",
                     borderRadius: "12px",
-                    color: "#FFF8F0",
+                    color: "var(--rada-pearl)",
                     fontSize: "15px",
                     outline: "none",
                     boxSizing: "border-box",
@@ -846,12 +871,12 @@ export default function ProfilePage() {
                 marginTop: "10px",
                 borderRadius: "14px",
                 border: "none",
-                background: "linear-gradient(135deg, #FF6B8A, #FF8C42)",
-                color: "#fff",
+                background: "var(--rada-gold-gradient)",
+                color: "#0A0A0C",
                 fontSize: "15px",
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: "pointer",
-                boxShadow: "0 4px 16px rgba(255,107,138,0.35)",
+                boxShadow: "0 4px 16px var(--rada-gold-subtle)",
               }}
             >
               Save Location ✓
