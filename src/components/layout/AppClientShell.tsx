@@ -83,8 +83,9 @@ function BottomNavInner() {
     {
       label: "Discover", href: "/discover",
       icon: (a: boolean) => (
-        <svg viewBox="0 0 24 24" width="22" height="22" fill={a ? "currentColor" : "none"} stroke="currentColor" strokeWidth={a ? 2 : 1.8} aria-hidden="true">
-          <circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" />
+          <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" fill={a ? "currentColor" : "none"} />
         </svg>
       ),
     },
@@ -92,7 +93,7 @@ function BottomNavInner() {
       label: "Radar & Chats", href: "/matches",
       badge: unreadMessagesCount > 0 ? unreadMessagesCount : undefined,
       icon: (a: boolean) => (
-        <svg viewBox="0 0 24 24" width="22" height="22" fill={a ? "currentColor" : "none"} stroke="currentColor" strokeWidth={a ? 2 : 1.8} aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill={a ? "var(--rada-gold-subtle)" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
         </svg>
       ),
@@ -101,7 +102,7 @@ function BottomNavInner() {
       label: "Likes", href: "/likes",
       badge: newLikesCount > 0 ? newLikesCount : undefined,
       icon: (a: boolean) => (
-        <svg viewBox="0 0 24 24" width="22" height="22" fill={a ? "currentColor" : "none"} stroke="currentColor" strokeWidth={a ? 2 : 1.8} aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill={a ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
         </svg>
       ),
@@ -109,7 +110,7 @@ function BottomNavInner() {
     {
       label: "Profile", href: "/profile",
       icon: (a: boolean) => (
-        <svg viewBox="0 0 24 24" width="22" height="22" fill={a ? "currentColor" : "none"} stroke="currentColor" strokeWidth={a ? 2 : 1.8} aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill={a ? "var(--rada-gold-subtle)" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
         </svg>
       ),
@@ -154,21 +155,21 @@ function BottomNavInner() {
                 {item.badge && item.badge > 0 && (
                   <span aria-label={`${item.badge} notifications`} style={{
                     position: "absolute", top: "-4px", right: "-8px",
-                    background: "var(--rada-gold)", color: "#0A0A0C",
+                    background: "var(--rada-gold-gradient)", color: "#0A0A0C",
                     fontSize: "0.625rem", fontWeight: 800,
                     minWidth: "16px", height: "16px",
                     borderRadius: "8px", display: "flex",
                     alignItems: "center", justifyContent: "center",
-                    padding: "0 4px", boxShadow: "0 2px 8px var(--rada-gold-subtle)",
+                    padding: "0 4px", boxShadow: "0 2px 8px rgba(245, 207, 104, 0.4)",
                   }}>{item.badge}</span>
                 )}
               </div>
-              <span style={{ lineHeight: 1.1 }}>{item.label}</span>
+              <span style={{ lineHeight: 1.1, letterSpacing: "0.01em" }}>{item.label}</span>
               {isActive && (
                 <span aria-hidden="true" style={{
-                  width: "18px", height: "2px", borderRadius: "1px",
-                  background: "var(--rada-gold)", position: "absolute", bottom: 0,
-                  boxShadow: "0 0 8px var(--rada-gold-subtle)",
+                  width: "16px", height: "2.5px", borderRadius: "9999px",
+                  background: "var(--rada-gold-gradient)", position: "absolute", bottom: "2px",
+                  boxShadow: "0 0 10px rgba(245, 207, 104, 0.6)",
                 }} />
               )}
             </Link>

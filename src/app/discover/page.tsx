@@ -34,7 +34,7 @@ const LocationErrorBanner = ({ error, onDismiss }: { error: string; onDismiss: (
   </div>
 );
 
-// Location toggle button
+// Luxury Radar Location Toggle Button
 const LocationBtn = ({
   useLocation, locationError, onToggle, isPending,
 }: {
@@ -43,23 +43,53 @@ const LocationBtn = ({
   <button
     onClick={onToggle}
     disabled={isPending}
-    title={useLocation ? "Location ON — tap to disable" : "Enable location to see nearby matches"}
+    title={useLocation ? "GPS Radar Active — tap to toggle nationwide mode" : "Tap to enable precise GPS Radar for nearby singles"}
     style={{
-      background: useLocation ? "rgba(52,211,153,0.15)" : isPending ? "rgba(255,200,50,0.12)" : "rgba(255,255,255,0.06)",
-      border: `1px solid ${useLocation ? "#34D399" : locationError ? "rgba(255,90,95,0.5)" : isPending ? "rgba(255,200,50,0.5)" : "var(--color-border)"}`,
-      color: useLocation ? "#34D399" : isPending ? "#FFC832" : locationError ? "#FF7B7F" : "var(--color-text-secondary)",
-      borderRadius: "20px",
-      padding: "6px 12px",
+      background: useLocation
+        ? "var(--rada-surface-raised)"
+        : "var(--rada-surface)",
+      border: `1px solid ${useLocation ? "var(--rada-gold)" : locationError ? "rgba(239, 68, 68, 0.4)" : "var(--rada-border)"}`,
+      borderRadius: "9999px",
+      padding: "6px 14px",
       fontSize: "12px",
-      fontWeight: 600,
+      fontWeight: 700,
       cursor: isPending ? "wait" : "pointer",
       display: "flex",
       alignItems: "center",
-      gap: "4px",
-      transition: "all 0.2s",
+      gap: "7px",
+      transition: "all 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
+      boxShadow: useLocation ? "0 2px 10px rgba(245, 207, 104, 0.2)" : "var(--rada-shadow-sm)",
+      color: "var(--rada-pearl)",
     }}
   >
-    {isPending ? "⏳" : "📍"} {isPending ? "Locating..." : useLocation ? "Nearby" : "Location"}
+    {/* SVG Radar Instrument Icon */}
+    <span style={{ display: "flex", alignItems: "center", position: "relative" }}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={useLocation ? "var(--rada-gold)" : "var(--rada-pearl-muted)"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="6" />
+        <circle cx="12" cy="12" r="2" fill={useLocation ? "var(--rada-gold)" : "none"} />
+        <line x1="12" y1="2" x2="12" y2="6" />
+        <line x1="12" y1="18" x2="12" y2="22" />
+        <line x1="2" y1="12" x2="6" y2="12" />
+        <line x1="18" y1="12" x2="22" y2="12" />
+      </svg>
+      {/* Live Beacon Pulse */}
+      <span
+        style={{
+          position: "absolute",
+          top: "-1px",
+          right: "-1px",
+          width: "5px",
+          height: "5px",
+          borderRadius: "50%",
+          background: useLocation ? "#34D399" : isPending ? "var(--rada-gold)" : "transparent",
+          boxShadow: useLocation ? "0 0 6px #34D399" : "none",
+        }}
+      />
+    </span>
+    <span style={{ letterSpacing: "0.02em" }}>
+      {isPending ? "Locating..." : useLocation ? "Radar Active" : "Radar: Kenya"}
+    </span>
   </button>
 );
 
@@ -297,8 +327,8 @@ export default function DiscoverPage() {
                   flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "radial-gradient(circle at 50% 40%, #2D1445 0%, #0D0520 100%)",
-                  gap: "14px",
+                  background: "radial-gradient(circle at 50% 40%, #17171C 0%, #09090B 100%)",
+                  gap: "16px",
                 }}
               >
                 <div
@@ -306,19 +336,20 @@ export default function DiscoverPage() {
                     width: "100px",
                     height: "100px",
                     borderRadius: "50%",
-                    background: "linear-gradient(135deg, rgba(255,107,138,0.25), rgba(157,78,221,0.25))",
-                    border: "2px solid rgba(255,107,138,0.4)",
+                    background: "linear-gradient(135deg, rgba(245, 207, 104, 0.16) 0%, rgba(20, 20, 24, 0.85) 100%)",
+                    border: "2px solid var(--rada-gold)",
+                    boxShadow: "var(--rada-gold-glow)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "42px",
+                    fontSize: "40px",
                     fontWeight: 800,
-                    color: "#FFF8F0",
+                    color: "var(--rada-gold)",
                   }}
                 >
                   {currentCard.fullName.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 600 }}>
+                <span style={{ fontSize: "11px", color: "var(--rada-gold)", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
                   ✦ Awaiting Photos
                 </span>
               </div>

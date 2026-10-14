@@ -30,14 +30,17 @@
 }
 
 .coral {
-  background-color: rgba(255, 90, 95, 0.95);
-  box-shadow: 0 4px 20px rgba(255, 90, 95, 0.4);
+  background: var(--rada-gold-gradient);
+  color: #0A0A0C;
+  box-shadow: 0 4px 20px rgba(245, 207, 104, 0.45);
+  border: 1px solid var(--rada-gold);
 }
 
 .amber {
-  background-color: rgba(255, 178, 56, 0.95);
-  color: var(--rada-charcoal);
-  box-shadow: 0 4px 20px rgba(255, 178, 56, 0.4);
+  background: var(--rada-gold-gradient);
+  color: #0A0A0C;
+  box-shadow: 0 4px 20px rgba(245, 207, 104, 0.45);
+  border: 1px solid var(--rada-gold);
 }
 
 .success {
@@ -46,8 +49,9 @@
 }
 
 .neutral {
-  background-color: rgba(42, 22, 71, 0.95);
-  border-color: rgba(255, 255, 255, 0.2);
+  background-color: var(--rada-surface-raised);
+  color: var(--rada-pearl);
+  border: 1px solid var(--rada-border);
 }
 
 .danger {

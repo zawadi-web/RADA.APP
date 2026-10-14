@@ -19,34 +19,34 @@
   --rada-pearl-muted:    #5E5E68;   /* Refined Charcoal Muted Text */
   --rada-pearl-dim:      #8E8E98;   /* Soft Subtext */
 
-  /* --- CHAMPAGNE GOLD ACCENT (Opulent, Bespoke, Warm) --- */
-  --rada-gold:           #C59B27;   /* Warm Rich Champagne Gold */
-  --rada-gold-hover:     #AA8318;   /* Deeper Burnished Gold */
-  --rada-gold-subtle:    rgba(197, 155, 39, 0.12);
-  --rada-gold-glow:      0 0 20px rgba(197, 155, 39, 0.25);
-  --rada-gold-gradient:  linear-gradient(135deg, #F5E5B8 0%, #D4AF37 50%, #9E7D23 100%);
+  /* --- CHAMPAGNE GOLD ACCENT (Prestigious, Metallic, Luminous) --- */
+  --rada-gold:           #D4AF37;   /* Classic 24K Champagne Gold */
+  --rada-gold-hover:     #B89222;   /* Burnished Gold */
+  --rada-gold-subtle:    rgba(212, 175, 55, 0.12);
+  --rada-gold-glow:      0 0 20px rgba(212, 175, 55, 0.3);
+  --rada-gold-gradient:  linear-gradient(135deg, #FFF3C4 0%, #E5C05D 35%, #D4AF37 70%, #9B700F 100%);
   --rada-gold-text:      #8B6810;
 
   /* Aliasing legacy teal & lime to gold */
-  --rada-teal:           #C59B27;
-  --rada-teal-hover:     #AA8318;
-  --rada-teal-subtle:    rgba(197, 155, 39, 0.12);
-  --rada-teal-glow:      rgba(197, 155, 39, 0.25);
+  --rada-teal:           #D4AF37;
+  --rada-teal-hover:     #B89222;
+  --rada-teal-subtle:    rgba(212, 175, 55, 0.12);
+  --rada-teal-glow:      rgba(212, 175, 55, 0.3);
 
-  --rada-lime:           #C59B27;
-  --rada-lime-subtle:    rgba(197, 155, 39, 0.12);
+  --rada-lime:           #D4AF37;
+  --rada-lime-subtle:    rgba(212, 175, 55, 0.12);
 
   /* Luxury Accents */
   --rada-obsidian:       #0A0A0C;
   --rada-amethyst:       #18181B;
-  --rada-champagne:      #D4AF37;
-  --rada-champagne-light:#FBF3D6;
+  --rada-champagne:      #E5C05D;
+  --rada-champagne-light:#FFF8DD;
   --rada-champagne-dark: #8C6A18;
-  --rada-rose-coral:     #C59B27;
-  --rada-rose-gradient:  linear-gradient(135deg, #F5E5B8 0%, #D4AF37 100%);
+  --rada-rose-coral:     #D4AF37;
+  --rada-rose-gradient:  linear-gradient(135deg, #FFF3C4 0%, #E5C05D 50%, #D4AF37 100%);
   --rada-luxury-glass:   rgba(255, 255, 255, 0.92);
-  --rada-luxury-border:  rgba(197, 155, 39, 0.35);
-  --rada-luxury-glow:    0 8px 32px rgba(197, 155, 39, 0.16);
+  --rada-luxury-border:  rgba(212, 175, 55, 0.38);
+  --rada-luxury-glow:    0 8px 32px rgba(212, 175, 55, 0.22);
 
   /* --- BORDERS --- */
   --rada-border:         rgba(0, 0, 0, 0.08);
@@ -137,37 +137,37 @@
   --rada-pearl-muted:    rgba(255, 255, 255, 0.65);
   --rada-pearl-dim:      rgba(255, 255, 255, 0.35);
 
-  /* --- RADIANT GOLD ACCENT --- */
-  --rada-gold:           #E5C158;   /* Luminous Warm Gold */
-  --rada-gold-hover:     #F3D072;
-  --rada-gold-subtle:    rgba(229, 193, 88, 0.14);
-  --rada-gold-glow:      0 0 24px rgba(229, 193, 88, 0.35);
-  --rada-gold-gradient:  linear-gradient(135deg, #FBE8A6 0%, #D4AF37 50%, #9B700F 100%);
-  --rada-gold-text:      #FBE8A6;
+  /* --- RADIANT GOLD ACCENT (Radiant Luxury Jewelry Gold) --- */
+  --rada-gold:           #F5CF68;   /* Brilliant Radiant Champagne Gold */
+  --rada-gold-hover:     #FFE28A;
+  --rada-gold-subtle:    rgba(245, 207, 104, 0.16);
+  --rada-gold-glow:      0 0 28px rgba(245, 207, 104, 0.45);
+  --rada-gold-gradient:  linear-gradient(135deg, #FFF6D6 0%, #F5CF68 35%, #D4AF37 70%, #9B700F 100%);
+  --rada-gold-text:      #F5CF68;
 
-  --rada-teal:           #E5C158;
-  --rada-teal-hover:     #F3D072;
-  --rada-teal-subtle:    rgba(229, 193, 88, 0.14);
-  --rada-teal-glow:      rgba(229, 193, 88, 0.35);
+  --rada-teal:           #F5CF68;
+  --rada-teal-hover:     #FFE28A;
+  --rada-teal-subtle:    rgba(245, 207, 104, 0.16);
+  --rada-teal-glow:      rgba(245, 207, 104, 0.45);
 
-  --rada-lime:           #E5C158;
-  --rada-lime-subtle:    rgba(229, 193, 88, 0.14);
+  --rada-lime:           #F5CF68;
+  --rada-lime-subtle:    rgba(245, 207, 104, 0.16);
 
   --rada-obsidian:       #050506;
   --rada-amethyst:       #121215;
-  --rada-champagne:      #E5C158;
-  --rada-champagne-light:#FDEEB3;
-  --rada-champagne-dark: #8B6A14;
-  --rada-rose-coral:     #E5C158;
-  --rada-rose-gradient:  linear-gradient(135deg, #FBE8A6 0%, #D4AF37 100%);
+  --rada-champagne:      #F5CF68;
+  --rada-champagne-light:#FFF8DD;
+  --rada-champagne-dark: #9E7412;
+  --rada-rose-coral:     #F5CF68;
+  --rada-rose-gradient:  linear-gradient(135deg, #FFF6D6 0%, #F5CF68 50%, #D4AF37 100%);
   --rada-luxury-glass:   rgba(20, 20, 24, 0.85);
-  --rada-luxury-border:  rgba(229, 193, 88, 0.3);
-  --rada-luxury-glow:    0 0 32px rgba(229, 193, 88, 0.25);
+  --rada-luxury-border:  rgba(245, 207, 104, 0.38);
+  --rada-luxury-glow:    0 0 32px rgba(245, 207, 104, 0.35);
 
   /* --- BORDERS --- */
   --rada-border:         rgba(255, 255, 255, 0.10);
-  --rada-border-teal:    rgba(229, 193, 88, 0.35);
-  --rada-border-focus:   #E5C158;
+  --rada-border-teal:    rgba(245, 207, 104, 0.40);
+  --rada-border-focus:   #F5CF68;
 
   /* --- FUNCTIONAL STATUS --- */
   --rada-success:        #34D399;

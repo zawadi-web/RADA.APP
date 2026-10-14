@@ -2,11 +2,11 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: linear-gradient(135deg, rgba(42, 22, 71, 0.85) 0%, rgba(26, 11, 46, 0.95) 100%);
-  border: 1px solid rgba(255, 90, 95, 0.25);
+  background: var(--rada-surface-raised);
+  border: 1px solid var(--rada-border);
   border-radius: var(--radius-lg);
   padding: 14px 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--rada-shadow-md);
   backdrop-filter: blur(16px);
   position: relative;
   overflow: hidden;
@@ -17,9 +17,9 @@
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
+  width: 3px;
   height: 100%;
-  background: linear-gradient(180deg, var(--color-radiant-coral) 0%, var(--color-sunset-amber) 100%);
+  background: var(--rada-gold-gradient);
   border-radius: 4px 0 0 4px;
 }
 
@@ -35,12 +35,12 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--color-sunset-amber);
-  background: rgba(255, 178, 56, 0.12);
+  font-weight: 700;
+  color: var(--rada-gold);
+  background: var(--rada-gold-subtle);
   padding: 4px 10px;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(255, 178, 56, 0.25);
+  border: 1px solid var(--rada-border-teal);
   max-width: 80%;
   white-space: nowrap;
   overflow: hidden;
@@ -48,9 +48,9 @@
 }
 
 .speedBtn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--color-border);
-  color: var(--color-warm-cream);
+  background: var(--rada-surface);
+  border: 1px solid var(--rada-border);
+  color: var(--rada-pearl-muted);
   font-size: 11px;
   font-weight: 700;
   padding: 3px 8px;
@@ -60,8 +60,9 @@
 }
 
 .speedBtn:hover {
-  background: rgba(255, 90, 95, 0.2);
-  border-color: var(--color-radiant-coral);
+  background: var(--rada-gold-subtle);
+  border-color: var(--rada-gold);
+  color: var(--rada-gold);
 }
 
 .playerRow {
@@ -74,21 +75,21 @@
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--color-radiant-coral) 0%, #E0484D 100%);
+  background: var(--rada-gold-gradient);
   border: none;
-  color: #FFFFFF;
+  color: #0A0A0C;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(255, 90, 95, 0.45);
+  box-shadow: 0 4px 14px rgba(245, 207, 104, 0.4);
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   flex-shrink: 0;
 }
 
 .playBtn:hover {
   transform: scale(1.06);
-  box-shadow: 0 6px 18px rgba(255, 90, 95, 0.6);
+  box-shadow: 0 6px 18px rgba(245, 207, 104, 0.55);
 }
 
 .playBtn:active {
@@ -96,8 +97,8 @@
 }
 
 .playBtnActive {
-  background: linear-gradient(135deg, var(--color-sunset-amber) 0%, #E69D28 100%);
-  box-shadow: 0 4px 16px rgba(255, 178, 56, 0.5);
+  background: var(--rada-gold-gradient);
+  box-shadow: 0 0 20px rgba(245, 207, 104, 0.6);
 }
 
 .icon {
@@ -124,14 +125,14 @@
 
 .bar {
   flex: 1;
-  background: rgba(255, 255, 255, 0.18);
+  background: var(--rada-border);
   border-radius: 2px;
   min-height: 4px;
   transition: height 0.15s ease, background-color 0.2s ease;
 }
 
 .barPlayed {
-  background: linear-gradient(180deg, var(--color-radiant-coral) 0%, var(--color-sunset-amber) 100%);
+  background: var(--rada-gold-gradient);
 }
 
 .barActive {
@@ -154,10 +155,10 @@
   justify-content: space-between;
   font-size: 11px;
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--rada-pearl-muted);
 }
 
 .vibeTag {
-  color: var(--color-radiant-coral);
+  color: var(--rada-gold);
   font-weight: 600;
 }

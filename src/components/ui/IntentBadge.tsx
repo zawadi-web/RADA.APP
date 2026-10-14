@@ -56,7 +56,7 @@ export const IntentBadge: React.FC<IntentBadgeProps> = ({
   return (
     <span
       className={`${styles.badge} ${config.className} ${styles[normalizedSize]}`}
-      style={glow ? { boxShadow: "0 0 16px rgba(255, 90, 95, 0.4)" } : undefined}
+      style={glow ? { boxShadow: "0 0 16px rgba(245, 207, 104, 0.45), 0 2px 8px rgba(0, 0, 0, 0.5)" } : undefined}
       title={`Intent: ${config.label}`}
     >
       {showIcon && <span className={styles.icon}>{config.icon}</span>}

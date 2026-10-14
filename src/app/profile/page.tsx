@@ -379,22 +379,22 @@ export default function ProfilePage() {
               <div style={{ flex: 1 }} onClick={() => setActivePhoto((p) => Math.min(photos.length - 1, p + 1))} />
             </div>
             {/* Dark gradient overlay at bottom */}
-            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "120px", background: "linear-gradient(transparent, #0D0520)" }} />
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "130px", background: "linear-gradient(to top, rgba(9, 9, 11, 0.95) 0%, rgba(9, 9, 11, 0.5) 60%, transparent 100%)" }} />
           </>
         ) : (
-          <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+          <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", background: "var(--rada-surface)" }}>
             <div style={{ fontSize: "48px" }}>📸</div>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", margin: 0 }}>No photos yet</p>
+            <p style={{ color: "var(--rada-pearl-muted)", fontSize: "14px", margin: 0 }}>No photos yet</p>
           </div>
         )}
 
         {/* Name / age over photo */}
         <div style={{ position: "absolute", bottom: "16px", left: "20px", right: "20px" }}>
-          <h1 style={{ fontSize: "28px", fontWeight: 800, margin: "0 0 2px", color: "#FFF8F0", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>
+          <h1 style={{ fontSize: "28px", fontWeight: 800, margin: "0 0 2px", color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>
             {currentUser.fullName?.split(" ")[0] || "Your Name"}{currentUser.age ? `, ${currentUser.age}` : ""}
           </h1>
           <div style={{ display: "flex", gap: "8px", alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "12px", background: "rgba(255,107,138,0.25)", border: "1px solid rgba(255,107,138,0.4)", borderRadius: "20px", padding: "3px 10px", color: "#FFF8F0" }}>
+            <span style={{ fontSize: "12px", background: "var(--rada-gold-subtle)", border: "1px solid var(--rada-gold)", borderRadius: "20px", padding: "3px 10px", color: "var(--rada-gold)", fontWeight: 700 }}>
               {intent.emoji} {intent.label}
             </span>
             {currentUser.gender && (

@@ -6,10 +6,11 @@
   z-index: 900;
   display: flex;
   justify-content: center;
-  background: rgba(26, 11, 46, 0.92);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border-top: 1px solid var(--rada-border-plum);
+  background: var(--rada-surface-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 1px solid var(--rada-border);
+  transition: background 0.25s ease, border-color 0.25s ease;
 }
 
 .navContainer {
@@ -26,7 +27,7 @@
   align-items: center;
   justify-content: center;
   gap: 4px;
-  color: var(--rada-cream-muted);
+  color: var(--rada-pearl-muted);
   text-decoration: none;
   font-family: var(--font-heading);
   font-size: 0.6875rem;
@@ -39,7 +40,7 @@
 }
 
 .navLink:hover {
-  color: var(--rada-cream);
+  color: var(--rada-pearl);
 }
 
 .iconContainer {
@@ -50,22 +51,22 @@
 }
 
 .active {
-  color: var(--rada-coral) !important;
+  color: var(--rada-gold) !important;
 }
 
 .active .iconContainer {
   transform: translateY(-2px);
-  filter: drop-shadow(0 2px 8px rgba(255, 90, 95, 0.4));
+  filter: drop-shadow(0 2px 8px rgba(245, 207, 104, 0.4));
 }
 
 .badge {
   position: absolute;
   top: -4px;
   right: -8px;
-  background-color: var(--rada-coral);
-  color: #FFFFFF;
+  background: var(--rada-gold-gradient);
+  color: #0A0A0C;
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: 800;
   min-width: 16px;
   height: 16px;
   border-radius: var(--radius-full);
@@ -78,15 +79,15 @@
 
 .label {
   line-height: 1.1;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.01em;
 }
 
 .activeIndicator {
-  width: 4px;
-  height: 4px;
-  background-color: var(--rada-coral);
+  width: 16px;
+  height: 2.5px;
+  background: var(--rada-gold-gradient);
   border-radius: var(--radius-full);
   position: absolute;
-  bottom: 0px;
-  box-shadow: 0 0 6px var(--rada-coral);
+  bottom: 2px;
+  box-shadow: 0 0 10px rgba(245, 207, 104, 0.6);
 }
