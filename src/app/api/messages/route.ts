@@ -111,3 +111,40 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/messages?messageId=xxx&mode=everyone|me
+ * Handles message deletion
+ */
+export async function DELETE(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const messageId = searchParams.get("messageId");
+    const mode = searchParams.get("mode") || "me";
+
+    if (!messageId) {
+      return NextResponse.json({ error: "messageId required" }, { status: 400 });
+    }
+
+    // For ephemeral client-side messages
+    if (messageId.startsWith("msg-")) {
+      return NextResponse.json({ success: true });
+    }
+
+    if (mode === "everyone") {
+      await prisma.message.updateMany({
+        where: { id: messageId },
+        data: { content: "🚫 This message was deleted" },
+      });
+    } else {
+      await prisma.message.deleteMany({
+        where: { id: messageId },
+      });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("[MESSAGES DELETE] Error:", error);
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+  }
+}

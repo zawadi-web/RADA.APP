@@ -59,6 +59,11 @@ export default function MatchesPage() {
 
   // ── PHOTO & 30s VIDEO ATTACHMENTS (Ephemeral - Not saved to SQL) ──
   const chatMediaInputRef = useRef<HTMLInputElement>(null);
+  const chatCameraInputRef = useRef<HTMLInputElement>(null);
+
+  // ── MESSAGE DELETION (Long Press WhatsApp-Style) ──
+  const [selectedDeleteMsg, setSelectedDeleteMsg] = useState<Message | null>(null);
+  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Request browser notification permissions on load
   useEffect(() => {
@@ -227,7 +232,7 @@ export default function MatchesPage() {
         id: `msg-photo-${Date.now()}`,
         conversationId: activeConvId,
         senderId: dbUserId || "user-me",
-        content: "📷 Photo",
+        content: "", // Clean photo message with NO redundant text
         isRead: true,
         createdAt: new Date().toISOString(),
         type: "photo",
@@ -240,6 +245,58 @@ export default function MatchesPage() {
       showToast("Photo sent! ✦", "success");
     };
     reader.readAsDataURL(file);
+  };
+
+  // Message Deletion Handlers (WhatsApp Long-Press)
+  const handleMsgTouchStart = (msg: Message) => {
+    if (longPressTimeoutRef.current) clearTimeout(longPressTimeoutRef.current);
+    longPressTimeoutRef.current = setTimeout(() => {
+      setSelectedDeleteMsg(msg);
+    }, 450);
+  };
+
+  const handleMsgTouchEnd = () => {
+    if (longPressTimeoutRef.current) {
+      clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  };
+
+  const handleDeleteMessage = async (msg: Message, mode: "everyone" | "me") => {
+    if (!activeConvId) return;
+
+    // Optimistic state update
+    setConversations((prev: Record<string, Message[]>) => {
+      const list = prev[activeConvId] || [];
+      if (mode === "everyone") {
+        return {
+          ...prev,
+          [activeConvId]: list.map((m) =>
+            m.id === msg.id
+              ? { ...m, content: "🚫 This message was deleted", mediaUrl: undefined, type: "text" }
+              : m
+          ),
+        };
+      } else {
+        return {
+          ...prev,
+          [activeConvId]: list.filter((m) => m.id !== msg.id),
+        };
+      }
+    });
+
+    setSelectedDeleteMsg(null);
+    showToast(mode === "everyone" ? "Message deleted for everyone" : "Message deleted for you", "neutral");
+
+    try {
+      await fetch("/api/messages", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messageId: msg.id, mode }),
+      });
+    } catch (err) {
+      console.error("Delete message API error:", err);
+    }
   };
 
   // Play pleasant chime on incoming message
@@ -472,39 +529,47 @@ export default function MatchesPage() {
       {matches.length > 0 && (
         <>
         {!activeMatch ? (
-          <section style={{ marginTop: "20px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", padding: "0 4px" }}>
-              <span className={styles.sectionLabel} style={{ margin: 0 }}>RECENT CONVERSATIONS</span>
-              <span style={{ fontSize: "11px", color: "var(--rada-gold)", fontWeight: 700 }}>
-                {matches.length} {matches.length === 1 ? "Active Chat" : "Active Chats"}
+          <section style={{ marginTop: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px", padding: "0 8px" }}>
+              <span className={styles.sectionLabel} style={{ margin: 0, letterSpacing: "0.5px" }}>CHATS</span>
+              <span style={{ fontSize: "11px", color: "#00A884", fontWeight: 700 }}>
+                {matches.length} {matches.length === 1 ? "Conversation" : "Conversations"}
               </span>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {/* WhatsApp-Style Conversation List (Image 5) */}
+            <div style={{ display: "flex", flexDirection: "column" }}>
               {matches.map((match) => {
                 const convMessages = conversations[match.conversationId] || [];
                 const lastMsg = convMessages.length > 0 ? convMessages[convMessages.length - 1] : null;
                 const isUrgent = match.momentumHoursRemaining < 24;
+                const isMe = lastMsg ? (lastMsg.senderId === "user-me" || (dbUserId ? lastMsg.senderId === dbUserId : false)) : false;
+
+                // Partner last message preview text or icon
+                let previewContent = "✨ Radar aligned! Tap to open chat";
+                let isPhotoPreview = false;
+                let isVoicePreview = false;
+
+                if (lastMsg) {
+                  if (lastMsg.type === "photo") {
+                    isPhotoPreview = true;
+                    previewContent = "Photo";
+                  } else if (lastMsg.type === "voice") {
+                    isVoicePreview = true;
+                    previewContent = `Voice message (${lastMsg.durationSec || 15}s)`;
+                  } else if (lastMsg.content === "🚫 This message was deleted") {
+                    previewContent = "This message was deleted";
+                  } else {
+                    previewContent = lastMsg.content;
+                  }
+                }
 
                 return (
                   <button
                     key={match.id}
                     type="button"
                     onClick={() => setActiveConvId(match.conversationId)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "14px",
-                      padding: "14px 16px",
-                      borderRadius: "18px",
-                      background: "var(--rada-surface)",
-                      border: "1px solid var(--rada-border)",
-                      textAlign: "left",
-                      cursor: "pointer",
-                      width: "100%",
-                      transition: "all 0.2s ease",
-                      position: "relative",
-                    }}
+                    className={styles.chatListItem}
                   >
                     {/* Avatar with momentum ring */}
                     <div style={{ position: "relative", flexShrink: 0 }}>
@@ -516,8 +581,8 @@ export default function MatchesPage() {
                           padding: "2px",
                           background: isUrgent
                             ? "linear-gradient(135deg, #FF6B8B, #FF8E53)"
-                            : "linear-gradient(135deg, #FFF6D6, #F5CF68 40%, #D4AF37 75%, #9B700F 100%)",
-                          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.4)",
+                            : "linear-gradient(135deg, #00A884 0%, #25D366 100%)",
+                          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.35)",
                         }}
                       >
                         {match.matchedWith.photos[0]?.url ? (
@@ -532,13 +597,13 @@ export default function MatchesPage() {
                               width: "100%",
                               height: "100%",
                               borderRadius: "50%",
-                              background: "#1A1A22",
+                              background: "#182229",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "center",
                               fontSize: "18px",
                               fontWeight: 800,
-                              color: "var(--rada-gold)",
+                              color: "#00A884",
                             }}
                           >
                             {match.matchedWith.fullName.charAt(0).toUpperCase()}
@@ -550,13 +615,13 @@ export default function MatchesPage() {
                           position: "absolute",
                           bottom: "-2px",
                           right: "-2px",
-                          background: isUrgent ? "#FF4B4B" : "#10B981",
+                          background: isUrgent ? "#FF4B4B" : "#00A884",
                           color: "#FFFFFF",
                           fontSize: "9px",
                           fontWeight: 800,
                           padding: "1px 5px",
                           borderRadius: "6px",
-                          border: "1.5px solid #09090B",
+                          border: "1.5px solid #0B0E14",
                         }}
                       >
                         {match.momentumHoursRemaining}h
@@ -566,44 +631,58 @@ export default function MatchesPage() {
                     {/* Middle Info */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                        <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--rada-pearl)" }}>
+                        <span style={{ fontSize: "16px", fontWeight: 700, color: "#E9EDEF" }}>
                           {match.matchedWith.fullName}
                         </span>
-                        <span style={{ fontSize: "11px", color: "var(--rada-pearl-dim)" }}>
-                          {lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `${match.momentumHoursRemaining}h left`}
+                        <span style={{ fontSize: "11.5px", color: "#8696A0", fontWeight: 500 }}>
+                          {lastMsg
+                            ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                            : `${match.momentumHoursRemaining}h left`}
                         </span>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                        <IntentBadge intent={match.matchedWith.intent} size="small" />
-                        <span style={{ fontSize: "11px", color: "var(--rada-pearl-muted)" }}>
-                          • {match.matchedWith.area}
-                        </span>
-                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <p
+                          style={{
+                            fontSize: "13.5px",
+                            color: "#8696A0",
+                            margin: 0,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "5px",
+                          }}
+                        >
+                          {isMe && <span style={{ color: "#53BDEB", fontSize: "12px" }}>✓✓</span>}
+                          {isPhotoPreview && <span>📷</span>}
+                          {isVoicePreview && <span>🎙️</span>}
+                          <span>{previewContent}</span>
+                        </p>
 
-                      <p
-                        style={{
-                          fontSize: "13px",
-                          color: lastMsg ? "var(--rada-pearl-muted)" : "var(--rada-gold)",
-                          margin: 0,
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {lastMsg ? (
-                          <>
-                            {lastMsg.senderId === dbUserId ? "You: " : ""}
-                            {lastMsg.content}
-                          </>
-                        ) : (
-                          "✨ Radar aligned! Tap to open chat →"
+                        {/* Unread indicator */}
+                        {lastMsg && !isMe && !lastMsg.isRead && (
+                          <span
+                            style={{
+                              background: "#00A884",
+                              color: "#111B21",
+                              fontSize: "10.5px",
+                              fontWeight: 800,
+                              width: "18px",
+                              height: "18px",
+                              borderRadius: "50%",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginLeft: "8px",
+                              flexShrink: 0,
+                            }}
+                          >
+                            1
+                          </span>
                         )}
-                      </p>
-                    </div>
-
-                    <div style={{ color: "var(--rada-pearl-dim)", fontSize: "18px", marginLeft: "4px" }}>
-                      ›
+                      </div>
                     </div>
                   </button>
                 );
@@ -611,485 +690,480 @@ export default function MatchesPage() {
             </div>
           </section>
         ) : (
-          <section className={styles.chatSection}>
-          {/* Chat Header */}
-          <div className={styles.chatHeader}>
-            <button
-              type="button"
-              onClick={() => setActiveConvId(null)}
-              style={{
-                background: "rgba(255, 255, 255, 0.08)",
-                border: "1px solid var(--rada-border)",
-                borderRadius: "50%",
-                width: "36px",
-                height: "36px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--rada-pearl)",
-                cursor: "pointer",
-                marginRight: "10px",
-                flexShrink: 0,
-              }}
-              aria-label="Back to messages list"
-              title="Back to messages"
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-            <div className={styles.partnerInfo}>
-              <div className={styles.chatAvatar}>
-                {activeMatch.matchedWith.photos[0]?.url ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={activeMatch.matchedWith.photos[0].url}
-                    alt={activeMatch.matchedWith.fullName}
-                    width={40}
-                    height={40}
-                    className={styles.avatarImg}
-                    style={{ objectFit: "cover", borderRadius: "50%" }}
-                  />
-                ) : (
+          /* Full Screen WhatsApp Chat View (100vw × 100dvh Edge-to-Edge) */
+          <div className={styles.chatFullScreen}>
+            {/* WhatsApp Header */}
+            <div className={styles.chatHeaderFull}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0 }}>
+                {/* Back button */}
+                <button
+                  type="button"
+                  onClick={() => setActiveConvId(null)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#A7B2B8",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    padding: "4px",
+                    marginLeft: "-4px",
+                  }}
+                  aria-label="Back to conversations"
+                >
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+
+                {/* Partner Avatar */}
+                <div style={{ position: "relative", flexShrink: 0 }}>
                   <div
                     style={{
                       width: "40px",
                       height: "40px",
                       borderRadius: "50%",
-                      background: "var(--rada-gold-gradient)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "16px",
-                      fontWeight: 800,
-                      color: "#0A0A0C",
+                      overflow: "hidden",
+                      background: "#2A3942",
                     }}
                   >
-                    {activeMatch.matchedWith.fullName.charAt(0).toUpperCase()}
+                    {activeMatch.matchedWith.photos[0]?.url ? (
+                      <img
+                        src={activeMatch.matchedWith.photos[0].url}
+                        alt={activeMatch.matchedWith.fullName}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      />
+                    ) : (
+                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#E9EDEF", fontWeight: 700 }}>
+                        {activeMatch.matchedWith.fullName.charAt(0)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Partner Name & Live Status */}
+                <div style={{ minWidth: 0, overflow: "hidden" }}>
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#E9EDEF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {activeMatch.matchedWith.fullName}
+                  </div>
+                  {(() => {
+                    const partnerLastActive = (activeMatch.matchedWith as any)?.lastActive || activeMatch.lastActivity;
+                    const diffMs = partnerLastActive ? Math.abs(Date.now() - new Date(partnerLastActive).getTime()) : NaN;
+                    const isOnline = !isNaN(diffMs) && diffMs < 5 * 60 * 1000;
+                    return (
+                      <div style={{ fontSize: "11px", color: isOnline ? "#00A884" : "#8696A0", fontWeight: isOnline ? 600 : 400 }}>
+                        {isOnline ? "online" : "last seen recently"}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              {/* Call & Safety Icons */}
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", color: "#A7B2B8" }}>
+                <button
+                  type="button"
+                  onClick={() => startCall("video")}
+                  style={{ background: "none", border: "none", color: "#A7B2B8", cursor: "pointer", fontSize: "18px" }}
+                  title="Video Call"
+                  aria-label="Video Call"
+                >
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => startCall("voice")}
+                  style={{ background: "none", border: "none", color: "#A7B2B8", cursor: "pointer", fontSize: "18px" }}
+                  title="Voice Call"
+                  aria-label="Voice Call"
+                >
+                  <svg viewBox="0 0 24 24" width="19" height="19" fill="currentColor">
+                    <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2a15.053 15.053 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-.99-1.12z"/>
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSafetyMenu(!showSafetyMenu)}
+                  style={{ background: "none", border: "none", color: "#A7B2B8", cursor: "pointer", fontSize: "20px" }}
+                  aria-label="Safety menu"
+                >
+                  ⋮
+                </button>
+                {showSafetyMenu && (
+                  <div className={styles.safetyDropdown} style={{ top: "45px", right: "10px" }}>
+                    <button onClick={handleBlockActiveUser} className={styles.blockBtn}>
+                      Block {activeMatch.matchedWith.fullName.split(" ")[0]}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsReportOpen(true);
+                        setShowSafetyMenu(false);
+                      }}
+                      className={styles.reportBtn}
+                    >
+                      Report &amp; Block
+                    </button>
                   </div>
                 )}
               </div>
-              <div>
-                <div className={styles.nameBadgeRow}>
-                  <strong className={styles.partnerName}>{activeMatch.matchedWith.fullName.split(" ")[0]}</strong>
-                  <IntentBadge intent={activeMatch.matchedWith.intent} size="small" />
-                </div>
-                {(() => {
-                  const partnerLastActive = (activeMatch.matchedWith as any)?.lastActive || activeMatch.lastActivity;
-                  const diffMs = partnerLastActive ? Math.abs(Date.now() - new Date(partnerLastActive).getTime()) : NaN;
-                  const isOnline = !isNaN(diffMs) && diffMs < 5 * 60 * 1000;
-                  let statusLabel = "Offline";
-                  if (isOnline) {
-                    statusLabel = "Online Now";
-                  } else if (!isNaN(diffMs)) {
-                    const mins = Math.floor(diffMs / 60000);
-                    if (mins < 60) statusLabel = `Active ${mins}m ago`;
-                    else {
-                      const hrs = Math.floor(mins / 60);
-                      if (hrs < 24) statusLabel = `Active ${hrs}h ago`;
-                      else statusLabel = "Offline";
-                    }
-                  }
+            </div>
 
+            {/* 48-Hour Momentum Strip */}
+            <div style={{
+              padding: "5px 12px",
+              background: "rgba(212, 175, 55, 0.08)",
+              borderBottom: "1px solid rgba(212, 175, 55, 0.15)",
+              color: "#D4AF37",
+              fontSize: "11px",
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "6px",
+            }}>
+              <span>⚡ <strong>{activeMatch.momentumHoursRemaining}h remaining</strong> to keep this momentum active</span>
+            </div>
+
+            {/* Message Thread */}
+            <div className={styles.messagesListFull}>
+              {activeMessages.map((msg) => {
+                if (msg.isSystem) {
                   return (
-                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                      <span
-                        style={{
-                          width: "7px",
-                          height: "7px",
-                          borderRadius: "50%",
-                          background: isOnline ? "#10B981" : "rgba(255, 255, 255, 0.28)",
-                          boxShadow: isOnline ? "0 0 6px #10B981" : "none",
-                        }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "11px",
-                          color: isOnline ? "#10B981" : "var(--rada-pearl-dim)",
-                          fontWeight: isOnline ? 700 : 500,
-                        }}
-                      >
-                        {statusLabel}
-                      </span>
-                      <span style={{ fontSize: "11px", color: "var(--rada-pearl-dim)" }}>• {activeMatch.matchedWith.area}</span>
+                    <div key={msg.id} className={styles.systemMessage}>
+                      <span>{msg.content}</span>
                     </div>
                   );
-                })()}
-              </div>
-            </div>
+                }
 
-            <div className={styles.headerActions} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              {/* Voice Call Button */}
-              <button
-                type="button"
-                onClick={() => startCall("voice")}
-                style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid var(--rada-border)",
-                  borderRadius: "50%",
-                  width: "36px",
-                  height: "36px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "16px",
-                  cursor: "pointer",
-                }}
-                aria-label="Start Voice Call"
-                title="Voice Call"
-              >
-                📞
-              </button>
-              {/* Video Call Button */}
-              <button
-                type="button"
-                onClick={() => startCall("video")}
-                style={{
-                  background: "rgba(255, 255, 255, 0.08)",
-                  border: "1px solid var(--rada-border)",
-                  borderRadius: "50%",
-                  width: "36px",
-                  height: "36px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "16px",
-                  cursor: "pointer",
-                }}
-                aria-label="Start Video Call"
-                title="Video Call"
-              >
-                📹
-              </button>
-              <button
-                className={styles.safetyBtn}
-                onClick={() => setShowSafetyMenu(!showSafetyMenu)}
-                aria-label="Safety menu"
-              >
-                ⋮
-              </button>
-              {showSafetyMenu && (
-                <div className={styles.safetyDropdown}>
-                  <button onClick={handleBlockActiveUser} className={styles.blockBtn}>
-                    Block {activeMatch.matchedWith.fullName.split(" ")[0]}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsReportOpen(true);
-                      setShowSafetyMenu(false);
-                    }}
-                    className={styles.reportBtn}
-                  >
-                    Report &amp; Block
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+                const isMe = msg.senderId === "user-me" || (dbUserId ? msg.senderId === dbUserId : false);
+                const timeStr = typeof msg.createdAt === "string" && msg.createdAt.length > 20
+                  ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                  : msg.createdAt;
 
-          {/* 48-Hour Momentum Strip */}
-          <div className={styles.momentumStrip}>
-            <span>⚡ <strong>{activeMatch.momentumHoursRemaining} hours left</strong> to keep this momentum active</span>
-          </div>
-
-          {/* Message Thread */}
-          <div className={styles.messagesList}>
-            {activeMessages.map((msg) => {
-              if (msg.isSystem) {
                 return (
-                  <div key={msg.id} className={styles.systemMessage}>
-                    <span>{msg.content}</span>
-                  </div>
-                );
-              }
-
-              const isMe = msg.senderId === "user-me" || (dbUserId ? msg.senderId === dbUserId : false);
-              return (
-                <div
-                  key={msg.id}
-                  className={`${styles.messageRow} ${isMe ? styles.messageRowMe : styles.messageRowPartner}`}
-                >
-                  <div className={`${styles.bubble} ${isMe ? styles.bubbleMe : styles.bubblePartner}`}>
-                    {/* Media Attachments (Ephemeral, never stored in DB) */}
-                    {msg.type === "photo" && msg.mediaUrl && (
-                      <div style={{ marginBottom: "6px", borderRadius: "12px", overflow: "hidden" }}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <div
+                    key={msg.id}
+                    className={`${styles.messageRow} ${isMe ? styles.messageRowMe : styles.messageRowPartner}`}
+                    onTouchStart={() => handleMsgTouchStart(msg)}
+                    onTouchEnd={handleMsgTouchEnd}
+                    onMouseDown={() => handleMsgTouchStart(msg)}
+                    onMouseUp={handleMsgTouchEnd}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setSelectedDeleteMsg(msg);
+                    }}
+                    style={{ userSelect: "none", cursor: "pointer" }}
+                  >
+                    {/* Deleted Message */}
+                    {msg.content === "🚫 This message was deleted" ? (
+                      <div className={`${styles.bubble} ${isMe ? styles.bubbleMe : styles.bubblePartner}`} style={{ opacity: 0.7 }}>
+                        <span className={styles.deletedMessageText}>
+                          🚫 This message was deleted
+                        </span>
+                        <span className={styles.msgTime} style={{ marginTop: "4px", display: "block" }}>{timeStr}</span>
+                      </div>
+                    ) : msg.type === "photo" && msg.mediaUrl ? (
+                      /* Edge-to-Edge Photo Bubble (NO redundant '📷 Photo' text) */
+                      <div className={styles.photoBubbleContainer} style={{ border: isMe ? "1.5px solid #00A884" : "1.5px solid rgba(255,255,255,0.15)" }}>
                         <img
                           src={msg.mediaUrl}
                           alt="Photo attachment"
-                          style={{ maxWidth: "240px", maxHeight: "240px", width: "100%", objectFit: "cover", display: "block", borderRadius: "10px" }}
+                          className={styles.photoBubbleImg}
                         />
+                        <div className={styles.floatingTimestamp}>
+                          <span>{timeStr}</span>
+                          {isMe && <span style={{ color: "#53BDEB" }}>✓✓</span>}
+                        </div>
+                      </div>
+                    ) : (
+                      /* Text / Audio / Video Bubble */
+                      <div className={`${styles.bubble} ${isMe ? styles.bubbleMe : styles.bubblePartner}`}>
+                        {msg.type === "video" && msg.mediaUrl && (
+                          <div style={{ marginBottom: "6px", borderRadius: "10px", overflow: "hidden", maxWidth: "260px" }}>
+                            <video
+                              src={msg.mediaUrl}
+                              controls
+                              playsInline
+                              style={{ width: "100%", maxHeight: "240px", borderRadius: "10px", display: "block", background: "#000" }}
+                            />
+                          </div>
+                        )}
+                        {msg.type === "voice" && msg.mediaUrl && (
+                          <div style={{ marginBottom: "4px", minWidth: "190px", maxWidth: "240px" }}>
+                            <audio src={msg.mediaUrl} controls style={{ width: "100%", height: "36px" }} />
+                          </div>
+                        )}
+                        {msg.content && <p className={styles.msgText}>{msg.content}</p>}
+                        <span className={styles.msgTime} style={{ display: "flex", alignItems: "center", gap: "4px", justifyContent: "flex-end", marginTop: "2px" }}>
+                          {timeStr}
+                          {isMe && <span style={{ color: "#53BDEB", fontSize: "11px" }}>✓✓</span>}
+                        </span>
                       </div>
                     )}
-                    {msg.type === "video" && msg.mediaUrl && (
-                      <div style={{ marginBottom: "6px", borderRadius: "12px", overflow: "hidden", maxWidth: "240px" }}>
-                        <video
-                          src={msg.mediaUrl}
-                          controls
-                          playsInline
-                          style={{ width: "100%", maxHeight: "240px", borderRadius: "10px", display: "block", background: "#000" }}
-                        />
-                      </div>
-                    )}
-                    {msg.type === "voice" && msg.mediaUrl && (
-                      <div style={{ marginBottom: "6px", minWidth: "180px", maxWidth: "240px" }}>
-                        <audio src={msg.mediaUrl} controls style={{ width: "100%", height: "36px" }} />
-                      </div>
-                    )}
-                    <p className={styles.msgText}>{msg.content}</p>
-                    <span className={styles.msgTime}>
-                      {typeof msg.createdAt === "string" && msg.createdAt.length > 20
-                        ? new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                        : msg.createdAt}
-                    </span>
                   </div>
-                </div>
-              );
-            })}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Icebreaker Starter Chips */}
-          <div className={styles.icebreakers}>
-            <button
-              className={styles.chip}
-              onClick={() => handleSendPromptChip("What's your favorite coffee spot in Nairobi?")}
-            >
-              ☕ Coffee spot debate?
-            </button>
-            <button
-              className={styles.chip}
-              onClick={() => handleSendPromptChip("What made you choose this intention on Rada?")}
-            >
-              🎯 Why this intention?
-            </button>
-            <button
-              className={styles.chip}
-              onClick={() => handleSendPromptChip("Saturday Karura run or Sunday slow brunch?")}
-            >
-              🌳 Saturday vs Sunday vibe?
-            </button>
-          </div>
-
-          {/* Coin Chat Economy Banner or Input Bar */}
-          {chatGate.requiresUnlock ? (
-            <div style={{
-              margin: "12px 14px", padding: "18px 16px", borderRadius: "18px",
-              background: "var(--rada-gold-subtle)",
-              border: "1px solid var(--rada-border-teal)",
-              textAlign: "center", boxShadow: "var(--rada-shadow-md)",
-            }}>
-              <div style={{ fontSize: "24px", marginBottom: "4px" }}>🔒 🪙</div>
-              <h4 style={{ fontSize: "15px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 4px" }}>
-                5 Free Messages Used
-              </h4>
-              <p style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", margin: "0 0 14px", lineHeight: 1.4 }}>
-                To keep conversation quality high and prevent spam, unlock unlimited chat with {activeMatch.matchedWith.fullName.split(" ")[0]} for <strong>10 Coins</strong>.
-              </p>
-              <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (coins < 10) {
-                      openCoinModal();
-                      showToast("You need 10 coins. Top up now to continue chatting!", "neutral");
-                      return;
-                    }
-                    const res = await unlockConversationWithCoins(activeConvId!);
-                    if (res.success) {
-                      showToast("✦ Chat Unlocked! You now have unlimited messaging.", "success");
-                    } else {
-                      showToast(res.error || "Unlock failed", "coral");
-                    }
-                  }}
-                  style={{
-                    padding: "11px 18px", borderRadius: "12px", border: "none",
-                    background: "var(--rada-gold-gradient)",
-                    color: "#0A0A0C", fontWeight: 800, fontSize: "13px", cursor: "pointer",
-                    boxShadow: "0 4px 16px var(--rada-gold-subtle)",
-                  }}
-                >
-                  Unlock Unlimited Chat (10 Coins) ✦
-                </button>
-                <button
-                  type="button"
-                  onClick={openCoinModal}
-                  style={{
-                    padding: "11px 14px", borderRadius: "12px",
-                    background: "var(--rada-surface-raised)", border: "1px solid var(--rada-border)",
-                    color: "var(--rada-pearl)", fontWeight: 700, fontSize: "12px", cursor: "pointer",
-                  }}
-                >
-                  Get Coins
-                </button>
-              </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
             </div>
-          ) : (
-            <>
-              {chatGate.remainingFree < 5 && (
-                <div style={{
-                  padding: "4px 16px", margin: "0 8px 6px",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  fontSize: "11px", color: "#D4AF37",
-                  background: "rgba(212,175,55,0.08)", borderRadius: "8px",
-                  border: "1px solid rgba(212,175,55,0.2)",
-                }}>
-                  <span>💬 {chatGate.remainingFree} of 5 free messages remaining</span>
+
+            {/* Quick Starter Chips */}
+            <div className={styles.icebreakers}>
+              <button
+                className={styles.chip}
+                onClick={() => handleSendPromptChip("What's your favorite coffee spot in Nairobi?")}
+              >
+                ☕ Coffee spot debate?
+              </button>
+              <button
+                className={styles.chip}
+                onClick={() => handleSendPromptChip("What made you choose this intention on Rada?")}
+              >
+                🎯 Why this intention?
+              </button>
+              <button
+                className={styles.chip}
+                onClick={() => handleSendPromptChip("Saturday Karura run or Sunday slow brunch?")}
+              >
+                🌳 Saturday vs Sunday vibe?
+              </button>
+            </div>
+
+            {/* Coin Chat Economy Banner or Input Bar */}
+            {chatGate.requiresUnlock ? (
+              <div style={{
+                margin: "8px 12px", padding: "16px", borderRadius: "16px",
+                background: "rgba(212, 175, 55, 0.1)",
+                border: "1px solid rgba(212, 175, 55, 0.3)",
+                textAlign: "center",
+              }}>
+                <div style={{ fontSize: "20px", marginBottom: "4px" }}>🔒 🪙</div>
+                <h4 style={{ fontSize: "14px", fontWeight: 800, color: "#E9EDEF", margin: "0 0 4px" }}>
+                  5 Free Messages Used
+                </h4>
+                <p style={{ fontSize: "12px", color: "#8696A0", margin: "0 0 12px" }}>
+                  Unlock unlimited chat with {activeMatch.matchedWith.fullName.split(" ")[0]} for <strong>10 Coins</strong>.
+                </p>
+                <div style={{ display: "flex", gap: "8px", justifyContent: "center" }}>
                   <button
                     type="button"
                     onClick={async () => {
-                      if (coins < 10) { openCoinModal(); return; }
+                      if (coins < 10) {
+                        openCoinModal();
+                        showToast("You need 10 coins. Top up now to continue chatting!", "neutral");
+                        return;
+                      }
                       const res = await unlockConversationWithCoins(activeConvId!);
-                      if (res.success) showToast("Chat unlocked for unlimited messages! ✦", "success");
+                      if (res.success) {
+                        showToast("✦ Chat Unlocked! You now have unlimited messaging.", "success");
+                      }
                     }}
-                    style={{ color: "#D4AF37", textDecoration: "underline", fontSize: "11px", cursor: "pointer" }}
+                    style={{
+                      padding: "10px 16px", borderRadius: "12px", border: "none",
+                      background: "linear-gradient(135deg, #00A884, #25D366)",
+                      color: "#FFFFFF", fontWeight: 800, fontSize: "13px", cursor: "pointer",
+                    }}
                   >
-                    Unlock Unlimited (10 coins)
+                    Unlock Chat (10 Coins)
                   </button>
-                </div>
-              )}
-
-              {/* Input Bar */}
-              {isRecordingVoice ? (
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 14px",
-                  background: "rgba(225, 29, 72, 0.12)",
-                  border: "1px solid rgba(225, 29, 72, 0.3)",
-                  borderRadius: "24px",
-                  margin: "8px 12px 14px",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <span style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "50%",
-                      background: "#E11D48",
-                      boxShadow: "0 0 8px #E11D48",
-                    }} />
-                    <span style={{ fontSize: "13px", fontWeight: 700, color: "#FDA4AF" }}>
-                      Recording Voice Note ({voiceSeconds}s / 30s)...
-                    </span>
-                  </div>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (voiceTimerRef.current) clearInterval(voiceTimerRef.current);
-                        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
-                          mediaRecorderRef.current.stop();
-                        }
-                        setIsRecordingVoice(false);
-                      }}
-                      style={{
-                        padding: "6px 12px",
-                        background: "rgba(255,255,255,0.1)",
-                        border: "none",
-                        borderRadius: "14px",
-                        color: "var(--rada-pearl-dim)",
-                        fontSize: "12px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={stopVoiceRecording}
-                      style={{
-                        padding: "6px 14px",
-                        background: "#E11D48",
-                        border: "none",
-                        borderRadius: "14px",
-                        color: "#FFFFFF",
-                        fontWeight: 700,
-                        fontSize: "12px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      Send Note 🎙️
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <form onSubmit={handleSend} className={styles.inputBar}>
-                  <input
-                    ref={chatMediaInputRef}
-                    type="file"
-                    accept="image/*,video/*"
-                    style={{ display: "none" }}
-                    onChange={handleChatMediaUpload}
-                  />
                   <button
                     type="button"
-                    onClick={() => chatMediaInputRef.current?.click()}
+                    onClick={openCoinModal}
                     style={{
-                      background: "rgba(255, 255, 255, 0.08)",
-                      border: "1px solid var(--rada-border)",
-                      borderRadius: "50%",
-                      width: "40px",
-                      height: "40px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "18px",
-                      cursor: "pointer",
-                      flexShrink: 0,
+                      padding: "10px 14px", borderRadius: "12px",
+                      background: "#2A3942", border: "1px solid rgba(255,255,255,0.1)",
+                      color: "#E9EDEF", fontWeight: 700, fontSize: "12px", cursor: "pointer",
                     }}
-                    title="Send photo or video (max 30s)"
-                    aria-label="Send photo or video"
                   >
-                    📷
+                    Get Coins
                   </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Hidden File Inputs: Camera & Gallery */}
+                <input
+                  ref={chatCameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  style={{ display: "none" }}
+                  onChange={handleChatMediaUpload}
+                />
+                <input
+                  ref={chatMediaInputRef}
+                  type="file"
+                  accept="image/*,video/*"
+                  style={{ display: "none" }}
+                  onChange={handleChatMediaUpload}
+                />
 
-                  <input
-                    type="text"
-                    placeholder={`Message ${activeMatch.matchedWith.fullName.split(" ")[0]}...`}
-                    value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
-                    className={styles.textInput}
-                    disabled={isSending}
-                  />
+                {/* WhatsApp-Style Input Bar (Image 4) */}
+                {isRecordingVoice ? (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "8px 14px",
+                    background: "rgba(225, 29, 72, 0.15)",
+                    borderTop: "1px solid rgba(225, 29, 72, 0.3)",
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#E11D48", boxShadow: "0 0 8px #E11D48" }} />
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#FDA4AF" }}>
+                        Recording voice note ({voiceSeconds}s / 30s)...
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", gap: "8px" }}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (voiceTimerRef.current) clearInterval(voiceTimerRef.current);
+                          if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+                            mediaRecorderRef.current.stop();
+                          }
+                          setIsRecordingVoice(false);
+                        }}
+                        style={{ padding: "6px 12px", background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "14px", color: "#8696A0", fontSize: "12px", cursor: "pointer" }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        onClick={stopVoiceRecording}
+                        style={{ padding: "6px 14px", background: "#00A884", border: "none", borderRadius: "14px", color: "#FFFFFF", fontWeight: 700, fontSize: "12px", cursor: "pointer" }}
+                      >
+                        Send Note 🎙️
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSend} className={styles.waInputBar}>
+                    {/* Dark Capsule: Camera + Paperclip + Input + Emoji */}
+                    <div className={styles.waCapsule}>
+                      {/* Direct Hardware Camera Icon */}
+                      <button
+                        type="button"
+                        className={styles.waIconBtn}
+                        onClick={() => chatCameraInputRef.current?.click()}
+                        title="Take photo with camera"
+                        aria-label="Take photo with camera"
+                      >
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                          <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/>
+                          <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                        </svg>
+                      </button>
+
+                      {/* Gallery Attachment Paperclip */}
+                      <button
+                        type="button"
+                        className={styles.waIconBtn}
+                        onClick={() => chatMediaInputRef.current?.click()}
+                        title="Attach photo or video"
+                        aria-label="Attach photo or video"
+                      >
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                          <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5a2.5 2.5 0 0 1 5 0v10.5c0 .83-.67 1.5-1.5 1.5s-1.5-.67-1.5-1.5V6H9v9.5a3 3 0 0 0 6 0V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
+                        </svg>
+                      </button>
+
+                      {/* Text Input */}
+                      <input
+                        type="text"
+                        placeholder="Message"
+                        value={inputText}
+                        onChange={(e) => setInputText(e.target.value)}
+                        className={styles.waInput}
+                        disabled={isSending}
+                      />
+
+                      {/* Emoji Icon */}
+                      <button
+                        type="button"
+                        className={styles.waIconBtn}
+                        onClick={() => setInputText((prev) => prev + " ✦ ")}
+                        title="Add emoji"
+                        aria-label="Add emoji"
+                      >
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                          <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                        </svg>
+                      </button>
+                    </div>
+
+                    {/* Circular Floating Action Button (Mic when empty, Send when typed) */}
+                    {inputText.trim() ? (
+                      <button
+                        type="submit"
+                        className={styles.waFab}
+                        disabled={isSending}
+                        title="Send message"
+                        aria-label="Send message"
+                      >
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className={styles.waFab}
+                        onClick={startVoiceRecording}
+                        title="Record voice note"
+                        aria-label="Record voice note"
+                      >
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                        </svg>
+                      </button>
+                    )}
+                  </form>
+                )}
+              </>
+            )}
+
+            {/* Long-Press Message Deletion Bottom Sheet */}
+            {selectedDeleteMsg && (
+              <div className={styles.deleteModalOverlay} onClick={() => setSelectedDeleteMsg(null)}>
+                <div className={styles.deleteModalSheet} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.deleteModalTitle}>Delete message?</div>
+
+                  {/* If user is the sender, show 'Delete for everyone' */}
+                  {(selectedDeleteMsg.senderId === "user-me" || (dbUserId && selectedDeleteMsg.senderId === dbUserId)) && (
+                    <button
+                      type="button"
+                      className={`${styles.deleteOptionBtn} ${styles.deleteEveryoneBtn}`}
+                      onClick={() => handleDeleteMessage(selectedDeleteMsg, "everyone")}
+                    >
+                      <span>🗑️</span> Delete for everyone
+                    </button>
+                  )}
 
                   <button
                     type="button"
-                    onClick={startVoiceRecording}
-                    style={{
-                      background: "rgba(255, 255, 255, 0.08)",
-                      border: "1px solid var(--rada-border)",
-                      borderRadius: "50%",
-                      width: "40px",
-                      height: "40px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "18px",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                    }}
-                    title="Record voice note (max 30s)"
-                    aria-label="Record voice note"
+                    className={`${styles.deleteOptionBtn} ${styles.deleteMeBtn}`}
+                    onClick={() => handleDeleteMessage(selectedDeleteMsg, "me")}
                   >
-                    🎙️
+                    <span>🗑️</span> Delete for me
                   </button>
 
-                  <Button
-                    variant="primary"
-                    type="submit"
-                    disabled={!inputText.trim() || isSending}
-                    className={styles.sendButton}
+                  <button
+                    type="button"
+                    className={`${styles.deleteOptionBtn} ${styles.deleteCancelBtn}`}
+                    onClick={() => setSelectedDeleteMsg(null)}
                   >
-                    {isSending ? "..." : "Send"}
-                  </Button>
-                </form>
-              )}
-            </>
-          )}
-        </section>
-      )}
-      </>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        </>
       )}
 
       {/* Safety Report Modal */}

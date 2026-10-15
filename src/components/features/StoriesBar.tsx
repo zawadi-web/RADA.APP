@@ -184,8 +184,8 @@ export function StoriesBar() {
       <input
         ref={cameraInputRef}
         type="file"
-        accept="image/*,video/*"
-        capture="user"
+        accept="image/*"
+        capture="environment"
         style={{ display: "none" }}
         onChange={handleMediaSelect}
       />
@@ -398,10 +398,10 @@ export function StoriesBar() {
           >
             <div style={{ textAlign: "center", marginBottom: "8px" }}>
               <h3 style={{ margin: "0 0 6px", fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>
-                Add to 24h Story
+                Add to Story
               </h3>
               <p style={{ margin: 0, fontSize: "12.5px", color: "var(--rada-pearl-muted)" }}>
-                Allow Rada access to capture a live moment or select photos and short clips (max 30s) from your device gallery.
+                Snap a live moment with your camera or select from your gallery.
               </p>
             </div>
 
@@ -504,10 +504,7 @@ export function StoriesBar() {
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "18px" }}>{isNewMediaVideo ? "🎥" : "📸"}</span>
-                <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 800 }}>New 24h Story</h3>
-              </div>
+              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 800 }}>Add to Story</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -558,23 +555,6 @@ export function StoriesBar() {
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
               )}
-              <span
-                style={{
-                  position: "absolute",
-                  top: "10px",
-                  left: "10px",
-                  background: "rgba(0, 0, 0, 0.65)",
-                  backdropFilter: "blur(6px)",
-                  color: "var(--rada-gold)",
-                  fontSize: "11px",
-                  fontWeight: 700,
-                  padding: "4px 8px",
-                  borderRadius: "10px",
-                  border: "1px solid rgba(245, 207, 104, 0.3)",
-                }}
-              >
-                ⏳ Expires in 24 Hours
-              </span>
             </div>
 
             {/* Caption Input */}
@@ -613,7 +593,7 @@ export function StoriesBar() {
                 boxShadow: "0 6px 20px rgba(245, 207, 104, 0.45)",
               }}
             >
-              {isPosting ? "Publishing Story..." : "Share to Stories (24h) ✦"}
+              {isPosting ? "Posting Story..." : "Add to Story ✦"}
             </button>
           </div>
         </div>
