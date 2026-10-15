@@ -17,7 +17,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   onSuccess,
   fullWidth = true,
 }) => {
-  const { signInWithGoogle, authUser, signOut, setDbUserId } = useRada();
+  const { signInWithGoogle, authUser, signOut, setDbUserId, updateProfile } = useRada();
   const { showToast } = useToast();
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [customName, setCustomName] = useState("");
@@ -61,9 +61,31 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
 
       // Existing completed user
       signInWithGoogle({ name, email, avatarUrl });
-      try {
-        localStorage.setItem("rada_onboarded", "1");
-      } catch { /* ignore */ }
+      if (data.user) {
+        const resolvedUser = {
+          id: data.user.id,
+          fullName: data.user.fullName || name,
+          email: data.user.email || email,
+          gender: data.user.gender,
+          interestedIn: data.user.interestedInGenders || (data.user.gender === "MAN" ? ["WOMAN"] : ["MAN"]),
+          intent: data.user.intent,
+          county: data.user.county,
+          area: data.user.area,
+          completionScore: data.user.completionScore || 70,
+          verified: true,
+        };
+        updateProfile(resolvedUser as any);
+        try {
+          const stored = localStorage.getItem("rada_app_real_production_v3");
+          const parsed = stored ? JSON.parse(stored) : {};
+          localStorage.setItem("rada_app_real_production_v3", JSON.stringify({
+            ...parsed,
+            dbUserId: data.user.id,
+            currentUser: { ...(parsed.currentUser || {}), ...resolvedUser },
+          }));
+          localStorage.setItem("rada_onboarded", "1");
+        } catch { /* ignore */ }
+      }
 
       showToast(`Welcome back ${name}! ✦`, "coral");
       if (onSuccess) onSuccess();
@@ -76,7 +98,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
     } finally {
       setIsSubmitting(false);
     }
-  }, [signInWithGoogle, onSuccess, showToast, setDbUserId]);
+  }, [signInWithGoogle, onSuccess, showToast, setDbUserId, updateProfile]);
 
   const handleSaveOnboarding = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +106,7 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
     setIsSavingProfile(true);
     try {
       const bio = promptHobbies.length > 0 ? `Passions: ${promptHobbies.join(", ")}` : "";
-      await fetch("/api/profile/save", {
+      const saveRes = await fetch("/api/profile/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -100,6 +122,27 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
         }),
       });
 
+      const savedData = await saveRes.json();
+      const realUserId = savedData.user?.id || pendingGoogleUser.id;
+      if (realUserId) {
+        setDbUserId(realUserId);
+      }
+
+      const updatedUser = {
+        id: realUserId,
+        fullName: pendingGoogleUser.name,
+        email: pendingGoogleUser.email,
+        age: Number(promptAge) || 24,
+        gender: promptGender,
+        interestedIn: [promptInterest],
+        intent: promptIntent,
+        bio,
+        photos: pendingGoogleUser.avatarUrl ? [{ id: "p0", url: pendingGoogleUser.avatarUrl, isPrimary: true, order: 0 }] : [],
+        verified: true,
+        completionScore: 75,
+      };
+
+      updateProfile(updatedUser as any);
       signInWithGoogle({
         name: pendingGoogleUser.name,
         email: pendingGoogleUser.email,
@@ -107,6 +150,13 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
       });
 
       try {
+        const stored = localStorage.getItem("rada_app_real_production_v3");
+        const parsed = stored ? JSON.parse(stored) : {};
+        localStorage.setItem("rada_app_real_production_v3", JSON.stringify({
+          ...parsed,
+          dbUserId: realUserId,
+          currentUser: { ...(parsed.currentUser || {}), ...updatedUser },
+        }));
         localStorage.setItem("rada_onboarded", "1");
       } catch { /* ignore */ }
 

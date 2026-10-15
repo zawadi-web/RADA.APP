@@ -573,13 +573,16 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
 
 // ── 5. PWA DOWNLOAD / INSTALL PROMPT ─────────────────────────────────────────
 function PwaInstallPromptInner() {
+  const [showBanner, setShowBanner] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [showModal, setShowModal] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [iosStepShow, setIosStepShow] = useState(false);
+  const [hostName, setHostName] = useState("rada.app");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    setHostName(window.location.host || "rada.app");
 
     // Check if already in standalone/PWA mode
     const standalone =
@@ -588,6 +591,13 @@ function PwaInstallPromptInner() {
     setIsStandalone(standalone);
 
     if (standalone) return; // Do not show if already running installed app
+
+    // Check if dismissed in this session
+    try {
+      if (sessionStorage.getItem("rada_install_banner_dismissed") === "1") {
+        return;
+      }
+    } catch {}
 
     // Detect iOS
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
@@ -610,19 +620,19 @@ function PwaInstallPromptInner() {
       e.preventDefault();
       setDeferredPrompt(e);
       (window as any).deferredPWAInstallPrompt = e;
-      setShowModal(true);
+      setShowBanner(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
     // Custom event to re-open from any button in the app
-    const handleOpenDownload = () => setShowModal(true);
+    const handleOpenDownload = () => setShowBanner(true);
     window.addEventListener("open-rada-download", handleOpenDownload);
 
-    // Immediately pop out the download option on site visit
+    // Pop out the download option cleanly at the top of the site
     const timer = setTimeout(() => {
-      setShowModal(true);
-    }, 400);
+      setShowBanner(true);
+    }, 700);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
@@ -632,7 +642,7 @@ function PwaInstallPromptInner() {
     };
   }, []);
 
-  if (isStandalone) return null;
+  if (isStandalone || !showBanner) return null;
 
   const handleInstallClick = async () => {
     const promptEvent = deferredPrompt || (typeof window !== "undefined" && (window as any).deferredPWAInstallPrompt);
@@ -641,7 +651,7 @@ function PwaInstallPromptInner() {
         await promptEvent.prompt();
         const choice = await promptEvent.userChoice;
         if (choice?.outcome === "accepted") {
-          setShowModal(false);
+          setShowBanner(false);
         }
       } catch (err) {
         console.error("Install prompt error:", err);
@@ -649,277 +659,158 @@ function PwaInstallPromptInner() {
       setDeferredPrompt(null);
       if (typeof window !== "undefined") (window as any).deferredPWAInstallPrompt = null;
     } else if (isIOS) {
-      // iOS has no programmatic trigger, the visual guide provides the 3 steps
+      setIosStepShow((prev) => !prev);
     } else {
-      // Graceful fallback: on browsers that already installed the PWA or need a second
-      setShowModal(false);
+      setShowBanner(false);
     }
   };
 
+  const handleDismiss = () => {
+    setShowBanner(false);
+    try {
+      sessionStorage.setItem("rada_install_banner_dismissed", "1");
+    } catch {}
+  };
+
   return (
-    <>
-      {/* Floating persistent launcher button when modal is closed */}
-      {!showModal && (
-        <button
-          onClick={() => setShowModal(true)}
-          aria-label="Download Rada App"
-          title="Download Rada App"
+    <div
+      style={{
+        position: "fixed",
+        top: "10px",
+        left: "12px",
+        right: "12px",
+        maxWidth: "440px",
+        margin: "0 auto",
+        zIndex: 99999,
+        animation: "slideDownInstall 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
+    >
+      <div
+        style={{
+          background: "#18181B",
+          border: "1px solid rgba(255, 255, 255, 0.14)",
+          borderRadius: "18px",
+          padding: "10px 14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+          boxShadow: "0 10px 32px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.2)",
+        }}
+      >
+        {/* Left: App Icon */}
+        <div
           style={{
-            position: "fixed",
-            top: "14px",
-            right: "58px",
-            zIndex: 950,
-            height: "36px",
-            padding: "0 12px",
-            borderRadius: "18px",
-            background: "var(--rada-surface-glass)",
-            backdropFilter: "blur(14px)",
-            WebkitBackdropFilter: "blur(14px)",
-            border: "1px solid rgba(245, 207, 104, 0.4)",
-            color: "var(--rada-gold)",
-            fontSize: "12px",
-            fontWeight: 700,
-            letterSpacing: "0.02em",
+            width: "38px",
+            height: "38px",
+            borderRadius: "10px",
+            overflow: "hidden",
+            flexShrink: 0,
             display: "flex",
             alignItems: "center",
-            gap: "6px",
-            boxShadow: "var(--rada-shadow-md), 0 0 12px rgba(245, 207, 104, 0.2)",
-            cursor: "pointer",
-            transition: "all 0.25s ease",
-          }}
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          <span>Get App</span>
-        </button>
-      )}
-
-      {/* Immediate Download Modal */}
-      {showModal && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 10000,
-            background: "rgba(0, 0, 0, 0.78)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            display: "flex",
-            alignItems: "flex-end",
             justifyContent: "center",
-            padding: "0",
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowModal(false);
+            background: "#0A0A0C",
+            border: "1px solid rgba(245, 207, 104, 0.35)",
           }}
         >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icon-192.png"
+            alt="Rada"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+
+        {/* Center: Title & Domain */}
+        <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
-              width: "100%",
-              maxWidth: "460px",
-              background: "linear-gradient(180deg, #18181E 0%, #0D0D12 100%)",
-              borderTop: "1px solid rgba(245, 207, 104, 0.35)",
-              borderLeft: "1px solid rgba(245, 207, 104, 0.15)",
-              borderRight: "1px solid rgba(245, 207, 104, 0.15)",
-              borderRadius: "24px 24px 0 0",
-              boxShadow: "0 -10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(245, 207, 104, 0.15)",
-              padding: "24px 22px 32px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              position: "relative",
-              color: "var(--rada-pearl)",
+              fontSize: "14.5px",
+              fontWeight: 700,
+              color: "#FFFFFF",
+              letterSpacing: "-0.01em",
+              lineHeight: 1.25,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            {/* Grab handle */}
-            <div
-              style={{
-                width: "42px",
-                height: "4px",
-                borderRadius: "2px",
-                background: "rgba(255, 255, 255, 0.2)",
-                marginBottom: "18px",
-              }}
-            />
-
-            {/* Close button */}
-            <button
-              onClick={() => setShowModal(false)}
-              aria-label="Close download prompt"
-              style={{
-                position: "absolute",
-                top: "18px",
-                right: "18px",
-                width: "32px",
-                height: "32px",
-                borderRadius: "50%",
-                background: "rgba(255, 255, 255, 0.08)",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                color: "var(--rada-pearl-muted)",
-                fontSize: "14px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
-
-            {/* 3D Gold App Icon */}
-            <div
-              style={{
-                width: "72px",
-                height: "72px",
-                borderRadius: "18px",
-                padding: "3px",
-                background: "linear-gradient(135deg, #FFF6D6 0%, #F5CF68 40%, #D4AF37 75%, #9B700F 100%)",
-                boxShadow: "0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px rgba(245, 207, 104, 0.35)",
-                marginBottom: "14px",
-                overflow: "hidden",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <img
-                src="/icon-192.png"
-                alt="Rada Icon"
-                style={{ width: "100%", height: "100%", borderRadius: "15px", objectFit: "cover" }}
-              />
-            </div>
-
-            {/* App Title & Badge */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-              <h3 style={{ fontSize: "20px", fontWeight: 800, color: "#FFFFFF", margin: 0, letterSpacing: "-0.01em" }}>
-                Rada App
-              </h3>
-              <span
-                style={{
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "#0A0A0E",
-                  background: "linear-gradient(135deg, #F5CF68, #D4AF37)",
-                  padding: "2px 7px",
-                  borderRadius: "10px",
-                }}
-              >
-                Official
-              </span>
-            </div>
-
-            <p style={{ fontSize: "13px", color: "var(--rada-pearl-muted)", textAlign: "center", margin: "0 0 18px", maxWidth: "340px", lineHeight: 1.45 }}>
-              Install directly to your device for instant matches, push alerts, and faster full-screen intentional dating.
-            </p>
-
-            {/* Feature highlights */}
-            <div
-              style={{
-                width: "100%",
-                background: "rgba(255, 255, 255, 0.04)",
-                border: "1px solid rgba(255, 255, 255, 0.07)",
-                borderRadius: "14px",
-                padding: "12px 14px",
-                marginBottom: "20px",
-                display: "flex",
-                flexDirection: "column",
-                gap: "8px",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "var(--rada-pearl)" }}>
-                <span style={{ color: "var(--rada-gold)", fontSize: "14px" }}>✦</span>
-                <span><strong>Direct Install</strong> — Zero app store downloads needed</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "var(--rada-pearl)" }}>
-                <span style={{ color: "var(--rada-gold)", fontSize: "14px" }}>✦</span>
-                <span><strong>Full Screen</strong> — Fast, distraction-free browsing</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "var(--rada-pearl)" }}>
-                <span style={{ color: "var(--rada-gold)", fontSize: "14px" }}>✦</span>
-                <span><strong>Instant Notifications</strong> — Never miss someone vibing with you</span>
-              </div>
-            </div>
-
-            {/* iOS Guidance */}
-            {isIOS ? (
-              <div
-                style={{
-                  width: "100%",
-                  background: "rgba(245, 207, 104, 0.08)",
-                  border: "1px dashed rgba(245, 207, 104, 0.4)",
-                  borderRadius: "14px",
-                  padding: "14px",
-                  marginBottom: "16px",
-                  textAlign: "left",
-                }}
-              >
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--rada-gold)", marginBottom: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span>📲</span> Easy 3-Step iPhone / iPad Setup:
-                </div>
-                <ol style={{ margin: 0, paddingLeft: "18px", fontSize: "12px", color: "var(--rada-pearl)", lineHeight: 1.6 }}>
-                  <li>Tap the <strong>Share</strong> button <span style={{ color: "var(--rada-gold)", fontWeight: 700 }}>[ ⎕↑ ]</span> at bottom of Safari</li>
-                  <li>Scroll down and tap <strong>&quot;Add to Home Screen&quot;</strong></li>
-                  <li>Tap <strong>&quot;Add&quot;</strong> in top-right corner</li>
-                </ol>
-              </div>
-            ) : null}
-
-            {/* Action button */}
-            <button
-              onClick={handleInstallClick}
-              style={{
-                width: "100%",
-                padding: "14px 20px",
-                borderRadius: "14px",
-                background: "linear-gradient(135deg, #FFF6D6 0%, #F5CF68 35%, #D4AF37 70%, #9B700F 100%)",
-                color: "#0A0A0E",
-                fontSize: "15px",
-                fontWeight: 800,
-                border: "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                boxShadow: "0 6px 20px rgba(245, 207, 104, 0.45)",
-                transition: "transform 0.15s ease",
-              }}
-            >
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              <span>{isIOS ? "Got It — Follow Steps Above" : "Install / Download App Now"}</span>
-            </button>
-
-            {/* Dismiss link */}
-            <button
-              onClick={() => setShowModal(false)}
-              style={{
-                background: "none",
-                border: "none",
-                color: "var(--rada-pearl-dim)",
-                fontSize: "12px",
-                fontWeight: 600,
-                cursor: "pointer",
-                marginTop: "14px",
-                padding: "4px",
-              }}
-            >
-              Continue in Browser
-            </button>
+            Install Rada
+          </div>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#8E8E93",
+              lineHeight: 1.3,
+              marginTop: "2px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {hostName}
           </div>
         </div>
+
+        {/* Right: Install Action & Dismiss */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <button
+            onClick={handleInstallClick}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#F5CF68",
+              fontSize: "15px",
+              fontWeight: 700,
+              cursor: "pointer",
+              padding: "6px 8px",
+              borderRadius: "8px",
+              transition: "opacity 0.15s ease",
+            }}
+          >
+            Install
+          </button>
+          <button
+            onClick={handleDismiss}
+            aria-label="Dismiss banner"
+            style={{
+              background: "rgba(255, 255, 255, 0.08)",
+              border: "none",
+              color: "#A1A1AA",
+              fontSize: "12px",
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      {/* iOS Safari Tip */}
+      {iosStepShow && (
+        <div
+          style={{
+            marginTop: "6px",
+            background: "rgba(24, 24, 28, 0.98)",
+            border: "1px solid rgba(245, 207, 104, 0.3)",
+            borderRadius: "14px",
+            padding: "10px 14px",
+            fontSize: "12px",
+            color: "#E4E4E7",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+          }}
+        >
+          <span style={{ color: "#F5CF68", fontWeight: 700 }}>To install on iPhone: </span>
+          Tap Safari Share button <span style={{ color: "#F5CF68", fontWeight: 700 }}>[ ⎕↑ ]</span> and select <strong>&quot;Add to Home Screen&quot;</strong>.
+        </div>
       )}
-    </>
+    </div>
   );
 }
 

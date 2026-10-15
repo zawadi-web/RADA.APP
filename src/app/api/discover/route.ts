@@ -18,6 +18,14 @@ import { calculateDistanceKm, normalizeCounty } from "@/lib/kenya-locations";
  *
  * Intent ranking: MARRIAGE > LONG_TERM > SERIOUS_RELATIONSHIP > INTENTIONAL_DATING > EXPLORING
  */
+function normalizeTargetGender(raw: string): "MAN" | "WOMAN" | "NON_BINARY" | null {
+  const s = raw.trim().toUpperCase();
+  if (s === "WOMAN" || s === "WOMEN" || s === "FEMALE" || s === "FEMALES" || s === "LADY" || s === "LADIES") return "WOMAN";
+  if (s === "MAN" || s === "MEN" || s === "MALE" || s === "MALES" || s === "GUY" || s === "GUYS") return "MAN";
+  if (s === "NON_BINARY" || s === "NONBINARY" || s === "NON-BINARY") return "NON_BINARY";
+  return null;
+}
+
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const userId     = searchParams.get("userId") || "";
@@ -38,23 +46,29 @@ export async function GET(req: Request) {
 
   try {
     // ── Step 1: Resolve requesting user info ─────────────────────────────────
-    let requestingUserGender: string | null = null;
+    let requestingUserGender: "MAN" | "WOMAN" | "NON_BINARY" | null = null;
     let myCounty: string | null = county || null;
     let myArea: string | null = area || null;
     let myLat: number | null = null;
     let myLng: number | null = null;
+    let me: { id: string; fullName: string; email: string | null; gender: "MAN" | "WOMAN" | "NON_BINARY"; interestedInGenders: string[]; county: string; area: string; latitude: number | null; longitude: number | null } | null = null;
 
     if (userId) {
-      const me = await prisma.user.findUnique({
+      me = await prisma.user.findUnique({
         where: { id: userId },
         select: {
+          id: true,
+          fullName: true,
+          email: true,
           gender: true,
+          interestedInGenders: true,
           county: true,
           area: true,
           latitude: true,
           longitude: true,
         },
       }).catch(() => null);
+
       if (me) {
         requestingUserGender = me.gender;
         myCounty = myCounty || me.county;
@@ -87,20 +101,32 @@ export async function GET(req: Request) {
       });
     }
 
-    // ── Step 3: Gender filter (what the requester wants to see) ────────────
-    let genderFilter: object = {};
-    if (interestedIn && interestedIn !== "all" && !interestedIn.includes("BOTH")) {
-      const targetGenders = interestedIn
+    // ── Step 3: Determine strict gender filter ───────────────────────────────
+    let targetGenders: ("MAN" | "WOMAN" | "NON_BINARY")[] = [];
+
+    if (interestedIn && interestedIn !== "all" && !interestedIn.toUpperCase().includes("BOTH")) {
+      targetGenders = interestedIn
         .split(",")
-        .filter((g) => ["MAN", "WOMAN", "NON_BINARY"].includes(g)) as ("MAN" | "WOMAN" | "NON_BINARY")[];
-      if (targetGenders.length > 0) {
-        genderFilter = { gender: { in: targetGenders } };
-      }
+        .map(normalizeTargetGender)
+        .filter((g): g is "MAN" | "WOMAN" | "NON_BINARY" => g !== null);
+    } else if (me?.interestedInGenders && me.interestedInGenders.length > 0 && !me.interestedInGenders.some((g) => g.toUpperCase() === "BOTH" || g.toUpperCase() === "ALL")) {
+      targetGenders = me.interestedInGenders
+        .map(normalizeTargetGender)
+        .filter((g): g is "MAN" | "WOMAN" | "NON_BINARY" => g !== null);
+    }
+
+    // Default heterosexual fallback if preferences are unstated
+    if (targetGenders.length === 0 && !interestedIn.toUpperCase().includes("BOTH")) {
+      if (requestingUserGender === "MAN") targetGenders = ["WOMAN"];
+      else if (requestingUserGender === "WOMAN") targetGenders = ["MAN"];
+    }
+
+    let genderFilter: object = {};
+    if (targetGenders.length > 0) {
+      genderFilter = { gender: { in: targetGenders } };
     }
 
     // ── Step 4 & 5: Fetch candidates across Kenya ────────────────────────────
-    // We over-fetch so proximity scoring brings nearby singles (e.g. Tharaka Nithi)
-    // to the top, while still giving nationwide discovery without empty decks.
     const users = await prisma.user.findMany({
       where: {
         id:              { notIn: Array.from(excludeIds) },
@@ -119,13 +145,29 @@ export async function GET(req: Request) {
       take: Math.min(limit * 2, 40),
     });
 
-    // ── Step 6: RECIPROCAL FILTER ────────────────────────────────────────────
+    // ── Step 6: RECIPROCAL & GENDER SAFEGUARD ────────────────────────────────
     const eligible = users.filter((u) => {
+      // 1. HARD SAFETY: never show user to themselves (by id, email, or full name)
+      if (userId && u.id === userId) return false;
+      if (me?.email && u.email && u.email.toLowerCase() === me.email.toLowerCase()) return false;
+      if (me?.fullName && u.fullName.trim().toLowerCase() === me.fullName.trim().toLowerCase()) return false;
+
+      // 2. HARD SAFETY: if requester wants specific gender(s), candidate MUST match!
+      if (targetGenders.length > 0 && !targetGenders.includes(u.gender as any)) {
+        return false;
+      }
+
+      // 3. RECIPROCITY: Candidate must be open to requester's gender
       if (!requestingUserGender) return true;
-      const theyWant = u.interestedInGenders ?? [];
+      const theyWant = (u.interestedInGenders ?? [])
+        .map(normalizeTargetGender)
+        .filter((g): g is "MAN" | "WOMAN" | "NON_BINARY" => g !== null);
+
+      const isBoth = (u.interestedInGenders ?? []).some((g) => g.toUpperCase() === "BOTH" || g.toUpperCase() === "ALL");
+
       return (
         theyWant.includes(requestingUserGender) ||
-        theyWant.includes("BOTH") ||
+        isBoth ||
         theyWant.length === 0
       );
     });

@@ -55,7 +55,7 @@ export async function POST(req: Request) {
         county:             "Nairobi",
         area:               "Kilimani",
         verified:           true,
-        completionScore:    40,
+        completionScore:    10, // Must complete onboarding (gte: 30) before appearing in discover decks
         photos: avatarUrl
           ? { create: { url: avatarUrl, isPrimary: true, order: 0 } }
           : undefined,

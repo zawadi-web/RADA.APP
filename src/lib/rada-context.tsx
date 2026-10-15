@@ -703,12 +703,23 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!res.ok) throw new Error("Failed to fetch discover deck");
       const data = await res.json();
       if (data.deck && Array.isArray(data.deck)) {
-        // Double-filter: exclude by DB id AND by full name (handles stale currentUser.id)
-        const clean = data.deck.filter((u: RadaUser) =>
-          u.id !== activeId &&
-          u.id !== currentUser.id &&
-          u.fullName !== currentUser.fullName
-        );
+        const allowedGenders = (currentUser.interestedIn && currentUser.interestedIn.length > 0)
+          ? currentUser.interestedIn
+          : [currentUser.gender === "MAN" ? "WOMAN" : "MAN"];
+        const allowsAll = allowedGenders.some((g) => (g as string).toUpperCase() === "BOTH" || (g as string).toUpperCase() === "ALL");
+
+        // Double-filter: exclude by DB id, local id, full name, email, and strictly enforce gender preference
+        const clean = data.deck.filter((u: RadaUser) => {
+          if (activeId && u.id === activeId) return false;
+          if (currentUser.id && u.id === currentUser.id) return false;
+          if (currentUser.fullName && u.fullName && u.fullName.trim().toLowerCase() === currentUser.fullName.trim().toLowerCase()) return false;
+          if (currentUser.email && u.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) return false;
+
+          if (!allowsAll && !allowedGenders.includes(u.gender)) {
+            return false;
+          }
+          return true;
+        });
         setDeck(clean);
       }
     } catch (err) {
