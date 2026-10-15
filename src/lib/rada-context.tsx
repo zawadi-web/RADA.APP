@@ -490,8 +490,8 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
       conversationId,
       senderId: currentUser.id,
       content: content.trim(),
-      isRead: true,
-      createdAt: "Just now",
+      isRead: false,
+      createdAt: new Date().toISOString(),
     };
 
     setConversations((prev) => ({
@@ -512,48 +512,6 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return m;
       })
     );
-
-    // Realistic simulation: Bot reply after 1.5 seconds if talking to Amina or Wanjiku
-    setTimeout(() => {
-      const match = matches.find((m) => m.conversationId === conversationId);
-      if (match) {
-        const partnerName = match.matchedWith.fullName.split(" ")[0];
-        const replies = [
-          `That makes so much sense! Love that perspective 😊`,
-          `Totally agree with you on that! Nairobi really needs more of that vibe.`,
-          `Haha true! So when are we grabbing that coffee?`,
-          `You definitely get it! Looking forward to chatting more.`,
-        ];
-        const replyText = replies[Math.floor(Math.random() * replies.length)];
-
-        const replyMsg: Message = {
-          id: `reply-${Date.now()}`,
-          conversationId,
-          senderId: match.matchedWith.id,
-          content: replyText,
-          isRead: true,
-          createdAt: "Just now",
-        };
-
-        setConversations((prev) => ({
-          ...prev,
-          [conversationId]: [...(prev[conversationId] || []), replyMsg],
-        }));
-
-        setMatches((prev) =>
-          prev.map((m) => {
-            if (m.conversationId === conversationId) {
-              return {
-                ...m,
-                lastMessage: replyMsg,
-                lastActivity: new Date().toISOString(),
-              };
-            }
-            return m;
-          })
-        );
-      }
-    }, 1500);
   };
 
   const updateUserIntent = (intent: IntentType) => {

@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { VoiceNotePlayer } from "@/components/ui/VoiceNotePlayer";
 import { PromptReactionSheet } from "@/components/features/PromptReactionSheet";
 import { StoriesBar } from "@/components/features/StoriesBar";
+import { useTheme } from "@/lib/theme-context";
 import styles from "./page.module.css";
 
 // Shared location error banner
@@ -35,7 +36,7 @@ const LocationErrorBanner = ({ error, onDismiss }: { error: string; onDismiss: (
   </div>
 );
 
-// Luxury Radar Location Toggle Button
+// Sleek Compact Radar Location Toggle
 const LocationBtn = ({
   useLocation, locationError, onToggle, isPending,
 }: {
@@ -46,56 +47,37 @@ const LocationBtn = ({
     disabled={isPending}
     title={useLocation ? "GPS Radar Active — tap to toggle nationwide mode" : "Tap to enable precise GPS Radar for nearby singles"}
     style={{
-      background: useLocation
-        ? "var(--rada-surface-raised)"
-        : "var(--rada-surface)",
-      border: `1px solid ${useLocation ? "var(--rada-gold)" : locationError ? "rgba(239, 68, 68, 0.4)" : "var(--rada-border)"}`,
+      background: useLocation ? "rgba(16, 185, 129, 0.12)" : "var(--rada-surface-raised)",
+      border: `1px solid ${useLocation ? "#10B981" : locationError ? "rgba(239, 68, 68, 0.4)" : "var(--rada-border)"}`,
       borderRadius: "9999px",
-      padding: "6px 14px",
-      fontSize: "12px",
+      padding: "5px 11px",
+      fontSize: "11.5px",
       fontWeight: 700,
       cursor: isPending ? "wait" : "pointer",
-      display: "flex",
+      display: "inline-flex",
       alignItems: "center",
-      gap: "7px",
-      transition: "all 0.2s cubic-bezier(0.25, 1, 0.5, 1)",
-      boxShadow: useLocation ? "0 2px 10px rgba(245, 207, 104, 0.2)" : "var(--rada-shadow-sm)",
-      color: "var(--rada-pearl)",
+      gap: "6px",
+      color: useLocation ? "#10B981" : "var(--rada-pearl)",
+      transition: "all 0.2s ease",
+      boxShadow: useLocation ? "0 2px 8px rgba(16, 185, 129, 0.2)" : "none",
     }}
   >
-    {/* SVG Radar Instrument Icon */}
-    <span style={{ display: "flex", alignItems: "center", position: "relative" }}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={useLocation ? "var(--rada-gold)" : "var(--rada-pearl-muted)"} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" />
-        <circle cx="12" cy="12" r="6" />
-        <circle cx="12" cy="12" r="2" fill={useLocation ? "var(--rada-gold)" : "none"} />
-        <line x1="12" y1="2" x2="12" y2="6" />
-        <line x1="12" y1="18" x2="12" y2="22" />
-        <line x1="2" y1="12" x2="6" y2="12" />
-        <line x1="18" y1="12" x2="22" y2="12" />
-      </svg>
-      {/* Live Beacon Pulse */}
-      <span
-        style={{
-          position: "absolute",
-          top: "-1px",
-          right: "-1px",
-          width: "5px",
-          height: "5px",
-          borderRadius: "50%",
-          background: useLocation ? "#34D399" : isPending ? "var(--rada-gold)" : "transparent",
-          boxShadow: useLocation ? "0 0 6px #34D399" : "none",
-        }}
-      />
-    </span>
-    <span style={{ letterSpacing: "0.02em" }}>
-      {isPending ? "Locating..." : useLocation ? "Radar Active" : "Radar: Kenya"}
-    </span>
+    <span
+      style={{
+        width: "6px",
+        height: "6px",
+        borderRadius: "50%",
+        background: useLocation ? "#10B981" : isPending ? "var(--rada-gold)" : "#8696A0",
+        boxShadow: useLocation ? "0 0 6px #10B981" : "none",
+      }}
+    />
+    <span>{isPending ? "Locating..." : useLocation ? "Radar" : "Kenya"}</span>
   </button>
 );
 
 export default function DiscoverPage() {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const {
     currentCard,
     passCurrentCard,
@@ -239,8 +221,34 @@ export default function DiscoverPage() {
               onToggle={handleLocationToggle}
               isPending={isPendingLocation}
             />
-            <button className={styles.vipPill} onClick={openVipModal}>
-              {currentUser.isVip ? "✦ VIP Active" : "Upgrade VIP"}
+            <button
+              className={styles.vipPill}
+              onClick={openVipModal}
+              style={{ padding: "5px 11px", fontSize: "11.5px" }}
+              title="Upgrade VIP"
+            >
+              {currentUser.isVip ? "✦ VIP" : "✦ VIP"}
+            </button>
+            <button
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+              style={{
+                width: "30px",
+                height: "30px",
+                borderRadius: "50%",
+                background: "var(--rada-surface-raised)",
+                border: "1px solid var(--rada-border)",
+                color: "var(--rada-gold)",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "13px",
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              {theme === "dark" ? "☀️" : "🌙"}
             </button>
           </div>
         </header>
@@ -281,8 +289,34 @@ export default function DiscoverPage() {
             onToggle={handleLocationToggle}
             isPending={isPendingLocation}
           />
-          <button className={styles.vipPill} onClick={openVipModal}>
-            {currentUser.isVip ? "✦ VIP Active" : "Upgrade VIP"}
+          <button
+            className={styles.vipPill}
+            onClick={openVipModal}
+            style={{ padding: "5px 11px", fontSize: "11.5px" }}
+            title="Upgrade VIP"
+          >
+            {currentUser.isVip ? "✦ VIP" : "✦ VIP"}
+          </button>
+          <button
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            style={{
+              width: "30px",
+              height: "30px",
+              borderRadius: "50%",
+              background: "var(--rada-surface-raised)",
+              border: "1px solid var(--rada-border)",
+              color: "var(--rada-gold)",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "13px",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            {theme === "dark" ? "☀️" : "🌙"}
           </button>
         </div>
       </header>

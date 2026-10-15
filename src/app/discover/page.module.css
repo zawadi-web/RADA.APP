@@ -13,6 +13,12 @@
   padding: 4px 0 14px;
 }
 
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .brandRow {
   display: flex;
   align-items: center;

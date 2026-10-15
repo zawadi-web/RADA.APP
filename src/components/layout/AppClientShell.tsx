@@ -24,6 +24,9 @@ function FloatingThemeToggle() {
   const pathname = usePathname();
   const { theme, toggleTheme } = useTheme();
 
+  // Avoid overlapping header actions on discover or full screen chat
+  if (pathname === "/discover" || pathname === "/matches") return null;
+
   return (
     <button
       onClick={toggleTheme}

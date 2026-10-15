@@ -43,12 +43,14 @@ export default function MatchesPage() {
 
   // ── CALLS (Voice & Video) ──
   const [activeCallType, setActiveCallType] = useState<"voice" | "video" | null>(null);
-  const [callStatus, setCallStatus] = useState<"ringing" | "connected" | "ended">("ringing");
+  const [callStatus, setCallStatus] = useState<"ringing" | "connected" | "unavailable" | "ended">("ringing");
   const [callDuration, setCallDuration] = useState(0);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
+  const [isSpeakerOn, setIsSpeakerOn] = useState(false);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // ── VOICE NOTES ──
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
@@ -88,13 +90,14 @@ export default function MatchesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbUserId]);
 
-  // Start Call Handler
+  // Start Call Handler (WhatsApp Ringing Behavior)
   const startCall = async (type: "voice" | "video") => {
     setActiveCallType(type);
     setCallStatus("ringing");
     setCallDuration(0);
     setIsMicMuted(false);
     setIsCameraOff(false);
+    setIsSpeakerOn(false);
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -105,21 +108,20 @@ export default function MatchesPage() {
         localVideoRef.current.srcObject = stream;
       }
     } catch {
-      // Permission rejected or not supported fallback
+      // Audio or video permissions
     }
 
-    // Connect after 2.5 seconds
-    setTimeout(() => {
-      setCallStatus("connected");
-      const startT = Date.now();
-      callTimerRef.current = setInterval(() => {
-        setCallDuration(Math.floor((Date.now() - startT) / 1000));
-      }, 1000);
-    }, 2500);
+    // Real phone behavior: Ringing without fake auto-connect!
+    // If the other party does not answer within 30 seconds, mark as unavailable
+    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+    ringTimeoutRef.current = setTimeout(() => {
+      setCallStatus("unavailable");
+    }, 30000);
   };
 
   const endCall = () => {
     if (callTimerRef.current) clearInterval(callTimerRef.current);
+    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
     if (localVideoRef.current?.srcObject) {
       const stream = localVideoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((t) => t.stop());
@@ -128,7 +130,7 @@ export default function MatchesPage() {
     setCallStatus("ended");
     setTimeout(() => {
       setActiveCallType(null);
-    }, 600);
+    }, 350);
   };
 
   // Voice Note Recorder Handlers
@@ -332,19 +334,26 @@ export default function MatchesPage() {
       if (!res.ok) return;
       const data = await res.json();
       if (data.messages && Array.isArray(data.messages)) {
-        // Merge with existing to avoid losing local media and trigger alerts
         setConversations((prev: Record<string, Message[]>) => {
           const currentList = prev[activeConvId] || [];
 
-          // Retain all locally sent media (photos, videos, voice notes) so polling doesn't overwrite them
+          // Retain local client media blobs (photos, videos, voice notes) that don't have permanent DB IDs
           const clientMediaMessages = currentList.filter(
-            (m) => m.type === "photo" || m.type === "video" || m.type === "voice" || m.id.startsWith("msg-")
+            (m) => m.type === "photo" || m.type === "video" || m.type === "voice"
           );
 
           const serverMsgIds = new Set(data.messages.map((m: Message) => m.id));
-          const unsavedClientMessages = clientMediaMessages.filter((m) => !serverMsgIds.has(m.id));
+          const unsavedClientMedia = clientMediaMessages.filter((m) => !serverMsgIds.has(m.id));
 
-          const merged = [...data.messages, ...unsavedClientMessages];
+          // Also retain any in-flight temporary message sent less than 4 seconds ago not yet in server list
+          const now = Date.now();
+          const inFlightTempMessages = currentList.filter(
+            (m) => m.id.startsWith("temp-") &&
+                   now - new Date(m.createdAt).getTime() < 4000 &&
+                   !data.messages.some((sm: Message) => sm.content === m.content && sm.senderId === m.senderId)
+          );
+
+          const merged = [...data.messages, ...unsavedClientMedia, ...inFlightTempMessages];
 
           if (data.messages.length > currentList.length) {
             playNotificationSound();
@@ -385,29 +394,99 @@ export default function MatchesPage() {
     const text = inputText.trim();
     setInputText("");
 
-    // Optimistic update (local)
-    sendMessage(activeConvId, text);
+    const isRealDbMatch = dbUserId && activeConvId && !activeConvId.startsWith("conv-");
+    const tempId = `temp-${Date.now()}`;
 
-    // Persist to DB if real match
-    if (dbUserId && activeConvId && !activeConvId.startsWith("conv-")) {
+    if (isRealDbMatch) {
+      // Optimistic temporary message (starts unread with grey ticks)
+      const optimisticMsg: Message = {
+        id: tempId,
+        conversationId: activeConvId,
+        senderId: dbUserId,
+        content: text,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      };
+
+      setConversations((prev: Record<string, Message[]>) => ({
+        ...prev,
+        [activeConvId]: [...(prev[activeConvId] || []), optimisticMsg],
+      }));
+
       setIsSending(true);
       try {
-        await fetch("/api/messages", {
+        const res = await fetch("/api/messages", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ matchId: activeConvId, senderId: dbUserId, content: text }),
         });
+        if (res.ok) {
+          const savedMsg = await res.json();
+          if (savedMsg && savedMsg.id) {
+            // Reconcile: replace tempId with the saved database record immediately
+            setConversations((prev: Record<string, Message[]>) => {
+              const currentList = prev[activeConvId] || [];
+              return {
+                ...prev,
+                [activeConvId]: currentList.map((m) => (m.id === tempId ? savedMsg : m)),
+              };
+            });
+          }
+        }
       } catch (err) {
         console.error("[MatchesPage] Send message error:", err);
       } finally {
         setIsSending(false);
       }
+    } else {
+      // Mock conversation fallback
+      sendMessage(activeConvId, text);
     }
   };
 
-  const handleSendPromptChip = (chipText: string) => {
+  const handleSendPromptChip = async (chipText: string) => {
     if (!activeConvId) return;
-    sendMessage(activeConvId, chipText);
+    const isRealDbMatch = dbUserId && activeConvId && !activeConvId.startsWith("conv-");
+    const tempId = `temp-${Date.now()}`;
+
+    if (isRealDbMatch) {
+      const optimisticMsg: Message = {
+        id: tempId,
+        conversationId: activeConvId,
+        senderId: dbUserId,
+        content: chipText,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+      };
+      setConversations((prev: Record<string, Message[]>) => ({
+        ...prev,
+        [activeConvId]: [...(prev[activeConvId] || []), optimisticMsg],
+      }));
+
+      try {
+        const res = await fetch("/api/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ matchId: activeConvId, senderId: dbUserId, content: chipText }),
+        });
+        if (res.ok) {
+          const savedMsg = await res.json();
+          if (savedMsg && savedMsg.id) {
+            setConversations((prev: Record<string, Message[]>) => {
+              const currentList = prev[activeConvId] || [];
+              return {
+                ...prev,
+                [activeConvId]: currentList.map((m) => (m.id === tempId ? savedMsg : m)),
+              };
+            });
+          }
+        }
+      } catch (err) {
+        console.error("[MatchesPage] Chip send error:", err);
+      }
+    } else {
+      sendMessage(activeConvId, chipText);
+    }
   };
 
   const handleBlockActiveUser = () => {
@@ -655,7 +734,7 @@ export default function MatchesPage() {
                             gap: "5px",
                           }}
                         >
-                          {isMe && <span style={{ color: "#53BDEB", fontSize: "12px" }}>✓✓</span>}
+                          {isMe && <span style={{ color: lastMsg?.isRead ? "#53BDEB" : "#8696A0", fontSize: "12px", letterSpacing: "-0.5px" }}>✓✓</span>}
                           {isPhotoPreview && <span>📷</span>}
                           {isVoicePreview && <span>🎙️</span>}
                           <span>{previewContent}</span>
@@ -875,7 +954,7 @@ export default function MatchesPage() {
                         />
                         <div className={styles.floatingTimestamp}>
                           <span>{timeStr}</span>
-                          {isMe && <span style={{ color: "#53BDEB" }}>✓✓</span>}
+                          {isMe && <span style={{ color: msg.isRead ? "#53BDEB" : "#8696A0", fontSize: "11px", letterSpacing: "-0.5px" }}>✓✓</span>}
                         </div>
                       </div>
                     ) : (
@@ -899,7 +978,7 @@ export default function MatchesPage() {
                         {msg.content && <p className={styles.msgText}>{msg.content}</p>}
                         <span className={styles.msgTime} style={{ display: "flex", alignItems: "center", gap: "4px", justifyContent: "flex-end", marginTop: "2px" }}>
                           {timeStr}
-                          {isMe && <span style={{ color: "#53BDEB", fontSize: "11px" }}>✓✓</span>}
+                          {isMe && <span style={{ color: msg.isRead ? "#53BDEB" : "#8696A0", fontSize: "11px", letterSpacing: "-0.5px" }}>✓✓</span>}
                         </span>
                       </div>
                     )}
@@ -1226,91 +1305,64 @@ export default function MatchesPage() {
         </div>
       </Modal>
 
-      {/* Voice & Video Call Modal */}
+      {/* WhatsApp Voice & Video Call Screen (Image 4) */}
       {activeCallType && activeMatch && (
-        <div style={{
-          position: "fixed",
-          inset: 0,
-          zIndex: 9999,
-          background: "rgba(7, 2, 13, 0.96)",
-          backdropFilter: "blur(20px)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "50px 24px 40px",
-        }}>
-          {/* Call Header */}
-          <div style={{ textAlign: "center", marginTop: "20px" }}>
-            <span style={{
-              display: "inline-block",
-              padding: "4px 12px",
-              background: "rgba(212, 175, 55, 0.15)",
-              color: "#D4AF37",
-              border: "1px solid rgba(212, 175, 55, 0.3)",
-              borderRadius: "20px",
-              fontSize: "12px",
-              fontWeight: 700,
-              marginBottom: "12px",
-              textTransform: "uppercase",
-              letterSpacing: "1px",
-            }}>
-              {activeCallType === "video" ? "📹 Encrypted Video Call" : "📞 Encrypted Voice Call"}
-            </span>
-            <h2 style={{ fontSize: "24px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 6px" }}>
-              {activeMatch.matchedWith.fullName}
-            </h2>
-            <p style={{
-              fontSize: "14px",
-              color: callStatus === "connected" ? "#10B981" : "var(--rada-pearl-dim)",
-              fontWeight: 600,
-              margin: 0,
-            }}>
-              {callStatus === "ringing" && "Connecting to secure room..."}
-              {callStatus === "connected" && `Connected • ${Math.floor(callDuration / 60)}:${(callDuration % 60).toString().padStart(2, "0")}`}
-              {callStatus === "ended" && "Call Ended"}
-            </p>
+        <div className={styles.waCallScreen}>
+          {/* Top Bar: Minimize, Contact Name, Encrypted, Status, Add User */}
+          <div className={styles.waCallTopBar}>
+            <button
+              type="button"
+              onClick={endCall}
+              style={{ background: "none", border: "none", color: "#E9EDEF", cursor: "pointer", padding: "6px" }}
+              aria-label="Minimize call"
+            >
+              <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            <div className={styles.waCallHeaderCenter}>
+              <div className={styles.waCallContactName}>
+                {activeMatch.matchedWith.fullName}
+              </div>
+              <div className={styles.waCallEncryption}>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+                <span>End-to-end encrypted</span>
+              </div>
+              <div className={styles.waCallStatus}>
+                {callStatus === "ringing" && "Ringing..."}
+                {callStatus === "unavailable" && "Unavailable"}
+                {callStatus === "connected" && `${Math.floor(callDuration / 60)}:${(callDuration % 60).toString().padStart(2, "0")}`}
+                {callStatus === "ended" && "Call ended"}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => showToast("Added to secure group call", "neutral")}
+              style={{ background: "none", border: "none", color: "#E9EDEF", cursor: "pointer", padding: "6px" }}
+              aria-label="Add participant"
+            >
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+              </svg>
+            </button>
           </div>
 
-          {/* Video or Avatar Display */}
-          <div style={{
-            position: "relative",
-            width: "100%",
-            maxWidth: "340px",
-            height: activeCallType === "video" ? "360px" : "200px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "20px 0",
-          }}>
-            {activeCallType === "video" ? (
-              <div style={{
-                position: "relative",
-                width: "100%",
-                height: "100%",
-                borderRadius: "24px",
-                overflow: "hidden",
-                border: "1px solid var(--rada-border)",
-                background: "#0F0F14",
-                boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
-              }}>
-                {/* Simulated remote stream */}
+          {/* Center: Large Profile Photo */}
+          <div className={styles.waCallCenter}>
+            {activeCallType === "video" && !isCameraOff ? (
+              <div style={{ position: "relative", width: "100%", maxWidth: "340px", height: "360px", borderRadius: "24px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.12)", background: "#1F2C34" }}>
                 {activeMatch.matchedWith.photos[0]?.url ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={activeMatch.matchedWith.photos[0].url}
                     alt={activeMatch.matchedWith.fullName}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
                 ) : (
-                  <div style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "48px",
-                  }}>
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px" }}>
                     👤
                   </div>
                 )}
@@ -1328,115 +1380,143 @@ export default function MatchesPage() {
                     height: "120px",
                     objectFit: "cover",
                     borderRadius: "14px",
-                    border: "2px solid #D4AF37",
-                    background: "#1E1E26",
-                    display: isCameraOff ? "none" : "block",
+                    border: "2px solid #00A884",
+                    background: "#0C1317",
                   }}
                 />
               </div>
             ) : (
-              <div style={{
-                width: "130px",
-                height: "130px",
-                borderRadius: "50%",
-                background: "var(--rada-gold-gradient)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 0 40px rgba(212, 175, 55, 0.4)",
-              }}>
+              <div className={styles.waCallAvatarContainer}>
                 {activeMatch.matchedWith.photos[0]?.url ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={activeMatch.matchedWith.photos[0].url}
                     alt={activeMatch.matchedWith.fullName}
-                    style={{ width: "120px", height: "120px", borderRadius: "50%", objectFit: "cover" }}
+                    className={styles.waCallAvatarImg}
                   />
                 ) : (
-                  <span style={{ fontSize: "48px", fontWeight: 800, color: "#0A0A0C" }}>
+                  <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "64px", fontWeight: 800, color: "#E9EDEF", background: "#1F2C34" }}>
                     {activeMatch.matchedWith.fullName.charAt(0)}
-                  </span>
+                  </div>
                 )}
               </div>
             )}
           </div>
 
-          {/* Call Controls */}
-          <div style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "20px",
-            marginBottom: "20px",
-          }}>
-            {/* Mic Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsMicMuted(!isMicMuted)}
-              style={{
-                width: "56px",
-                height: "56px",
-                borderRadius: "50%",
-                background: isMicMuted ? "#E11D48" : "rgba(255, 255, 255, 0.12)",
-                border: "1px solid var(--rada-border)",
-                color: "#FFFFFF",
-                fontSize: "20px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-              }}
-              title={isMicMuted ? "Unmute" : "Mute"}
-            >
-              {isMicMuted ? "🔇" : "🎙️"}
-            </button>
+          {/* Bottom Card: 2 rows of 3 buttons (Speaker, Video, Mute / More, Share, End) */}
+          <div className={styles.waCallControlCard}>
+            <div className={styles.waCallGrid}>
+              {/* Row 1 */}
+              {/* Speaker */}
+              <div className={styles.waCallBtnWrapper}>
+                <button
+                  type="button"
+                  className={`${styles.waCallBtn} ${isSpeakerOn ? styles.waCallBtnActive : ""}`}
+                  onClick={() => {
+                    setIsSpeakerOn(!isSpeakerOn);
+                    showToast(isSpeakerOn ? "Speaker off" : "Speaker on", "neutral");
+                  }}
+                  aria-label="Speaker"
+                >
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                  </svg>
+                </button>
+                <span className={styles.waCallLabel}>Speaker</span>
+              </div>
 
-            {/* Video Camera Toggle (If Video Call) */}
-            {activeCallType === "video" && (
-              <button
-                type="button"
-                onClick={() => setIsCameraOff(!isCameraOff)}
-                style={{
-                  width: "56px",
-                  height: "56px",
-                  borderRadius: "50%",
-                  background: isCameraOff ? "#E11D48" : "rgba(255, 255, 255, 0.12)",
-                  border: "1px solid var(--rada-border)",
-                  color: "#FFFFFF",
-                  fontSize: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                }}
-                title={isCameraOff ? "Turn Camera On" : "Turn Camera Off"}
-              >
-                {isCameraOff ? "🚫" : "📹"}
-              </button>
-            )}
+              {/* Video */}
+              <div className={styles.waCallBtnWrapper}>
+                <button
+                  type="button"
+                  className={`${styles.waCallBtn} ${activeCallType === "video" ? styles.waCallBtnActive : ""}`}
+                  onClick={() => {
+                    if (activeCallType === "video") {
+                      setIsCameraOff(!isCameraOff);
+                    } else {
+                      setActiveCallType("video");
+                    }
+                  }}
+                  aria-label="Video"
+                >
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                  </svg>
+                </button>
+                <span className={styles.waCallLabel}>Video</span>
+              </div>
 
-            {/* End Call Button */}
-            <button
-              type="button"
-              onClick={endCall}
-              style={{
-                width: "64px",
-                height: "64px",
-                borderRadius: "50%",
-                background: "#E11D48",
-                border: "none",
-                color: "#FFFFFF",
-                fontSize: "24px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                boxShadow: "0 6px 20px rgba(225, 29, 72, 0.4)",
-              }}
-              title="End Call"
-            >
-              📞
-            </button>
+              {/* Mute */}
+              <div className={styles.waCallBtnWrapper}>
+                <button
+                  type="button"
+                  className={`${styles.waCallBtn} ${isMicMuted ? styles.waCallBtnActive : ""}`}
+                  onClick={() => setIsMicMuted(!isMicMuted)}
+                  aria-label="Mute"
+                >
+                  {isMicMuted ? (
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                      <path d="M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4.02.17c0-.06.02-.11.02-.17V5c0-1.66-1.34-3-3-3S9 3.34 9 5v.18l5.98 5.99zM4.27 3L3 4.27l6.01 6.01V11c0 1.66 1.33 3 2.99 3 .22 0 .44-.03.65-.08l1.66 1.66c-.71.33-1.5.52-2.31.52-2.76 0-5.3-2.1-5.3-5.1H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c.91-.13 1.77-.45 2.54-.9L19.73 21 21 19.73 4.27 3z"/>
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                      <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                      <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                  )}
+                </button>
+                <span className={styles.waCallLabel}>Mute</span>
+              </div>
+
+              {/* Row 2 */}
+              {/* More */}
+              <div className={styles.waCallBtnWrapper}>
+                <button
+                  type="button"
+                  className={styles.waCallBtn}
+                  onClick={() => showToast("Encrypted WebRTC peer-to-peer session", "neutral")}
+                  aria-label="More"
+                >
+                  <span style={{ fontSize: "20px", lineHeight: 1 }}>⋯</span>
+                </button>
+                <span className={styles.waCallLabel}>More</span>
+              </div>
+
+              {/* Share */}
+              <div className={styles.waCallBtnWrapper}>
+                <button
+                  type="button"
+                  className={styles.waCallBtn}
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({ title: "Rada Call", text: "Join my encrypted call on Rada", url: window.location.href }).catch(() => {});
+                    } else {
+                      showToast("Call link copied", "neutral");
+                    }
+                  }}
+                  aria-label="Share"
+                >
+                  <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                  </svg>
+                </button>
+                <span className={styles.waCallLabel}>Share</span>
+              </div>
+
+              {/* End Call */}
+              <div className={styles.waCallBtnWrapper}>
+                <button
+                  type="button"
+                  className={styles.waCallEndBtn}
+                  onClick={endCall}
+                  aria-label="End call"
+                >
+                  <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" style={{ transform: "rotate(135deg)" }}>
+                    <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2a15.053 15.053 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-.99-1.12z"/>
+                  </svg>
+                </button>
+                <span className={styles.waCallLabel}>End</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
