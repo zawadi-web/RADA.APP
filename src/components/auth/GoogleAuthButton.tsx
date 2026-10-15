@@ -24,21 +24,24 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
   const [customEmail, setCustomEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Google Onboarding Profile Completion Prompt State
+  const [showOnboardingPrompt, setShowOnboardingPrompt] = useState(false);
+  const [pendingGoogleUser, setPendingGoogleUser] = useState<{ id?: string; name: string; email: string; avatarUrl: string } | null>(null);
+  const [promptGender, setPromptGender] = useState<"MAN" | "WOMAN" | "NON_BINARY">("MAN");
+  const [promptInterest, setPromptInterest] = useState<"WOMAN" | "MAN" | "BOTH">("WOMAN");
+  const [promptAge, setPromptAge] = useState<number>(24);
+  const [promptIntent, setPromptIntent] = useState<string>("INTENTIONAL_DATING");
+  const [promptHobbies, setPromptHobbies] = useState<string[]>(["Coffee", "Travel"]);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+
   const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "69580522763-c6hclai3nijv5pk6kqc5l40fgnnhiead.apps.googleusercontent.com";
 
   const handleConfirmLogin = useCallback(async (name: string, email: string, avatarUrl: string) => {
     setIsSubmitting(true);
     try {
-      signInWithGoogle({ name, email, avatarUrl });
-      try {
-        localStorage.setItem("rada_onboarded", "1");
-      } catch { /* ignore */ }
-
       setShowPromptModal(false);
-      showToast(`Welcome ${name}! Authenticated with Google ✦`, "coral");
-      if (onSuccess) onSuccess();
 
-      // Sync with Supabase PostgreSQL database
+      // Sync with Supabase PostgreSQL database first
       const res = await fetch("/api/auth/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,12 +51,75 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
       if (data.user?.id) {
         setDbUserId(data.user.id);
       }
+
+      // If user has NOT completed gender, interest, age, intent & hobbies, prompt them immediately
+      if (!data.hasCompletedProfile) {
+        setPendingGoogleUser({ id: data.user?.id, name, email, avatarUrl });
+        setShowOnboardingPrompt(true);
+        return;
+      }
+
+      // Existing completed user
+      signInWithGoogle({ name, email, avatarUrl });
+      try {
+        localStorage.setItem("rada_onboarded", "1");
+      } catch { /* ignore */ }
+
+      showToast(`Welcome back ${name}! ✦`, "coral");
+      if (onSuccess) onSuccess();
+      window.location.href = "/discover";
     } catch (err) {
       console.warn("Google DB sync note:", err);
+      // Fallback
+      setPendingGoogleUser({ name, email, avatarUrl });
+      setShowOnboardingPrompt(true);
     } finally {
       setIsSubmitting(false);
     }
   }, [signInWithGoogle, onSuccess, showToast, setDbUserId]);
+
+  const handleSaveOnboarding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pendingGoogleUser) return;
+    setIsSavingProfile(true);
+    try {
+      const bio = promptHobbies.length > 0 ? `Passions: ${promptHobbies.join(", ")}` : "";
+      await fetch("/api/profile/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: pendingGoogleUser.id,
+          fullName: pendingGoogleUser.name,
+          email: pendingGoogleUser.email,
+          age: Number(promptAge) || 24,
+          gender: promptGender,
+          interestedIn: [promptInterest],
+          intent: promptIntent,
+          bio,
+          photos: pendingGoogleUser.avatarUrl ? [pendingGoogleUser.avatarUrl] : [],
+        }),
+      });
+
+      signInWithGoogle({
+        name: pendingGoogleUser.name,
+        email: pendingGoogleUser.email,
+        avatarUrl: pendingGoogleUser.avatarUrl,
+      });
+
+      try {
+        localStorage.setItem("rada_onboarded", "1");
+      } catch { /* ignore */ }
+
+      setShowOnboardingPrompt(false);
+      showToast(`Welcome to Rada, ${pendingGoogleUser.name.split(" ")[0]}! ✦`, "coral");
+      if (onSuccess) onSuccess();
+      window.location.href = "/discover";
+    } catch (err) {
+      showToast("Error saving profile. Please retry.", "neutral");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
 
   // Initialize official Google Identity Services SDK
   useEffect(() => {
@@ -446,6 +512,271 @@ export const GoogleAuthButton: React.FC<GoogleAuthButtonProps> = ({
                 }}
               >
                 {isSubmitting ? "Connecting..." : "Continue to Rada ✦"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── GOOGLE PROFILE COMPLETION MODAL ── */}
+      {showOnboardingPrompt && pendingGoogleUser && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.85)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 10000,
+            padding: "16px",
+            overflowY: "auto",
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: "#111116",
+              border: "1px solid rgba(245, 207, 104, 0.4)",
+              borderRadius: "24px",
+              padding: "24px 22px",
+              maxWidth: "440px",
+              width: "100%",
+              color: "var(--rada-pearl)",
+              boxShadow: "0 20px 60px rgba(0, 0, 0, 0.9), 0 0 30px rgba(245, 207, 104, 0.2)",
+              maxHeight: "90vh",
+              overflowY: "auto",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: "18px" }}>
+              <div
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  margin: "0 auto 10px",
+                  padding: "2px",
+                  background: "linear-gradient(135deg, #FFF6D6, #F5CF68 40%, #D4AF37 75%, #9B700F 100%)",
+                  boxShadow: "0 0 16px rgba(245, 207, 104, 0.4)",
+                  overflow: "hidden",
+                }}
+              >
+                {pendingGoogleUser.avatarUrl ? (
+                  <img
+                    src={pendingGoogleUser.avatarUrl}
+                    alt={pendingGoogleUser.name}
+                    style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <div style={{ width: "100%", height: "100%", borderRadius: "50%", background: "#1A1A22", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--rada-gold)", fontWeight: 800 }}>
+                    {pendingGoogleUser.name.charAt(0)}
+                  </div>
+                )}
+              </div>
+              <h3 style={{ margin: "0 0 4px", fontSize: "19px", fontWeight: 800, color: "#FFFFFF" }}>
+                Welcome, {pendingGoogleUser.name.split(" ")[0]}!
+              </h3>
+              <p style={{ margin: 0, fontSize: "12.5px", color: "var(--rada-pearl-muted)" }}>
+                Tell us a few quick details to activate your intentional radar.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveOnboarding} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {/* 1. Gender */}
+              <div>
+                <label style={{ fontSize: "12px", color: "var(--rada-gold)", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                  I identify as:
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                  {[
+                    { id: "MAN", label: "👨 Man" },
+                    { id: "WOMAN", label: "👩 Woman" },
+                    { id: "NON_BINARY", label: "💫 Non-binary" },
+                  ].map((g) => (
+                    <button
+                      key={g.id}
+                      type="button"
+                      onClick={() => setPromptGender(g.id as any)}
+                      style={{
+                        padding: "10px 6px",
+                        borderRadius: "12px",
+                        background: promptGender === g.id ? "rgba(245, 207, 104, 0.18)" : "var(--rada-surface-raised)",
+                        border: promptGender === g.id ? "1.5px solid var(--rada-gold)" : "1px solid var(--rada-border)",
+                        color: promptGender === g.id ? "var(--rada-gold)" : "var(--rada-pearl)",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {g.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Looking for / Interest */}
+              <div>
+                <label style={{ fontSize: "12px", color: "var(--rada-gold)", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                  Looking to meet:
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px" }}>
+                  {[
+                    { id: "WOMAN", label: "👩 Women" },
+                    { id: "MAN", label: "👨 Men" },
+                    { id: "BOTH", label: "✨ Everyone" },
+                  ].map((i) => (
+                    <button
+                      key={i.id}
+                      type="button"
+                      onClick={() => setPromptInterest(i.id as any)}
+                      style={{
+                        padding: "10px 6px",
+                        borderRadius: "12px",
+                        background: promptInterest === i.id ? "rgba(245, 207, 104, 0.18)" : "var(--rada-surface-raised)",
+                        border: promptInterest === i.id ? "1.5px solid var(--rada-gold)" : "1px solid var(--rada-border)",
+                        color: promptInterest === i.id ? "var(--rada-gold)" : "var(--rada-pearl)",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {i.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 3. Age */}
+              <div>
+                <label style={{ fontSize: "12px", color: "var(--rada-gold)", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                  My Age:
+                </label>
+                <input
+                  type="number"
+                  min={18}
+                  max={99}
+                  required
+                  value={promptAge}
+                  onChange={(e) => setPromptAge(parseInt(e.target.value) || 18)}
+                  style={{
+                    width: "100%",
+                    padding: "11px 14px",
+                    borderRadius: "12px",
+                    background: "var(--rada-surface-raised)",
+                    border: "1px solid var(--rada-border)",
+                    color: "var(--rada-pearl)",
+                    fontSize: "15px",
+                    fontWeight: 700,
+                    outline: "none",
+                  }}
+                />
+              </div>
+
+              {/* 4. Intention */}
+              <div>
+                <label style={{ fontSize: "12px", color: "var(--rada-gold)", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                  My Dating Intention:
+                </label>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  {[
+                    { id: "INTENTIONAL_DATING", label: "🎯 Intentional Dating" },
+                    { id: "SERIOUS_RELATIONSHIP", label: "❤️ Serious Relationship" },
+                    { id: "MARRIAGE", label: "💍 Marriage & Family" },
+                    { id: "LONG_TERM", label: "🌱 Long-term Partner" },
+                  ].map((intent) => (
+                    <button
+                      key={intent.id}
+                      type="button"
+                      onClick={() => setPromptIntent(intent.id)}
+                      style={{
+                        padding: "10px 8px",
+                        borderRadius: "12px",
+                        background: promptIntent === intent.id ? "rgba(245, 207, 104, 0.18)" : "var(--rada-surface-raised)",
+                        border: promptIntent === intent.id ? "1.5px solid var(--rada-gold)" : "1px solid var(--rada-border)",
+                        color: promptIntent === intent.id ? "var(--rada-gold)" : "var(--rada-pearl)",
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      {intent.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* 5. Hobbies & Passions */}
+              <div>
+                <label style={{ fontSize: "12px", color: "var(--rada-gold)", display: "block", marginBottom: "6px", fontWeight: 700 }}>
+                  Hobbies &amp; Passions (pick 2+):
+                </label>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                  {[
+                    "☕ Coffee spots",
+                    "✈️ Traveling",
+                    "🏋️ Fitness / Gym",
+                    "💻 Tech & Startups",
+                    "🎵 Music & Gigs",
+                    "🍳 Foodie / Cooking",
+                    "🎨 Art & Culture",
+                    "🌿 Hiking Karura",
+                    "📚 Reading",
+                    "🍸 Chill Sundowners",
+                  ].map((hobby) => {
+                    const isSelected = promptHobbies.includes(hobby);
+                    return (
+                      <button
+                        key={hobby}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setPromptHobbies((prev) => prev.filter((h) => h !== hobby));
+                          } else {
+                            setPromptHobbies((prev) => [...prev, hobby]);
+                          }
+                        }}
+                        style={{
+                          padding: "6px 11px",
+                          borderRadius: "18px",
+                          background: isSelected ? "rgba(245, 207, 104, 0.22)" : "var(--rada-surface-raised)",
+                          border: isSelected ? "1px solid var(--rada-gold)" : "1px solid var(--rada-border)",
+                          color: isSelected ? "var(--rada-gold)" : "var(--rada-pearl-muted)",
+                          fontSize: "11.5px",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                      >
+                        {hobby}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Submit CTA */}
+              <button
+                type="submit"
+                disabled={isSavingProfile}
+                style={{
+                  width: "100%",
+                  padding: "14px",
+                  borderRadius: "14px",
+                  background: "linear-gradient(135deg, #FFF6D6 0%, #F5CF68 35%, #D4AF37 70%, #9B700F 100%)",
+                  color: "#0A0A0E",
+                  fontSize: "15px",
+                  fontWeight: 800,
+                  border: "none",
+                  cursor: isSavingProfile ? "not-allowed" : "pointer",
+                  boxShadow: "0 6px 20px rgba(245, 207, 104, 0.45)",
+                  marginTop: "6px",
+                }}
+              >
+                {isSavingProfile ? "Saving Profile..." : "Complete Profile & Enter Rada ✦"}
               </button>
             </form>
           </div>

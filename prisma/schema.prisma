@@ -72,6 +72,7 @@ model User {
   photos          Photo[]
   prompts         Prompt[]
   voiceNotes      VoiceNote[]
+  stories         Story[]
   
   // Interactions
   sentLikes       Like[]        @relation("SentLikes")
@@ -250,4 +251,20 @@ model Transaction {
 
   @@index([userId, status])
   @@index([reference])
+}
+
+// 24-Hour Expiring Stories (Instagram-style)
+model Story {
+  id        String   @id @default(cuid())
+  userId    String
+  mediaUrl  String   @db.Text
+  caption   String?
+  createdAt DateTime @default(now())
+  expiresAt DateTime // exactly 24 hours after creation
+  isExpired Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([expiresAt, isExpired])
 }

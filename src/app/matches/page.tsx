@@ -60,12 +60,7 @@ export default function MatchesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbUserId]);
 
-  // Auto-select the first (newest) match whenever matches list changes and nothing is selected
-  useEffect(() => {
-    if (matches.length > 0 && !activeConvId) {
-      setActiveConvId(matches[0].conversationId);
-    }
-  }, [matches, activeConvId]);
+  // Note: We do NOT auto-select the first match so users see their matches & conversations list first
 
   // Poll for new messages every 5 seconds (near-real-time)
   const pollMessages = useCallback(async () => {
@@ -251,10 +246,173 @@ export default function MatchesPage() {
       {/* Main Conversation Container */}
       {matches.length > 0 && (
         <>
-        {activeMatch ? (
+        {!activeMatch ? (
+          <section style={{ marginTop: "20px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px", padding: "0 4px" }}>
+              <span className={styles.sectionLabel} style={{ margin: 0 }}>RECENT CONVERSATIONS</span>
+              <span style={{ fontSize: "11px", color: "var(--rada-gold)", fontWeight: 700 }}>
+                {matches.length} {matches.length === 1 ? "Active Chat" : "Active Chats"}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {matches.map((match) => {
+                const convMessages = conversations[match.conversationId] || [];
+                const lastMsg = convMessages.length > 0 ? convMessages[convMessages.length - 1] : null;
+                const isUrgent = match.momentumHoursRemaining < 24;
+
+                return (
+                  <button
+                    key={match.id}
+                    type="button"
+                    onClick={() => setActiveConvId(match.conversationId)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "14px",
+                      padding: "14px 16px",
+                      borderRadius: "18px",
+                      background: "var(--rada-surface)",
+                      border: "1px solid var(--rada-border)",
+                      textAlign: "left",
+                      cursor: "pointer",
+                      width: "100%",
+                      transition: "all 0.2s ease",
+                      position: "relative",
+                    }}
+                  >
+                    {/* Avatar with momentum ring */}
+                    <div style={{ position: "relative", flexShrink: 0 }}>
+                      <div
+                        style={{
+                          width: "52px",
+                          height: "52px",
+                          borderRadius: "50%",
+                          padding: "2px",
+                          background: isUrgent
+                            ? "linear-gradient(135deg, #FF6B8B, #FF8E53)"
+                            : "linear-gradient(135deg, #FFF6D6, #F5CF68 40%, #D4AF37 75%, #9B700F 100%)",
+                          boxShadow: "0 2px 10px rgba(0, 0, 0, 0.4)",
+                        }}
+                      >
+                        {match.matchedWith.photos[0]?.url ? (
+                          <img
+                            src={match.matchedWith.photos[0].url}
+                            alt={match.matchedWith.fullName}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }}
+                          />
+                        ) : (
+                          <div
+                            style={{
+                              width: "100%",
+                              height: "100%",
+                              borderRadius: "50%",
+                              background: "#1A1A22",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontSize: "18px",
+                              fontWeight: 800,
+                              color: "var(--rada-gold)",
+                            }}
+                          >
+                            {match.matchedWith.fullName.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <span
+                        style={{
+                          position: "absolute",
+                          bottom: "-2px",
+                          right: "-2px",
+                          background: isUrgent ? "#FF4B4B" : "#10B981",
+                          color: "#FFFFFF",
+                          fontSize: "9px",
+                          fontWeight: 800,
+                          padding: "1px 5px",
+                          borderRadius: "6px",
+                          border: "1.5px solid #09090B",
+                        }}
+                      >
+                        {match.momentumHoursRemaining}h
+                      </span>
+                    </div>
+
+                    {/* Middle Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                        <span style={{ fontSize: "15px", fontWeight: 700, color: "var(--rada-pearl)" }}>
+                          {match.matchedWith.fullName}
+                        </span>
+                        <span style={{ fontSize: "11px", color: "var(--rada-pearl-dim)" }}>
+                          {lastMsg ? new Date(lastMsg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : `${match.momentumHoursRemaining}h left`}
+                        </span>
+                      </div>
+
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                        <IntentBadge intent={match.matchedWith.intent} size="small" />
+                        <span style={{ fontSize: "11px", color: "var(--rada-pearl-muted)" }}>
+                          • {match.matchedWith.area}
+                        </span>
+                      </div>
+
+                      <p
+                        style={{
+                          fontSize: "13px",
+                          color: lastMsg ? "var(--rada-pearl-muted)" : "var(--rada-gold)",
+                          margin: 0,
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {lastMsg ? (
+                          <>
+                            {lastMsg.senderId === dbUserId ? "You: " : ""}
+                            {lastMsg.content}
+                          </>
+                        ) : (
+                          "✨ Radar aligned! Tap to open chat →"
+                        )}
+                      </p>
+                    </div>
+
+                    <div style={{ color: "var(--rada-pearl-dim)", fontSize: "18px", marginLeft: "4px" }}>
+                      ›
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        ) : (
           <section className={styles.chatSection}>
           {/* Chat Header */}
           <div className={styles.chatHeader}>
+            <button
+              type="button"
+              onClick={() => setActiveConvId(null)}
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid var(--rada-border)",
+                borderRadius: "50%",
+                width: "36px",
+                height: "36px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--rada-pearl)",
+                cursor: "pointer",
+                marginRight: "10px",
+                flexShrink: 0,
+              }}
+              aria-label="Back to messages list"
+              title="Back to messages"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
             <div className={styles.partnerInfo}>
               <div className={styles.chatAvatar}>
                 {activeMatch.matchedWith.photos[0]?.url ? (
@@ -482,10 +640,6 @@ export default function MatchesPage() {
             </>
           )}
         </section>
-      ) : (
-        <div className={styles.noMatchSelected}>
-          <p>Select an active radar match above to start chatting!</p>
-        </div>
       )}
       </>
       )}

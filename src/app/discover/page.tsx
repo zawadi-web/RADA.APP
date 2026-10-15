@@ -8,6 +8,7 @@ import { LocationBadge } from "@/components/ui/LocationBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { VoiceNotePlayer } from "@/components/ui/VoiceNotePlayer";
 import { PromptReactionSheet } from "@/components/features/PromptReactionSheet";
+import { StoriesBar } from "@/components/features/StoriesBar";
 import styles from "./page.module.css";
 
 // Shared location error banner
@@ -282,6 +283,9 @@ export default function DiscoverPage() {
           </button>
         </div>
       </header>
+
+      {/* 24-Hour Active Radar Stories */}
+      <StoriesBar />
 
       {locationError && (
         <LocationErrorBanner error={locationError} onDismiss={() => setLocationError(null)} />

@@ -42,7 +42,8 @@ export async function POST(req: Request) {
         },
         include: { photos: true },
       });
-      return NextResponse.json({ success: true, user: updated });
+      const hasCompletedProfile = Boolean(existing.completionScore >= 60 && existing.photos.length > 0);
+      return NextResponse.json({ success: true, user: updated, isNew: false, hasCompletedProfile });
     }
 
     // New user — create with safe defaults; onboarding completes the profile
@@ -54,8 +55,7 @@ export async function POST(req: Request) {
         county:             "Nairobi",
         area:               "Kilimani",
         verified:           true,
-        // DO NOT set gender/interestedInGenders here — onboarding handles it.
-        // Schema default is MAN/["WOMAN"] which will be corrected during onboarding.
+        completionScore:    40,
         photos: avatarUrl
           ? { create: { url: avatarUrl, isPrimary: true, order: 0 } }
           : undefined,
@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       include: { photos: true },
     });
 
-    return NextResponse.json({ success: true, user: created });
+    return NextResponse.json({ success: true, user: created, isNew: true, hasCompletedProfile: false });
   } catch (error) {
     console.error("Auth sync error:", error);
     return NextResponse.json(
