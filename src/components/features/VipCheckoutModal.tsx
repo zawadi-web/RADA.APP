@@ -54,9 +54,9 @@ export const VipCheckoutModal: React.FC = () => {
   // ── Paystack Inline Popup ─────────────────────────────────────────────────
   const handlePaystackInline = () => {
     const publicKey = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || "";
-    const isLiveKey = publicKey.startsWith("pk_live_") && !publicKey.includes("your_public_key_here");
+    const isPaystackKey = (publicKey.startsWith("pk_live_") || publicKey.startsWith("pk_test_")) && !publicKey.includes("your_public_key_here");
 
-    if (!isLiveKey || !window.PaystackPop) {
+    if (!isPaystackKey || !window.PaystackPop) {
       // Fallback: call our server to get an authorization URL, or simulate
       handlePaystackServer();
       return;
