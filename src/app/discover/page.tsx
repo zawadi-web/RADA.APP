@@ -245,6 +245,9 @@ export default function DiscoverPage() {
           </div>
         </header>
 
+        {/* 24-Hour Active Radar Stories (Always Visible) */}
+        <StoriesBar />
+
         {locationError && (
           <LocationErrorBanner error={locationError} onDismiss={() => setLocationError(null)} />
         )}

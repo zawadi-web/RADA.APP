@@ -95,6 +95,9 @@ export interface Message {
   isRead: boolean;
   createdAt: string;
   isSystem?: boolean;
+  type?: "text" | "photo" | "video" | "voice";
+  mediaUrl?: string;
+  durationSec?: number;
 }
 
 export interface MatchItem {

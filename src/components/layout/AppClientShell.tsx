@@ -579,10 +579,23 @@ function PwaInstallPromptInner() {
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
 
+    // Check if event was already captured in window
+    if ((window as any).deferredPWAInstallPrompt) {
+      setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+    }
+
+    const handlePromptReady = () => {
+      if ((window as any).deferredPWAInstallPrompt) {
+        setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+      }
+    };
+    window.addEventListener("pwa-prompt-ready", handlePromptReady);
+
     // Capture Chrome/Edge beforeinstallprompt event
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      (window as any).deferredPWAInstallPrompt = e;
       setShowModal(true);
     };
 
@@ -599,6 +612,7 @@ function PwaInstallPromptInner() {
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("pwa-prompt-ready", handlePromptReady);
       window.removeEventListener("open-rada-download", handleOpenDownload);
       clearTimeout(timer);
     };
@@ -607,10 +621,11 @@ function PwaInstallPromptInner() {
   if (isStandalone) return null;
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
+    const promptEvent = deferredPrompt || (typeof window !== "undefined" && (window as any).deferredPWAInstallPrompt);
+    if (promptEvent) {
       try {
-        await deferredPrompt.prompt();
-        const choice = await deferredPrompt.userChoice;
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
         if (choice?.outcome === "accepted") {
           setShowModal(false);
         }
@@ -618,10 +633,12 @@ function PwaInstallPromptInner() {
         console.error("Install prompt error:", err);
       }
       setDeferredPrompt(null);
+      if (typeof window !== "undefined") (window as any).deferredPWAInstallPrompt = null;
     } else if (isIOS) {
       // iOS has no programmatic trigger, the visual guide provides the 3 steps
     } else {
-      alert("To install Rada on this browser:\n1. Click your browser menu (⋮ in top right)\n2. Tap 'Install Rada' or 'Add to Home screen'");
+      // Graceful fallback: on browsers that already installed the PWA or need a second
+      setShowModal(false);
     }
   };
 

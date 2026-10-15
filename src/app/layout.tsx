@@ -58,7 +58,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('rada_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}`,
+            __html: `(function(){try{var t=localStorage.getItem('rada_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.deferredPWAInstallPrompt=e;window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));});`,
           }}
         />
       </head>

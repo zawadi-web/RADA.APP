@@ -348,6 +348,7 @@
 
 .inputBar {
   display: flex;
+  align-items: center;
   gap: 10px;
   padding: 10px 14px;
   background: var(--rada-surface);

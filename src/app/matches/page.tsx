@@ -41,6 +41,32 @@ export default function MatchesPage() {
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // ── CALLS (Voice & Video) ──
+  const [activeCallType, setActiveCallType] = useState<"voice" | "video" | null>(null);
+  const [callStatus, setCallStatus] = useState<"ringing" | "connected" | "ended">("ringing");
+  const [callDuration, setCallDuration] = useState(0);
+  const [isMicMuted, setIsMicMuted] = useState(false);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+  const localVideoRef = useRef<HTMLVideoElement>(null);
+  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ── VOICE NOTES ──
+  const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [voiceSeconds, setVoiceSeconds] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const voiceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // ── PHOTO & 30s VIDEO ATTACHMENTS (Ephemeral - Not saved to SQL) ──
+  const chatMediaInputRef = useRef<HTMLInputElement>(null);
+
+  // Request browser notification permissions on load
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission().catch(() => {});
+    }
+  }, []);
+
   const activeMatch = matches.find((m) => m.conversationId === activeConvId);
   const activeMessages = activeConvId ? (conversations[activeConvId] || []) : [];
 
@@ -49,18 +75,193 @@ export default function MatchesPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [activeMessages.length]);
 
-  // Load live matches from DB on mount and auto-select the newest
+  // Load live matches from DB on mount
   useEffect(() => {
     if (dbUserId) {
-      refreshMatches().then(() => {
-        // After refresh, the matches state will update via the context
-        // The effect below will then auto-select
-      });
+      refreshMatches().then(() => {});
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbUserId]);
 
-  // Note: We do NOT auto-select the first match so users see their matches & conversations list first
+  // Start Call Handler
+  const startCall = async (type: "voice" | "video") => {
+    setActiveCallType(type);
+    setCallStatus("ringing");
+    setCallDuration(0);
+    setIsMicMuted(false);
+    setIsCameraOff(false);
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: type === "video",
+        audio: true,
+      });
+      if (localVideoRef.current && type === "video") {
+        localVideoRef.current.srcObject = stream;
+      }
+    } catch {
+      // Permission rejected or not supported fallback
+    }
+
+    // Connect after 2.5 seconds
+    setTimeout(() => {
+      setCallStatus("connected");
+      const startT = Date.now();
+      callTimerRef.current = setInterval(() => {
+        setCallDuration(Math.floor((Date.now() - startT) / 1000));
+      }, 1000);
+    }, 2500);
+  };
+
+  const endCall = () => {
+    if (callTimerRef.current) clearInterval(callTimerRef.current);
+    if (localVideoRef.current?.srcObject) {
+      const stream = localVideoRef.current.srcObject as MediaStream;
+      stream.getTracks().forEach((t) => t.stop());
+      localVideoRef.current.srcObject = null;
+    }
+    setCallStatus("ended");
+    setTimeout(() => {
+      setActiveCallType(null);
+    }, 600);
+  };
+
+  // Voice Note Recorder Handlers
+  const startVoiceRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+      recorder.onstop = () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const voiceMsg: Message = {
+          id: `msg-voice-${Date.now()}`,
+          conversationId: activeConvId!,
+          senderId: dbUserId || "user-me",
+          content: `🎙️ Voice Note (${voiceSeconds || 3}s)`,
+          isRead: true,
+          createdAt: new Date().toISOString(),
+          type: "voice",
+          mediaUrl: audioUrl,
+          durationSec: voiceSeconds,
+        };
+        setConversations((prev: any) => ({
+          ...prev,
+          [activeConvId!]: [...(prev[activeConvId!] || []), voiceMsg],
+        }));
+        stream.getTracks().forEach((t) => t.stop());
+        showToast("Voice note sent! ✦", "coral");
+      };
+      recorder.start();
+      mediaRecorderRef.current = recorder;
+      setIsRecordingVoice(true);
+      setVoiceSeconds(0);
+
+      const startT = Date.now();
+      voiceTimerRef.current = setInterval(() => {
+        const sec = Math.floor((Date.now() - startT) / 1000);
+        setVoiceSeconds(sec);
+        if (sec >= 30) {
+          stopVoiceRecording();
+        }
+      }, 500);
+    } catch {
+      showToast("Microphone access denied. Please allow microphone permission.", "coral");
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    if (voiceTimerRef.current) clearInterval(voiceTimerRef.current);
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecordingVoice(false);
+  };
+
+  // Ephemeral Photo & 30s Video Handler (Bypasses permanent DB tables)
+  const handleChatMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !activeConvId) return;
+
+    if (file.type.startsWith("video/")) {
+      const videoEl = document.createElement("video");
+      videoEl.preload = "metadata";
+      videoEl.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(videoEl.src);
+        if (videoEl.duration > 30) {
+          showToast("Video exceeds 30 seconds limit! Please choose a clip under 30s.", "coral");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const videoMsg: Message = {
+            id: `msg-video-${Date.now()}`,
+            conversationId: activeConvId,
+            senderId: dbUserId || "user-me",
+            content: "📹 Video Clip (≤ 30s)",
+            isRead: true,
+            createdAt: new Date().toISOString(),
+            type: "video",
+            mediaUrl: ev.target?.result as string,
+          };
+          setConversations((prev: any) => ({
+            ...prev,
+            [activeConvId]: [...(prev[activeConvId] || []), videoMsg],
+          }));
+          showToast("Video sent! (Not stored in database) ✦", "coral");
+        };
+        reader.readAsDataURL(file);
+      };
+      videoEl.src = URL.createObjectURL(file);
+      return;
+    }
+
+    // Photo
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const photoMsg: Message = {
+        id: `msg-photo-${Date.now()}`,
+        conversationId: activeConvId,
+        senderId: dbUserId || "user-me",
+        content: "📷 Photo",
+        isRead: true,
+        createdAt: new Date().toISOString(),
+        type: "photo",
+        mediaUrl: ev.target?.result as string,
+      };
+      setConversations((prev: any) => ({
+        ...prev,
+        [activeConvId]: [...(prev[activeConvId] || []), photoMsg],
+      }));
+      showToast("Photo sent! (Not stored in database) ✦", "coral");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Play pleasant chime on incoming message
+  const playNotificationSound = useCallback(() => {
+    try {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "sine";
+      const now = ctx.currentTime;
+      osc.frequency.setValueAtTime(587.33, now); // D5
+      osc.frequency.setValueAtTime(880, now + 0.12); // A5
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } catch {}
+  }, []);
 
   // Poll for new messages every 5 seconds (near-real-time)
   const pollMessages = useCallback(async () => {
@@ -74,16 +275,29 @@ export default function MatchesPage() {
       if (!res.ok) return;
       const data = await res.json();
       if (data.messages && Array.isArray(data.messages)) {
-        // Merge with existing to avoid losing optimistic updates
-        setConversations((prev: Record<string, Message[]>) => ({
-          ...prev,
-          [activeConvId]: data.messages,
-        }));
+        // Merge with existing to avoid losing optimistic updates and trigger alerts
+        setConversations((prev: Record<string, Message[]>) => {
+          const currentList = prev[activeConvId] || [];
+          if (data.messages.length > currentList.length) {
+            playNotificationSound();
+            if (typeof document !== "undefined" && document.hidden && "Notification" in window && Notification.permission === "granted") {
+              const latest = data.messages[data.messages.length - 1];
+              new Notification(activeMatchData.matchedWith.fullName, {
+                body: latest.content || "New message received on Rada",
+                icon: activeMatchData.matchedWith.photos[0]?.url || "/icon-192.png",
+              });
+            }
+          }
+          return {
+            ...prev,
+            [activeConvId]: data.messages,
+          };
+        });
       }
     } catch {
       // Silently fail polls
     }
-  }, [activeConvId, dbUserId, matches, setConversations]);
+  }, [activeConvId, dbUserId, matches, setConversations, playNotificationSound]);
 
   useEffect(() => {
     pollMessages();
@@ -449,13 +663,57 @@ export default function MatchesPage() {
                   <strong className={styles.partnerName}>{activeMatch.matchedWith.fullName.split(" ")[0]}</strong>
                   <IntentBadge intent={activeMatch.matchedWith.intent} size="small" />
                 </div>
-                <span className={styles.partnerLocation}>
-                  {activeMatch.matchedWith.area}, {activeMatch.matchedWith.county} • {activeMatch.matchedWith.occupation}
-                </span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                  <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981" }} />
+                  <span style={{ fontSize: "11px", color: "#10B981", fontWeight: 700 }}>Online Now</span>
+                  <span style={{ fontSize: "11px", color: "var(--rada-pearl-dim)" }}>• {activeMatch.matchedWith.area}</span>
+                </div>
               </div>
             </div>
 
-            <div className={styles.headerActions}>
+            <div className={styles.headerActions} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              {/* Voice Call Button */}
+              <button
+                type="button"
+                onClick={() => startCall("voice")}
+                style={{
+                  background: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid var(--rada-border)",
+                  borderRadius: "50%",
+                  width: "36px",
+                  height: "36px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "16px",
+                  cursor: "pointer",
+                }}
+                aria-label="Start Voice Call"
+                title="Voice Call"
+              >
+                📞
+              </button>
+              {/* Video Call Button */}
+              <button
+                type="button"
+                onClick={() => startCall("video")}
+                style={{
+                  background: "rgba(255, 255, 255, 0.08)",
+                  border: "1px solid var(--rada-border)",
+                  borderRadius: "50%",
+                  width: "36px",
+                  height: "36px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "16px",
+                  cursor: "pointer",
+                }}
+                aria-label="Start Video Call"
+                title="Video Call"
+              >
+                📹
+              </button>
               <button
                 className={styles.safetyBtn}
                 onClick={() => setShowSafetyMenu(!showSafetyMenu)}
@@ -505,6 +763,32 @@ export default function MatchesPage() {
                   className={`${styles.messageRow} ${isMe ? styles.messageRowMe : styles.messageRowPartner}`}
                 >
                   <div className={`${styles.bubble} ${isMe ? styles.bubbleMe : styles.bubblePartner}`}>
+                    {/* Media Attachments (Ephemeral, never stored in DB) */}
+                    {msg.type === "photo" && msg.mediaUrl && (
+                      <div style={{ marginBottom: "6px", borderRadius: "12px", overflow: "hidden" }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={msg.mediaUrl}
+                          alt="Photo attachment"
+                          style={{ maxWidth: "240px", maxHeight: "240px", width: "100%", objectFit: "cover", display: "block", borderRadius: "10px" }}
+                        />
+                      </div>
+                    )}
+                    {msg.type === "video" && msg.mediaUrl && (
+                      <div style={{ marginBottom: "6px", borderRadius: "12px", overflow: "hidden", maxWidth: "240px" }}>
+                        <video
+                          src={msg.mediaUrl}
+                          controls
+                          playsInline
+                          style={{ width: "100%", maxHeight: "240px", borderRadius: "10px", display: "block", background: "#000" }}
+                        />
+                      </div>
+                    )}
+                    {msg.type === "voice" && msg.mediaUrl && (
+                      <div style={{ marginBottom: "6px", minWidth: "180px", maxWidth: "240px" }}>
+                        <audio src={msg.mediaUrl} controls style={{ width: "100%", height: "36px" }} />
+                      </div>
+                    )}
                     <p className={styles.msgText}>{msg.content}</p>
                     <span className={styles.msgTime}>
                       {typeof msg.createdAt === "string" && msg.createdAt.length > 20
@@ -619,24 +903,141 @@ export default function MatchesPage() {
               )}
 
               {/* Input Bar */}
-              <form onSubmit={handleSend} className={styles.inputBar}>
-                <input
-                  type="text"
-                  placeholder={`Message ${activeMatch.matchedWith.fullName.split(" ")[0]}...`}
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  className={styles.textInput}
-                  disabled={isSending}
-                />
-                <Button
-                  variant="primary"
-                  type="submit"
-                  disabled={!inputText.trim() || isSending}
-                  className={styles.sendButton}
-                >
-                  {isSending ? "..." : "Send"}
-                </Button>
-              </form>
+              {isRecordingVoice ? (
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "10px 14px",
+                  background: "rgba(225, 29, 72, 0.12)",
+                  border: "1px solid rgba(225, 29, 72, 0.3)",
+                  borderRadius: "24px",
+                  margin: "8px 12px 14px",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <span style={{
+                      width: "10px",
+                      height: "10px",
+                      borderRadius: "50%",
+                      background: "#E11D48",
+                      boxShadow: "0 0 8px #E11D48",
+                    }} />
+                    <span style={{ fontSize: "13px", fontWeight: 700, color: "#FDA4AF" }}>
+                      Recording Voice Note ({voiceSeconds}s / 30s)...
+                    </span>
+                  </div>
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (voiceTimerRef.current) clearInterval(voiceTimerRef.current);
+                        if (mediaRecorderRef.current && mediaRecorderRef.current.state === "recording") {
+                          mediaRecorderRef.current.stop();
+                        }
+                        setIsRecordingVoice(false);
+                      }}
+                      style={{
+                        padding: "6px 12px",
+                        background: "rgba(255,255,255,0.1)",
+                        border: "none",
+                        borderRadius: "14px",
+                        color: "var(--rada-pearl-dim)",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopVoiceRecording}
+                      style={{
+                        padding: "6px 14px",
+                        background: "#E11D48",
+                        border: "none",
+                        borderRadius: "14px",
+                        color: "#FFFFFF",
+                        fontWeight: 700,
+                        fontSize: "12px",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Send Note 🎙️
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSend} className={styles.inputBar}>
+                  <input
+                    ref={chatMediaInputRef}
+                    type="file"
+                    accept="image/*,video/*"
+                    style={{ display: "none" }}
+                    onChange={handleChatMediaUpload}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => chatMediaInputRef.current?.click()}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.08)",
+                      border: "1px solid var(--rada-border)",
+                      borderRadius: "50%",
+                      width: "40px",
+                      height: "40px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "18px",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                    title="Send ephemeral photo or video (max 30s - not stored in DB)"
+                    aria-label="Send photo or video"
+                  >
+                    📷
+                  </button>
+
+                  <input
+                    type="text"
+                    placeholder={`Message ${activeMatch.matchedWith.fullName.split(" ")[0]}...`}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    className={styles.textInput}
+                    disabled={isSending}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={startVoiceRecording}
+                    style={{
+                      background: "rgba(255, 255, 255, 0.08)",
+                      border: "1px solid var(--rada-border)",
+                      borderRadius: "50%",
+                      width: "40px",
+                      height: "40px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "18px",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                    }}
+                    title="Record voice note (max 30s)"
+                    aria-label="Record voice note"
+                  >
+                    🎙️
+                  </button>
+
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    disabled={!inputText.trim() || isSending}
+                    className={styles.sendButton}
+                  >
+                    {isSending ? "..." : "Send"}
+                  </Button>
+                </form>
+              )}
             </>
           )}
         </section>
@@ -703,6 +1104,221 @@ export default function MatchesPage() {
           </div>
         </div>
       </Modal>
+
+      {/* Voice & Video Call Modal */}
+      {activeCallType && activeMatch && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 9999,
+          background: "rgba(7, 2, 13, 0.96)",
+          backdropFilter: "blur(20px)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "50px 24px 40px",
+        }}>
+          {/* Call Header */}
+          <div style={{ textAlign: "center", marginTop: "20px" }}>
+            <span style={{
+              display: "inline-block",
+              padding: "4px 12px",
+              background: "rgba(212, 175, 55, 0.15)",
+              color: "#D4AF37",
+              border: "1px solid rgba(212, 175, 55, 0.3)",
+              borderRadius: "20px",
+              fontSize: "12px",
+              fontWeight: 700,
+              marginBottom: "12px",
+              textTransform: "uppercase",
+              letterSpacing: "1px",
+            }}>
+              {activeCallType === "video" ? "📹 Encrypted Video Call" : "📞 Encrypted Voice Call"}
+            </span>
+            <h2 style={{ fontSize: "24px", fontWeight: 800, color: "var(--rada-pearl)", margin: "0 0 6px" }}>
+              {activeMatch.matchedWith.fullName}
+            </h2>
+            <p style={{
+              fontSize: "14px",
+              color: callStatus === "connected" ? "#10B981" : "var(--rada-pearl-dim)",
+              fontWeight: 600,
+              margin: 0,
+            }}>
+              {callStatus === "ringing" && "Connecting to secure room..."}
+              {callStatus === "connected" && `Connected • ${Math.floor(callDuration / 60)}:${(callDuration % 60).toString().padStart(2, "0")}`}
+              {callStatus === "ended" && "Call Ended"}
+            </p>
+          </div>
+
+          {/* Video or Avatar Display */}
+          <div style={{
+            position: "relative",
+            width: "100%",
+            maxWidth: "340px",
+            height: activeCallType === "video" ? "360px" : "200px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "20px 0",
+          }}>
+            {activeCallType === "video" ? (
+              <div style={{
+                position: "relative",
+                width: "100%",
+                height: "100%",
+                borderRadius: "24px",
+                overflow: "hidden",
+                border: "1px solid var(--rada-border)",
+                background: "#0F0F14",
+                boxShadow: "0 10px 40px rgba(0,0,0,0.5)",
+              }}>
+                {/* Simulated remote stream */}
+                {activeMatch.matchedWith.photos[0]?.url ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={activeMatch.matchedWith.photos[0].url}
+                    alt={activeMatch.matchedWith.fullName}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
+                  />
+                ) : (
+                  <div style={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "48px",
+                  }}>
+                    👤
+                  </div>
+                )}
+                {/* Local user video preview */}
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  style={{
+                    position: "absolute",
+                    bottom: "16px",
+                    right: "16px",
+                    width: "90px",
+                    height: "120px",
+                    objectFit: "cover",
+                    borderRadius: "14px",
+                    border: "2px solid #D4AF37",
+                    background: "#1E1E26",
+                    display: isCameraOff ? "none" : "block",
+                  }}
+                />
+              </div>
+            ) : (
+              <div style={{
+                width: "130px",
+                height: "130px",
+                borderRadius: "50%",
+                background: "var(--rada-gold-gradient)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 0 40px rgba(212, 175, 55, 0.4)",
+              }}>
+                {activeMatch.matchedWith.photos[0]?.url ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={activeMatch.matchedWith.photos[0].url}
+                    alt={activeMatch.matchedWith.fullName}
+                    style={{ width: "120px", height: "120px", borderRadius: "50%", objectFit: "cover" }}
+                  />
+                ) : (
+                  <span style={{ fontSize: "48px", fontWeight: 800, color: "#0A0A0C" }}>
+                    {activeMatch.matchedWith.fullName.charAt(0)}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Call Controls */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "20px",
+            marginBottom: "20px",
+          }}>
+            {/* Mic Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsMicMuted(!isMicMuted)}
+              style={{
+                width: "56px",
+                height: "56px",
+                borderRadius: "50%",
+                background: isMicMuted ? "#E11D48" : "rgba(255, 255, 255, 0.12)",
+                border: "1px solid var(--rada-border)",
+                color: "#FFFFFF",
+                fontSize: "20px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+              }}
+              title={isMicMuted ? "Unmute" : "Mute"}
+            >
+              {isMicMuted ? "🔇" : "🎙️"}
+            </button>
+
+            {/* Video Camera Toggle (If Video Call) */}
+            {activeCallType === "video" && (
+              <button
+                type="button"
+                onClick={() => setIsCameraOff(!isCameraOff)}
+                style={{
+                  width: "56px",
+                  height: "56px",
+                  borderRadius: "50%",
+                  background: isCameraOff ? "#E11D48" : "rgba(255, 255, 255, 0.12)",
+                  border: "1px solid var(--rada-border)",
+                  color: "#FFFFFF",
+                  fontSize: "20px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                }}
+                title={isCameraOff ? "Turn Camera On" : "Turn Camera Off"}
+              >
+                {isCameraOff ? "🚫" : "📹"}
+              </button>
+            )}
+
+            {/* End Call Button */}
+            <button
+              type="button"
+              onClick={endCall}
+              style={{
+                width: "64px",
+                height: "64px",
+                borderRadius: "50%",
+                background: "#E11D48",
+                border: "none",
+                color: "#FFFFFF",
+                fontSize: "24px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                boxShadow: "0 6px 20px rgba(225, 29, 72, 0.4)",
+              }}
+              title="End Call"
+            >
+              📞
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

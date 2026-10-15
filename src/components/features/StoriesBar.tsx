@@ -27,12 +27,15 @@ export function StoriesBar() {
   const [stories, setStories] = useState<StoryItem[]>([]);
   const [activeStoryIndex, setActiveStoryIndex] = useState<number | null>(null);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  const [showSourceModal, setShowSourceModal] = useState(false);
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null);
+  const [isNewMediaVideo, setIsNewMediaVideo] = useState(false);
   const [newCaption, setNewCaption] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [storyProgress, setStoryProgress] = useState(0);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch stories on mount
@@ -79,15 +82,39 @@ export function StoriesBar() {
     return () => clearInterval(interval);
   }, [activeStoryIndex, stories.length]);
 
-  // Handle Photo Selection with client-side compression
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle Media Selection (Photo or Video <= 30s)
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setShowSourceModal(false);
+
+    if (file.type.startsWith("video/")) {
+      // Validate Video duration <= 30s
+      const videoElement = document.createElement("video");
+      videoElement.preload = "metadata";
+      videoElement.onloadedmetadata = () => {
+        window.URL.revokeObjectURL(videoElement.src);
+        if (videoElement.duration > 30) {
+          showToast("Video exceeds 30 seconds limit! Please choose a shorter clip.", "coral");
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setNewImagePreview(ev.target?.result as string);
+          setIsNewMediaVideo(true);
+          setIsCreatorOpen(true);
+        };
+        reader.readAsDataURL(file);
+      };
+      videoElement.src = URL.createObjectURL(file);
+      return;
+    }
+
+    // Photo selection with client-side compression
     const reader = new FileReader();
     reader.onload = (ev) => {
       const rawUrl = ev.target?.result as string;
-      // Client-side compression using Canvas (~100KB for zero storage waste)
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
@@ -110,6 +137,7 @@ export function StoriesBar() {
           ctx.drawImage(img, 0, 0, w, h);
           const compressed = canvas.toDataURL("image/jpeg", 0.82);
           setNewImagePreview(compressed);
+          setIsNewMediaVideo(false);
           setIsCreatorOpen(true);
         }
       };
@@ -152,14 +180,22 @@ export function StoriesBar() {
 
   return (
     <div style={{ marginBottom: "16px", padding: "0 4px" }}>
-      {/* Hidden file input for camera/photos */}
+      {/* Hidden file input for camera capture */}
       <input
-        ref={fileInputRef}
+        ref={cameraInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         capture="user"
         style={{ display: "none" }}
-        onChange={handlePhotoSelect}
+        onChange={handleMediaSelect}
+      />
+      {/* Hidden file input for gallery picker */}
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*,video/*"
+        style={{ display: "none" }}
+        onChange={handleMediaSelect}
       />
 
       {/* Stories Horizontal Tray */}
@@ -177,7 +213,7 @@ export function StoriesBar() {
         {/* 1. Add Story Bubble */}
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => setShowSourceModal(true)}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -325,6 +361,116 @@ export function StoriesBar() {
         })}
       </div>
 
+      {/* ── PERMISSION & SOURCE SELECTION MODAL ── */}
+      {showSourceModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 10001,
+            background: "rgba(0, 0, 0, 0.8)",
+            backdropFilter: "blur(12px)",
+            display: "flex",
+            alignItems: "flex-end",
+            justifyContent: "center",
+            padding: "0",
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSourceModal(false);
+          }}
+        >
+          <div
+            style={{
+              width: "100%",
+              maxWidth: "460px",
+              background: "linear-gradient(180deg, #18181E 0%, #0D0D12 100%)",
+              borderTop: "1px solid rgba(245, 207, 104, 0.4)",
+              borderRadius: "24px 24px 0 0",
+              padding: "24px 20px 34px",
+              boxShadow: "0 -10px 40px rgba(0, 0, 0, 0.9)",
+              display: "flex",
+              flexDirection: "column",
+              gap: "14px",
+              color: "var(--rada-pearl)",
+            }}
+          >
+            <div style={{ textAlign: "center", marginBottom: "8px" }}>
+              <h3 style={{ margin: "0 0 6px", fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>
+                Add to 24h Story
+              </h3>
+              <p style={{ margin: 0, fontSize: "12.5px", color: "var(--rada-pearl-muted)" }}>
+                Allow Rada access to capture a live moment or select photos and short clips (max 30s) from your device gallery.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              style={{
+                width: "100%",
+                padding: "14px 18px",
+                borderRadius: "14px",
+                background: "linear-gradient(135deg, #FFF6D6 0%, #F5CF68 35%, #D4AF37 70%, #9B700F 100%)",
+                color: "#0A0A0E",
+                fontSize: "14.5px",
+                fontWeight: 800,
+                border: "none",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                boxShadow: "0 4px 16px rgba(245, 207, 104, 0.35)",
+              }}
+            >
+              <span style={{ fontSize: "18px" }}>📸</span>
+              <span>Snap with Camera (Ask Permission)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => galleryInputRef.current?.click()}
+              style={{
+                width: "100%",
+                padding: "14px 18px",
+                borderRadius: "14px",
+                background: "var(--rada-surface-raised)",
+                color: "var(--rada-pearl)",
+                border: "1px solid var(--rada-border)",
+                fontSize: "14.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+              }}
+            >
+              <span style={{ fontSize: "18px" }}>🖼️</span>
+              <span>Choose from Device Gallery</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowSourceModal(false)}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--rada-pearl-dim)",
+                fontSize: "13px",
+                cursor: "pointer",
+                padding: "8px",
+                marginTop: "4px",
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── STORY CREATOR MODAL ──────────────────────────────────────────────── */}
       {isCreatorOpen && newImagePreview && (
         <div
@@ -359,7 +505,7 @@ export function StoriesBar() {
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ fontSize: "18px" }}>📸</span>
+                <span style={{ fontSize: "18px" }}>{isNewMediaVideo ? "🎥" : "📸"}</span>
                 <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 800 }}>New 24h Story</h3>
               </div>
               <button
@@ -382,7 +528,7 @@ export function StoriesBar() {
               </button>
             </div>
 
-            {/* Photo Preview */}
+            {/* Media Preview (Photo or Video) */}
             <div
               style={{
                 width: "100%",
@@ -391,13 +537,27 @@ export function StoriesBar() {
                 overflow: "hidden",
                 border: "1px solid rgba(255, 255, 255, 0.1)",
                 position: "relative",
+                background: "#000000",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <img
-                src={newImagePreview}
-                alt="Story Preview"
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
+              {isNewMediaVideo ? (
+                <video
+                  src={newImagePreview}
+                  controls
+                  autoPlay
+                  playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                />
+              ) : (
+                <img
+                  src={newImagePreview}
+                  alt="Story Preview"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              )}
               <span
                 style={{
                   position: "absolute",
@@ -582,11 +742,21 @@ export function StoriesBar() {
               overflow: "hidden",
             }}
           >
-            <img
-              src={activeStory.mediaUrl}
-              alt={activeStory.caption || "Story"}
-              style={{ width: "100%", height: "100%", objectFit: "contain" }}
-            />
+            {activeStory.mediaUrl.startsWith("data:video") || activeStory.mediaUrl.endsWith(".mp4") ? (
+              <video
+                src={activeStory.mediaUrl}
+                autoPlay
+                playsInline
+                controls={false}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            ) : (
+              <img
+                src={activeStory.mediaUrl}
+                alt={activeStory.caption || "Story"}
+                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+              />
+            )}
 
             {/* Tap Left (Previous) */}
             <div
