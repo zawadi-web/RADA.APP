@@ -212,7 +212,7 @@ export default function MatchesPage() {
             ...prev,
             [activeConvId]: [...(prev[activeConvId] || []), videoMsg],
           }));
-          showToast("Video sent! (Not stored in database) ✦", "coral");
+          showToast("Video sent! ✦", "success");
         };
         reader.readAsDataURL(file);
       };
@@ -237,7 +237,7 @@ export default function MatchesPage() {
         ...prev,
         [activeConvId]: [...(prev[activeConvId] || []), photoMsg],
       }));
-      showToast("Photo sent! (Not stored in database) ✦", "coral");
+      showToast("Photo sent! ✦", "success");
     };
     reader.readAsDataURL(file);
   };
@@ -275,9 +275,20 @@ export default function MatchesPage() {
       if (!res.ok) return;
       const data = await res.json();
       if (data.messages && Array.isArray(data.messages)) {
-        // Merge with existing to avoid losing optimistic updates and trigger alerts
+        // Merge with existing to avoid losing local media and trigger alerts
         setConversations((prev: Record<string, Message[]>) => {
           const currentList = prev[activeConvId] || [];
+
+          // Retain all locally sent media (photos, videos, voice notes) so polling doesn't overwrite them
+          const clientMediaMessages = currentList.filter(
+            (m) => m.type === "photo" || m.type === "video" || m.type === "voice" || m.id.startsWith("msg-")
+          );
+
+          const serverMsgIds = new Set(data.messages.map((m: Message) => m.id));
+          const unsavedClientMessages = clientMediaMessages.filter((m) => !serverMsgIds.has(m.id));
+
+          const merged = [...data.messages, ...unsavedClientMessages];
+
           if (data.messages.length > currentList.length) {
             playNotificationSound();
             if (typeof document !== "undefined" && document.hidden && "Notification" in window && Notification.permission === "granted") {
@@ -290,7 +301,7 @@ export default function MatchesPage() {
           }
           return {
             ...prev,
-            [activeConvId]: data.messages,
+            [activeConvId]: merged,
           };
         });
       }
@@ -663,11 +674,47 @@ export default function MatchesPage() {
                   <strong className={styles.partnerName}>{activeMatch.matchedWith.fullName.split(" ")[0]}</strong>
                   <IntentBadge intent={activeMatch.matchedWith.intent} size="small" />
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                  <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10B981", boxShadow: "0 0 6px #10B981" }} />
-                  <span style={{ fontSize: "11px", color: "#10B981", fontWeight: 700 }}>Online Now</span>
-                  <span style={{ fontSize: "11px", color: "var(--rada-pearl-dim)" }}>• {activeMatch.matchedWith.area}</span>
-                </div>
+                {(() => {
+                  const partnerLastActive = (activeMatch.matchedWith as any)?.lastActive || activeMatch.lastActivity;
+                  const diffMs = partnerLastActive ? Math.abs(Date.now() - new Date(partnerLastActive).getTime()) : NaN;
+                  const isOnline = !isNaN(diffMs) && diffMs < 5 * 60 * 1000;
+                  let statusLabel = "Offline";
+                  if (isOnline) {
+                    statusLabel = "Online Now";
+                  } else if (!isNaN(diffMs)) {
+                    const mins = Math.floor(diffMs / 60000);
+                    if (mins < 60) statusLabel = `Active ${mins}m ago`;
+                    else {
+                      const hrs = Math.floor(mins / 60);
+                      if (hrs < 24) statusLabel = `Active ${hrs}h ago`;
+                      else statusLabel = "Offline";
+                    }
+                  }
+
+                  return (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                      <span
+                        style={{
+                          width: "7px",
+                          height: "7px",
+                          borderRadius: "50%",
+                          background: isOnline ? "#10B981" : "rgba(255, 255, 255, 0.28)",
+                          boxShadow: isOnline ? "0 0 6px #10B981" : "none",
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: "11px",
+                          color: isOnline ? "#10B981" : "var(--rada-pearl-dim)",
+                          fontWeight: isOnline ? 700 : 500,
+                        }}
+                      >
+                        {statusLabel}
+                      </span>
+                      <span style={{ fontSize: "11px", color: "var(--rada-pearl-dim)" }}>• {activeMatch.matchedWith.area}</span>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
 
@@ -991,7 +1038,7 @@ export default function MatchesPage() {
                       cursor: "pointer",
                       flexShrink: 0,
                     }}
-                    title="Send ephemeral photo or video (max 30s - not stored in DB)"
+                    title="Send photo or video (max 30s)"
                     aria-label="Send photo or video"
                   >
                     📷

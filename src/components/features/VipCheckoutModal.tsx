@@ -19,7 +19,7 @@ export const VipCheckoutModal: React.FC = () => {
   const { isVipModalOpen, closeVipModal, upgradeToVip, currentUser } = useRada();
   const [gateway, setGateway] = useState<Gateway>("MPESA");
   const [selectedPlan, setSelectedPlan] = useState<"WEEKLY" | "MONTHLY">("WEEKLY");
-  const [phone, setPhone] = useState("0712345678");
+  const [phone, setPhone] = useState("");
 
   // STK / SIM Toolkit Simulation State
   const [showSimToolkit, setShowSimToolkit] = useState(false);
@@ -140,6 +140,10 @@ export const VipCheckoutModal: React.FC = () => {
 
   const handleStartPayment = async () => {
     if (gateway === "MPESA") {
+      if (!phone.trim()) {
+        alert("Please enter your M-Pesa phone number");
+        return;
+      }
       setShowSimToolkit(true);
       setPin("");
     } else {
@@ -392,7 +396,7 @@ export const VipCheckoutModal: React.FC = () => {
                   className={styles.phoneInput}
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="712345678"
+                  placeholder="e.g. 0712 345 678"
                 />
               </div>
             </div>

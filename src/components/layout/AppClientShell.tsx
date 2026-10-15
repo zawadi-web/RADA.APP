@@ -277,7 +277,7 @@ type PlanType = "WEEKLY" | "MONTHLY";
 function VipCheckoutInner() {
   const { isVipModalOpen, closeVipModal, upgradeToVip } = useRada();
   const [plan, setPlan] = useState<PlanType>("WEEKLY");
-  const [phone, setPhone] = useState("0712345678");
+  const [phone, setPhone] = useState("");
   const [showStk, setShowStk] = useState(false);
   const [pin, setPin] = useState("");
   const [processing, setProcessing] = useState(false);
@@ -287,7 +287,14 @@ function VipCheckoutInner() {
 
   const amount = plan === "WEEKLY" ? 250 : 750;
 
-  const handlePay = () => { setShowStk(true); setPin(""); };
+  const handlePay = () => {
+    if (!phone.trim()) {
+      alert("Please enter your M-Pesa phone number");
+      return;
+    }
+    setShowStk(true);
+    setPin("");
+  };
 
   const confirmPin = () => {
     if (pin.length < 4) return;
@@ -376,7 +383,7 @@ function VipCheckoutInner() {
             <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "6px" }}>Safaricom M-Pesa Number</label>
             <div style={{ display: "flex", alignItems: "center", background: "rgba(128,128,128,0.08)", border: "1px solid var(--rada-border-teal)", borderRadius: "10px", overflow: "hidden" }}>
               <span style={{ padding: "12px", fontSize: "13px", color: "var(--rada-gold)", borderRight: "1px solid var(--rada-border)", flexShrink: 0 }}>🇰🇪 +254</span>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="712345678" style={{ flex: 1, padding: "12px", background: "transparent", border: "none", color: "var(--rada-pearl)", fontSize: "14px", outline: "none" }} />
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0712 345 678" style={{ flex: 1, padding: "12px", background: "transparent", border: "none", color: "var(--rada-pearl)", fontSize: "14px", outline: "none" }} />
             </div>
           </div>
 
@@ -402,7 +409,7 @@ const COIN_PACKS: { id: CoinPackId; title: string; coins: number; priceKsh: numb
 function CoinPurchaseModalInner() {
   const { isCoinModalOpen, closeCoinModal, purchaseCoins, coins } = useRada();
   const [selectedPack, setSelectedPack] = useState<CoinPackId>("CUPID_200");
-  const [phone, setPhone] = useState("0712345678");
+  const [phone, setPhone] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
 
@@ -411,6 +418,10 @@ function CoinPurchaseModalInner() {
   const currentPack = COIN_PACKS.find((p) => p.id === selectedPack) || COIN_PACKS[1];
 
   const handleBuy = async () => {
+    if (!phone.trim()) {
+      setStatusMsg("Please enter your M-Pesa phone number");
+      return;
+    }
     setIsProcessing(true);
     setStatusMsg("Sending M-Pesa prompt to " + phone + "...");
     try {
@@ -498,7 +509,7 @@ function CoinPurchaseModalInner() {
           <label style={{ fontSize: "12px", color: "var(--rada-pearl-muted)", display: "block", marginBottom: "6px" }}>M-Pesa Express Phone Number</label>
           <div style={{ display: "flex", alignItems: "center", background: "rgba(128,128,128,0.08)", border: "1px solid var(--rada-border-teal)", borderRadius: "12px", overflow: "hidden" }}>
             <span style={{ padding: "10px 12px", fontSize: "13px", color: "var(--rada-gold)", borderRight: "1px solid var(--rada-border)", flexShrink: 0 }}>🇰🇪 +254</span>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="712345678" style={{ flex: 1, padding: "10px", background: "transparent", border: "none", color: "var(--rada-pearl)", fontSize: "14px", outline: "none" }} />
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0712 345 678" style={{ flex: 1, padding: "10px", background: "transparent", border: "none", color: "var(--rada-pearl)", fontSize: "14px", outline: "none" }} />
           </div>
         </div>
 

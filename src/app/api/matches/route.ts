@@ -82,6 +82,7 @@ export async function GET(req: Request) {
           bio: partner.bio || "",
           gender: partner.gender,
           prompts: [],
+          lastActive: partner.updatedAt.toISOString(),
         },
         lastMessage: lastMsg
           ? {
