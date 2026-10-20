@@ -809,3 +809,314 @@
   font-weight: 500;
   text-align: center;
 }
+
+/* ── WhatsApp Call Log Bubbles in Chat ── */
+.callLogCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: #1F2C34;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  min-width: 240px;
+  max-width: 310px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.callLogCardMe {
+  background: #005C4B;
+  border-color: rgba(255, 255, 255, 0.12);
+  align-self: flex-end;
+}
+
+.callLogCardPartner {
+  background: #202C33;
+  align-self: flex-start;
+}
+
+.callLogCardLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.callLogIconBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.callLogIconMissed {
+  background: rgba(241, 92, 109, 0.15);
+  color: #F15C6D;
+}
+
+.callLogIconCompleted {
+  background: rgba(0, 168, 132, 0.18);
+  color: #00A884;
+}
+
+.callLogIconDeclined {
+  background: rgba(134, 150, 160, 0.15);
+  color: #8696A0;
+}
+
+.callLogDetails {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.callLogTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #E9EDEF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.callLogSub {
+  font-size: 11px;
+  color: #8696A0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.callLogSubMissed {
+  color: #F15C6D;
+  font-weight: 500;
+}
+
+.callLogCallbackBtn {
+  background: rgba(0, 168, 132, 0.15);
+  border: 1px solid rgba(0, 168, 132, 0.4);
+  color: #00A884;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.callLogCallbackBtn:hover {
+  background: #00A884;
+  color: #FFFFFF;
+}
+
+/* ── WhatsApp Incoming Call Screen ── */
+.incomingCallOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(11, 20, 26, 0.96);
+  backdrop-filter: blur(12px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 48px 24px 44px;
+  animation: fadeInModal 0.25s ease-out;
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.incomingCallTop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+}
+
+.incomingCallBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(0, 168, 132, 0.15);
+  color: #00A884;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.incomingCallName {
+  font-size: 26px;
+  font-weight: 800;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+.incomingCallType {
+  font-size: 14px;
+  color: #8696A0;
+}
+
+.incomingAvatarRipple {
+  position: relative;
+  width: 160px;
+  height: 160px;
+  margin: 30px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.incomingAvatarRipple::before,
+.incomingAvatarRipple::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 168, 132, 0.4);
+  animation: rippleRing 2s infinite cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.incomingAvatarRipple::after {
+  inset: -28px;
+  border-color: rgba(0, 168, 132, 0.25);
+  animation-delay: 0.6s;
+}
+
+@keyframes rippleRing {
+  0% { transform: scale(0.9); opacity: 0.9; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+.incomingAvatarImg {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #00A884;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 2;
+}
+
+.incomingActionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 48px;
+  width: 100%;
+}
+
+.incomingActionItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.incomingDeclineBtn {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #EA0038;
+  border: none;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(234, 0, 56, 0.45);
+  transition: transform 0.15s ease;
+}
+
+.incomingDeclineBtn:active {
+  transform: scale(0.9);
+}
+
+.incomingAcceptBtn {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #00A884;
+  border: none;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(0, 168, 132, 0.5);
+  transition: transform 0.15s ease;
+  animation: pulseAccept 1.6s infinite ease-in-out;
+}
+
+.incomingAcceptBtn:active {
+  transform: scale(0.9);
+}
+
+@keyframes pulseAccept {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+.incomingActionLabel {
+  font-size: 13px;
+  color: #E9EDEF;
+  font-weight: 600;
+}
+
+/* Simulation Pill Bar on Active Call Screen */
+.simCallBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 8px;
+}
+
+.simCallBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #E9EDEF;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.simCallBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.simCallBtnAccept {
+  border-color: rgba(0, 168, 132, 0.5);
+  color: #25D366;
+}
+
+.simCallBtnDecline {
+  border-color: rgba(234, 0, 56, 0.5);
+  color: #F15C6D;
+}

@@ -77,6 +77,7 @@ interface RadaContextType {
   createTestProfile: (preset: "MALE" | "FEMALE") => Promise<RadaUser>;
   // Direct state setters (for advanced usage)
   setConversations: React.Dispatch<React.SetStateAction<Record<string, Message[]>>>;
+  setMatches: React.Dispatch<React.SetStateAction<MatchItem[]>>;
   // Coin economy
   coins: number;
   isCoinModalOpen: boolean;
@@ -1072,6 +1073,7 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
         savedTestProfiles,
         createTestProfile,
         setConversations,
+        setMatches,
         // Coin economy
         coins: currentUser.coins ?? 20,
         isCoinModalOpen,

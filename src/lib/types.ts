@@ -95,9 +95,11 @@ export interface Message {
   isRead: boolean;
   createdAt: string;
   isSystem?: boolean;
-  type?: "text" | "photo" | "video" | "voice";
+  type?: "text" | "photo" | "video" | "voice" | "call";
   mediaUrl?: string;
   durationSec?: number;
+  callType?: "voice" | "video";
+  callStatus?: "missed" | "completed" | "declined" | "cancelled";
 }
 
 export interface MatchItem {

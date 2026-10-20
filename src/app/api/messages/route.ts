@@ -32,15 +32,35 @@ export async function GET(req: Request) {
       });
     }
 
-    const formatted = messages.map((msg) => ({
-      id: msg.id,
-      conversationId: msg.matchId,
-      senderId: msg.senderId,
-      content: msg.content,
-      isRead: msg.isRead,
-      createdAt: msg.createdAt.toISOString(),
-      isSystem: msg.isSystem,
-    }));
+    const formatted = messages.map((msg) => {
+      // Parse call log metadata if present: [CALL:voice:completed:134] Voice call (2:14)
+      const callMatch = msg.content.match(/^\[CALL:(voice|video):(missed|completed|declined|cancelled)(?::(\d+))?\]\s*(.*)$/);
+      if (callMatch) {
+        return {
+          id: msg.id,
+          conversationId: msg.matchId,
+          senderId: msg.senderId,
+          content: callMatch[4] || msg.content,
+          isRead: msg.isRead,
+          createdAt: msg.createdAt.toISOString(),
+          isSystem: false,
+          type: "call" as const,
+          callType: callMatch[1] as "voice" | "video",
+          callStatus: callMatch[2] as "missed" | "completed" | "declined" | "cancelled",
+          durationSec: callMatch[3] ? parseInt(callMatch[3], 10) : 0,
+        };
+      }
+
+      return {
+        id: msg.id,
+        conversationId: msg.matchId,
+        senderId: msg.senderId,
+        content: msg.content,
+        isRead: msg.isRead,
+        createdAt: msg.createdAt.toISOString(),
+        isSystem: msg.isSystem,
+      };
+    });
 
     return NextResponse.json({ messages: formatted });
   } catch (error) {
@@ -96,6 +116,23 @@ export async function POST(req: Request) {
         data: { lastActivity: new Date() },
       }),
     ]);
+
+    const callMatch = newMessage.content.match(/^\[CALL:(voice|video):(missed|completed|declined|cancelled)(?::(\d+))?\]\s*(.*)$/);
+    if (callMatch) {
+      return NextResponse.json({
+        id: newMessage.id,
+        conversationId: newMessage.matchId,
+        senderId: newMessage.senderId,
+        content: callMatch[4] || newMessage.content,
+        isRead: newMessage.isRead,
+        createdAt: newMessage.createdAt.toISOString(),
+        isSystem: false,
+        type: "call",
+        callType: callMatch[1],
+        callStatus: callMatch[2],
+        durationSec: callMatch[3] ? parseInt(callMatch[3], 10) : 0,
+      });
+    }
 
     return NextResponse.json({
       id: newMessage.id,

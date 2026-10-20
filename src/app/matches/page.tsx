@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { Message } from "@/lib/types";
+import { callSounds } from "@/lib/call-sounds";
 import styles from "./page.module.css";
 
 const REPORT_REASONS = [
@@ -25,6 +26,7 @@ export default function MatchesPage() {
     blockUser,
     dbUserId,
     setConversations,
+    setMatches,
     refreshMatches,
     coins,
     openCoinModal,
@@ -43,7 +45,7 @@ export default function MatchesPage() {
 
   // ── CALLS (Voice & Video) ──
   const [activeCallType, setActiveCallType] = useState<"voice" | "video" | null>(null);
-  const [callStatus, setCallStatus] = useState<"ringing" | "connected" | "unavailable" | "ended">("ringing");
+  const [callStatus, setCallStatus] = useState<"calling" | "ringing" | "connected" | "unavailable" | "ended" | "declined">("calling");
   const [callDuration, setCallDuration] = useState(0);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isCameraOff, setIsCameraOff] = useState(false);
@@ -51,6 +53,19 @@ export default function MatchesPage() {
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
   const ringTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const activeSoundRef = useRef<{ stop: () => void } | null>(null);
+  const incomingSoundRef = useRef<{ stop: () => void } | null>(null);
+  const callChannelRef = useRef<BroadcastChannel | null>(null);
+
+  // ── INCOMING CALL OVERLAY ──
+  const [incomingCall, setIncomingCall] = useState<{
+    callId: string;
+    conversationId: string;
+    callerId: string;
+    callerName: string;
+    callerPhoto?: string;
+    callType: "voice" | "video";
+  } | null>(null);
 
   // ── VOICE NOTES ──
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
@@ -90,14 +105,99 @@ export default function MatchesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbUserId]);
 
-  // Start Call Handler (WhatsApp Ringing Behavior)
+  // Real-time call signaling across tabs/windows (BroadcastChannel)
+  useEffect(() => {
+    if (typeof window === "undefined" || !("BroadcastChannel" in window)) return;
+    const channel = new BroadcastChannel("rada_call_channel");
+    callChannelRef.current = channel;
+
+    channel.onmessage = (event) => {
+      const data = event.data;
+      if (!data || !data.type) return;
+
+      if (data.type === "RADA_INCOMING_CALL") {
+        const myId = dbUserId || "user-me";
+        // Check if incoming call is directed to current user
+        if (data.targetUserId === myId || data.targetUserId === "user-me") {
+          setIncomingCall({
+            callId: data.callId,
+            conversationId: data.conversationId,
+            callerId: data.callerId,
+            callerName: data.callerName,
+            callerPhoto: data.callerPhoto,
+            callType: data.callType,
+          });
+          incomingSoundRef.current?.stop();
+          incomingSoundRef.current = callSounds.playIncomingRingtone();
+        }
+      } else if (data.type === "RADA_CALL_ACCEPTED") {
+        if (activeCallType) {
+          activeSoundRef.current?.stop();
+          callSounds.playConnectedChime();
+          setCallStatus("connected");
+          if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+          if (callTimerRef.current) clearInterval(callTimerRef.current);
+          callTimerRef.current = setInterval(() => {
+            setCallDuration((prev) => prev + 1);
+          }, 1000);
+        }
+      } else if (data.type === "RADA_CALL_DECLINED") {
+        if (activeCallType) {
+          activeSoundRef.current?.stop();
+          callSounds.playCallEndedTone();
+          setCallStatus("declined");
+          if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+          setTimeout(() => {
+            endCall("declined", false);
+          }, 1200);
+        }
+      } else if (data.type === "RADA_CALL_ENDED") {
+        if (incomingCall) {
+          incomingSoundRef.current?.stop();
+          setIncomingCall(null);
+        }
+        if (activeCallType) {
+          endCall("ended", false);
+        }
+      }
+    };
+
+    return () => {
+      channel.close();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dbUserId, activeCallType, incomingCall]);
+
+  // Start Call Handler (WhatsApp Calling vs Ringing Behavior)
   const startCall = async (type: "voice" | "video") => {
+    if (!activeMatch) return;
     setActiveCallType(type);
-    setCallStatus("ringing");
     setCallDuration(0);
     setIsMicMuted(false);
     setIsCameraOff(false);
     setIsSpeakerOn(false);
+
+    // Stop existing audio
+    activeSoundRef.current?.stop();
+    if (callTimerRef.current) clearInterval(callTimerRef.current);
+    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+
+    // Check if partner is currently online
+    const partnerLastActive = (activeMatch.matchedWith as any)?.lastActive || activeMatch.lastActivity;
+    let isOnline = false;
+    if (typeof partnerLastActive === "string") {
+      const lower = partnerLastActive.toLowerCase();
+      if (lower.includes("active now") || lower.includes("online")) {
+        isOnline = true;
+      } else {
+        const diffMs = Math.abs(Date.now() - new Date(partnerLastActive).getTime());
+        isOnline = !isNaN(diffMs) && diffMs < 5 * 60 * 1000;
+      }
+    }
+
+    // Always start with "calling" initially (WhatsApp connecting phase)
+    setCallStatus("calling");
+    activeSoundRef.current = callSounds.playCallingTone();
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -111,25 +211,147 @@ export default function MatchesPage() {
       // Audio or video permissions
     }
 
-    // Real phone behavior: Ringing without fake auto-connect!
-    // If the other party does not answer within 30 seconds, mark as unavailable
-    if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
-    ringTimeoutRef.current = setTimeout(() => {
-      setCallStatus("unavailable");
-    }, 30000);
+    if (!isOnline) {
+      // ── PARTNER IS OFFLINE ──
+      // WhatsApp behavior: Screen strictly shows "Calling..." (NEVER switches to "Ringing...")
+      // If unanswered after 20 seconds, mark as unavailable and log missed call
+      ringTimeoutRef.current = setTimeout(() => {
+        activeSoundRef.current?.stop();
+        setCallStatus("unavailable");
+        setTimeout(() => {
+          endCall("missed");
+        }, 1500);
+      }, 20000);
+    } else {
+      // ── PARTNER IS ONLINE ──
+      // WhatsApp behavior: Brief "Calling..." for ~1.5s, then switches to "Ringing..."
+      // Play authentic ringback tone and ring recipient device
+      ringTimeoutRef.current = setTimeout(() => {
+        setCallStatus("ringing");
+        activeSoundRef.current?.stop();
+        activeSoundRef.current = callSounds.playRingingTone();
+
+        // Broadcast incoming call signal
+        callChannelRef.current?.postMessage({
+          type: "RADA_INCOMING_CALL",
+          callId: `call-${Date.now()}`,
+          conversationId: activeConvId,
+          callerId: dbUserId || "user-me",
+          callerName: currentUser.fullName || "Brian",
+          callerPhoto: currentUser.photos?.[0]?.url || "",
+          targetUserId: activeMatch.matchedWith.id,
+          callType: type,
+        });
+
+        // 30 seconds ringing timeout if unanswered
+        ringTimeoutRef.current = setTimeout(() => {
+          activeSoundRef.current?.stop();
+          setCallStatus("unavailable");
+          setTimeout(() => {
+            endCall("missed");
+          }, 1500);
+        }, 30000);
+      }, 1500);
+    }
   };
 
-  const endCall = () => {
+  const endCall = (
+    forcedOutcome?: "missed" | "completed" | "declined" | "cancelled" | "ended" | unknown,
+    broadcast = true
+  ) => {
+    const forced = typeof forcedOutcome === "string" ? (forcedOutcome as "missed" | "completed" | "declined" | "cancelled" | "ended") : undefined;
+    activeSoundRef.current?.stop();
     if (callTimerRef.current) clearInterval(callTimerRef.current);
     if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+
     if (localVideoRef.current?.srcObject) {
       const stream = localVideoRef.current.srcObject as MediaStream;
       stream.getTracks().forEach((t) => t.stop());
       localVideoRef.current.srcObject = null;
     }
+
+    const currentDuration = callDuration;
+    let finalStatus: "completed" | "missed" | "declined" | "cancelled" = "missed";
+
+    if (forced === "declined" || callStatus === "declined") {
+      finalStatus = "declined";
+    } else if (callStatus === "connected" && currentDuration > 0) {
+      finalStatus = "completed";
+    } else if (
+      forced === "missed" ||
+      callStatus === "unavailable" ||
+      callStatus === "calling" ||
+      callStatus === "ringing"
+    ) {
+      finalStatus = "missed";
+    }
+
+    const type = activeCallType || "voice";
+    const typeLabel = type === "video" ? "Video call" : "Voice call";
+
+    let content = "";
+    if (finalStatus === "completed") {
+      const mins = Math.floor(currentDuration / 60);
+      const secs = currentDuration % 60;
+      const durationStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+      content = `${type === "video" ? "📹" : "📞"} ${typeLabel} (${durationStr})`;
+    } else if (finalStatus === "declined") {
+      content = `${type === "video" ? "📹" : "📞"} Declined ${typeLabel.toLowerCase()}`;
+    } else {
+      content = `${type === "video" ? "📹" : "📞"} Missed ${typeLabel.toLowerCase()}`;
+    }
+
+    // Append Call Log Message to chat history
+    if (activeConvId) {
+      const callLogMsg: Message = {
+        id: `msg-call-${Date.now()}`,
+        conversationId: activeConvId,
+        senderId: dbUserId || "user-me",
+        content,
+        isRead: true,
+        createdAt: new Date().toISOString(),
+        type: "call",
+        callType: type,
+        callStatus: finalStatus,
+        durationSec: currentDuration,
+      };
+
+      setConversations((prev: any) => ({
+        ...prev,
+        [activeConvId]: [...(prev[activeConvId] || []), callLogMsg],
+      }));
+
+      // Update match preview in sidebar
+      setMatches((prev) =>
+        prev.map((m) =>
+          m.conversationId === activeConvId
+            ? { ...m, lastMessage: callLogMsg, lastActivity: new Date().toISOString() }
+            : m
+        )
+      );
+
+      // Persist call log to DB
+      fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matchId: activeConvId,
+          senderId: dbUserId || "user-me",
+          content: `[CALL:${type}:${finalStatus}:${currentDuration}] ${content}`,
+        }),
+      }).catch(() => {});
+    }
+
+    callSounds.playCallEndedTone();
     setCallStatus("ended");
+
+    if (broadcast && callChannelRef.current) {
+      callChannelRef.current.postMessage({ type: "RADA_CALL_ENDED" });
+    }
+
     setTimeout(() => {
       setActiveCallType(null);
+      setCallDuration(0);
     }, 350);
   };
 
@@ -337,9 +559,9 @@ export default function MatchesPage() {
         setConversations((prev: Record<string, Message[]>) => {
           const currentList = prev[activeConvId] || [];
 
-          // Retain local client media blobs (photos, videos, voice notes) that don't have permanent DB IDs
+          // Retain local client media blobs and call logs that don't have permanent DB IDs
           const clientMediaMessages = currentList.filter(
-            (m) => m.type === "photo" || m.type === "video" || m.type === "voice"
+            (m) => m.type === "photo" || m.type === "video" || m.type === "voice" || m.type === "call"
           );
 
           const serverMsgIds = new Set(data.messages.map((m: Message) => m.id));
@@ -957,6 +1179,69 @@ export default function MatchesPage() {
                           {isMe && <span style={{ color: msg.isRead ? "#53BDEB" : "#8696A0", fontSize: "11px", letterSpacing: "-0.5px" }}>✓✓</span>}
                         </div>
                       </div>
+                    ) : msg.type === "call" || msg.content.startsWith("📞") || msg.content.startsWith("📹") ? (
+                      /* WhatsApp Call Log Bubble */
+                      <div className={`${styles.callLogCard} ${isMe ? styles.callLogCardMe : styles.callLogCardPartner}`}>
+                        <div className={styles.callLogCardLeft}>
+                          <div className={`${styles.callLogIconBadge} ${
+                            msg.callStatus === "missed" ? styles.callLogIconMissed :
+                            msg.callStatus === "declined" ? styles.callLogIconDeclined :
+                            styles.callLogIconCompleted
+                          }`}>
+                            {msg.callType === "video" || msg.content.includes("📹") ? (
+                              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                              </svg>
+                            ) : (
+                              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2a15.053 15.053 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-.99-1.12z"/>
+                              </svg>
+                            )}
+                          </div>
+                          <div className={styles.callLogDetails}>
+                            <span className={styles.callLogTitle}>
+                              {msg.content.replace(/^[📞📹]\s*/, "")}
+                            </span>
+                            <span className={`${styles.callLogSub} ${msg.callStatus === "missed" ? styles.callLogSubMissed : ""}`}>
+                              {msg.callStatus === "missed" ? (
+                                <>
+                                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="7" y1="7" x2="17" y2="17" />
+                                    <polyline points="17 7 17 17 7 17" />
+                                  </svg>
+                                  <span>Missed call • {timeStr}</span>
+                                </>
+                              ) : msg.callStatus === "declined" ? (
+                                <span>Declined • {timeStr}</span>
+                              ) : (
+                                <>
+                                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="7" y1="17" x2="17" y2="7" />
+                                    <polyline points="7 7 17 7 17 17" />
+                                  </svg>
+                                  <span>{msg.durationSec ? `${Math.floor(msg.durationSec / 60)}:${(msg.durationSec % 60).toString().padStart(2, "0")}` : "Answered"} • {timeStr}</span>
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Direct Call Back button */}
+                        <button
+                          type="button"
+                          className={styles.callLogCallbackBtn}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startCall(msg.callType || (msg.content.includes("📹") ? "video" : "voice"));
+                          }}
+                          title="Call back"
+                        >
+                          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                            <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2a15.053 15.053 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-.99-1.12z"/>
+                          </svg>
+                          <span>Call back</span>
+                        </button>
+                      </div>
                     ) : (
                       /* Text / Audio / Video Bubble */
                       <div className={`${styles.bubble} ${isMe ? styles.bubbleMe : styles.bubblePartner}`}>
@@ -1332,11 +1617,53 @@ export default function MatchesPage() {
                 <span>End-to-end encrypted</span>
               </div>
               <div className={styles.waCallStatus}>
+                {callStatus === "calling" && "Calling..."}
                 {callStatus === "ringing" && "Ringing..."}
                 {callStatus === "unavailable" && "Unavailable"}
+                {callStatus === "declined" && "Call declined"}
                 {callStatus === "connected" && `${Math.floor(callDuration / 60)}:${(callDuration % 60).toString().padStart(2, "0")}`}
                 {callStatus === "ended" && "Call ended"}
               </div>
+
+              {/* In-Call Simulation Pill: Allows instant testing of Answer and Decline */}
+              {callStatus === "ringing" && (
+                <div className={styles.simCallBar}>
+                  <span style={{ fontSize: "11px", color: "#8696A0" }}>Test:</span>
+                  <button
+                    type="button"
+                    className={`${styles.simCallBtn} ${styles.simCallBtnAccept}`}
+                    onClick={() => {
+                      activeSoundRef.current?.stop();
+                      callSounds.playConnectedChime();
+                      setCallStatus("connected");
+                      if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+                      if (callTimerRef.current) clearInterval(callTimerRef.current);
+                      callTimerRef.current = setInterval(() => {
+                        setCallDuration((prev) => prev + 1);
+                      }, 1000);
+                      showToast("Call answered ✦", "success");
+                    }}
+                  >
+                    ✓ Partner Answers
+                  </button>
+                  <button
+                    type="button"
+                    className={`${styles.simCallBtn} ${styles.simCallBtnDecline}`}
+                    onClick={() => {
+                      activeSoundRef.current?.stop();
+                      callSounds.playCallEndedTone();
+                      setCallStatus("declined");
+                      if (ringTimeoutRef.current) clearTimeout(ringTimeoutRef.current);
+                      setTimeout(() => {
+                        endCall("declined");
+                      }, 1200);
+                      showToast("Partner declined call", "neutral");
+                    }}
+                  >
+                    ✕ Partner Declines
+                  </button>
+                </div>
+              )}
             </div>
 
             <button
@@ -1516,6 +1843,100 @@ export default function MatchesPage() {
                 </button>
                 <span className={styles.waCallLabel}>End</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Incoming Call Screen */}
+      {incomingCall && (
+        <div className={styles.incomingCallOverlay}>
+          <div className={styles.incomingCallTop}>
+            <div className={styles.incomingCallBadge}>
+              <span>🔒 End-to-end encrypted</span>
+            </div>
+            <h2 className={styles.incomingCallName}>{incomingCall.callerName}</h2>
+            <div className={styles.incomingCallType}>
+              Incoming WhatsApp {incomingCall.callType === "video" ? "Video" : "Voice"} Call...
+            </div>
+          </div>
+
+          <div className={styles.incomingAvatarRipple}>
+            {incomingCall.callerPhoto ? (
+              <img
+                src={incomingCall.callerPhoto}
+                alt={incomingCall.callerName}
+                className={styles.incomingAvatarImg}
+              />
+            ) : (
+              <div
+                className={styles.incomingAvatarImg}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#1F2C34",
+                  fontSize: "48px",
+                  color: "#E9EDEF",
+                  fontWeight: 800,
+                }}
+              >
+                {incomingCall.callerName.charAt(0)}
+              </div>
+            )}
+          </div>
+
+          <div className={styles.incomingActionsRow}>
+            {/* Decline Action */}
+            <div className={styles.incomingActionItem}>
+              <button
+                type="button"
+                className={styles.incomingDeclineBtn}
+                onClick={() => {
+                  incomingSoundRef.current?.stop();
+                  callSounds.playCallEndedTone();
+                  callChannelRef.current?.postMessage({ type: "RADA_CALL_DECLINED" });
+                  setIncomingCall(null);
+                  showToast("Call declined", "neutral");
+                }}
+                aria-label="Decline call"
+              >
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+                  <path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08a.996.996 0 0 1 0-1.41C2.92 9.09 7.22 7.5 12 7.5s9.08 1.59 11.71 4.17c.39.39.39 1.02 0 1.41l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28-.79-.74-1.69-1.36-2.67-1.85-.33-.16-.56-.5-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/>
+                </svg>
+              </button>
+              <span className={styles.incomingActionLabel}>Decline</span>
+            </div>
+
+            {/* Accept Action */}
+            <div className={styles.incomingActionItem}>
+              <button
+                type="button"
+                className={styles.incomingAcceptBtn}
+                onClick={() => {
+                  incomingSoundRef.current?.stop();
+                  callSounds.playConnectedChime();
+                  callChannelRef.current?.postMessage({ type: "RADA_CALL_ACCEPTED" });
+                  const convId = incomingCall.conversationId;
+                  const type = incomingCall.callType;
+                  setIncomingCall(null);
+                  setActiveConvId(convId);
+                  setActiveCallType(type);
+                  setCallStatus("connected");
+                  setCallDuration(0);
+                  if (callTimerRef.current) clearInterval(callTimerRef.current);
+                  callTimerRef.current = setInterval(() => {
+                    setCallDuration((prev) => prev + 1);
+                  }, 1000);
+                  showToast("Call connected ✦", "success");
+                }}
+                aria-label="Accept call"
+              >
+                <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
+                  <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2a15.053 15.053 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 4c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-.99-1.12z"/>
+                </svg>
+              </button>
+              <span className={styles.incomingActionLabel}>Accept</span>
             </div>
           </div>
         </div>
