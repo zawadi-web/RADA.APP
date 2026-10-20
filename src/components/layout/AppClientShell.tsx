@@ -571,18 +571,16 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-// ── 5. PWA DOWNLOAD / INSTALL PROMPT ─────────────────────────────────────────
+// ── 5. PWA POP-UP PROMPT (Brought on visit, not a permanent page/tab) ─────────
 function PwaInstallPromptInner() {
-  const [showBanner, setShowBanner] = useState(false);
+  const [showPrompt, setShowPrompt] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [iosStepShow, setIosStepShow] = useState(false);
-  const [hostName, setHostName] = useState("rada.app");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setHostName(window.location.host || "rada.app");
 
     // Check if already in standalone/PWA mode
     const standalone =
@@ -592,9 +590,10 @@ function PwaInstallPromptInner() {
 
     if (standalone) return; // Do not show if already running installed app
 
-    // Check if dismissed in this session
+    // Check if user previously dismissed the prompt (hide for 24h)
     try {
-      if (sessionStorage.getItem("rada_install_banner_dismissed") === "1") {
+      const dismissedUntil = localStorage.getItem("rada_install_prompt_dismissed_until");
+      if (dismissedUntil && Date.now() < parseInt(dismissedUntil, 10)) {
         return;
       }
     } catch {}
@@ -603,7 +602,7 @@ function PwaInstallPromptInner() {
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
 
-    // Check if event was already captured in window
+    // If deferred prompt was already captured
     if ((window as any).deferredPWAInstallPrompt) {
       setDeferredPrompt((window as any).deferredPWAInstallPrompt);
     }
@@ -611,28 +610,29 @@ function PwaInstallPromptInner() {
     const handlePromptReady = () => {
       if ((window as any).deferredPWAInstallPrompt) {
         setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+        setShowPrompt(true);
       }
     };
     window.addEventListener("pwa-prompt-ready", handlePromptReady);
 
-    // Capture Chrome/Edge beforeinstallprompt event
+    // Capture browser beforeinstallprompt
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
       (window as any).deferredPWAInstallPrompt = e;
-      setShowBanner(true);
+      setShowPrompt(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
-    // Custom event to re-open from any button in the app
-    const handleOpenDownload = () => setShowBanner(true);
+    // Listen for manual trigger (e.g. from profile or settings)
+    const handleOpenDownload = () => setShowPrompt(true);
     window.addEventListener("open-rada-download", handleOpenDownload);
 
-    // Pop out the download option cleanly at the top of the site
+    // Pop-up prompt when visiting the site
     const timer = setTimeout(() => {
-      setShowBanner(true);
-    }, 700);
+      setShowPrompt(true);
+    }, 1800);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
@@ -642,7 +642,7 @@ function PwaInstallPromptInner() {
     };
   }, []);
 
-  if (isStandalone || !showBanner) return null;
+  if (isStandalone || !showPrompt) return null;
 
   const handleInstallClick = async () => {
     const promptEvent = deferredPrompt || (typeof window !== "undefined" && (window as any).deferredPWAInstallPrompt);
@@ -651,7 +651,7 @@ function PwaInstallPromptInner() {
         await promptEvent.prompt();
         const choice = await promptEvent.userChoice;
         if (choice?.outcome === "accepted") {
-          setShowBanner(false);
+          setShowPrompt(false);
         }
       } catch (err) {
         console.error("Install prompt error:", err);
@@ -659,16 +659,17 @@ function PwaInstallPromptInner() {
       setDeferredPrompt(null);
       if (typeof window !== "undefined") (window as any).deferredPWAInstallPrompt = null;
     } else if (isIOS) {
-      setIosStepShow((prev) => !prev);
+      setIosStepShow(true);
     } else {
-      setShowBanner(false);
+      setShowPrompt(false);
     }
   };
 
   const handleDismiss = () => {
-    setShowBanner(false);
+    setShowPrompt(false);
     try {
-      sessionStorage.setItem("rada_install_banner_dismissed", "1");
+      // Don't show again for 24 hours
+      localStorage.setItem("rada_install_prompt_dismissed_until", (Date.now() + 24 * 60 * 60 * 1000).toString());
     } catch {}
   };
 
@@ -676,140 +677,152 @@ function PwaInstallPromptInner() {
     <div
       style={{
         position: "fixed",
-        top: "10px",
-        left: "12px",
-        right: "12px",
-        maxWidth: "440px",
-        margin: "0 auto",
+        inset: 0,
         zIndex: 99999,
-        animation: "slideDownInstall 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        background: "rgba(0, 0, 0, 0.65)",
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "flex-end",
+        justifyContent: "center",
+        padding: "0 12px 24px",
+        animation: "fadeInPrompt 0.25s ease-out",
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleDismiss();
       }}
     >
       <div
         style={{
-          background: "#18181B",
-          border: "1px solid rgba(255, 255, 255, 0.14)",
-          borderRadius: "18px",
-          padding: "10px 14px",
+          width: "100%",
+          maxWidth: "400px",
+          background: "#141418",
+          border: "1px solid rgba(245, 207, 104, 0.28)",
+          borderRadius: "24px",
+          padding: "20px",
+          boxShadow: "0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(245, 207, 104, 0.12)",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "12px",
-          boxShadow: "0 10px 32px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.2)",
+          flexDirection: "column",
+          gap: "14px",
+          animation: "slideUpPrompt 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+          position: "relative",
         }}
       >
-        {/* Left: App Icon */}
-        <div
+        {/* Dismiss ✕ Button */}
+        <button
+          onClick={handleDismiss}
+          aria-label="Dismiss prompt"
           style={{
-            width: "38px",
-            height: "38px",
-            borderRadius: "10px",
-            overflow: "hidden",
-            flexShrink: 0,
+            position: "absolute",
+            top: "14px",
+            right: "14px",
+            width: "28px",
+            height: "28px",
+            borderRadius: "50%",
+            background: "rgba(255, 255, 255, 0.08)",
+            border: "none",
+            color: "#A1A1AA",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#0A0A0C",
-            border: "1px solid rgba(245, 207, 104, 0.35)",
+            cursor: "pointer",
+            fontSize: "13px",
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/icon-192.png"
-            alt="Rada"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        </div>
+          ✕
+        </button>
 
-        {/* Center: Title & Domain */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Top Header with App Icon */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <div
             style={{
-              fontSize: "14.5px",
-              fontWeight: 700,
-              color: "#FFFFFF",
-              letterSpacing: "-0.01em",
-              lineHeight: 1.25,
-              whiteSpace: "nowrap",
+              width: "48px",
+              height: "48px",
+              borderRadius: "14px",
               overflow: "hidden",
-              textOverflow: "ellipsis",
+              flexShrink: 0,
+              border: "1.5px solid rgba(245, 207, 104, 0.4)",
+              background: "#0A0A0C",
+              boxShadow: "0 4px 14px rgba(245, 207, 104, 0.2)",
             }}
           >
-            Install Rada
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/icon-192.png"
+              alt="Rada"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
           </div>
+          <div>
+            <div style={{ fontSize: "16px", fontWeight: 800, color: "#FFFFFF" }}>
+              Install Rada App
+            </div>
+            <div style={{ fontSize: "12px", color: "var(--rada-gold, #F5CF68)", fontWeight: 600 }}>
+              Intentional Kenyan Dating
+            </div>
+          </div>
+        </div>
+
+        {/* Description */}
+        <p style={{ margin: 0, fontSize: "13px", color: "#A1A1AA", lineHeight: 1.45 }}>
+          Add Rada to your home screen for quick 1-tap access, real-time message alerts, and a fast full-screen experience.
+        </p>
+
+        {/* iOS Safari Steps */}
+        {(isIOS || iosStepShow) && (
           <div
             style={{
+              background: "rgba(245, 207, 104, 0.08)",
+              border: "1px dashed rgba(245, 207, 104, 0.35)",
+              borderRadius: "14px",
+              padding: "10px 14px",
               fontSize: "12px",
-              color: "#8E8E93",
-              lineHeight: 1.3,
-              marginTop: "2px",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
+              color: "#E4E4E7",
+              lineHeight: 1.5,
             }}
           >
-            {hostName}
+            <span style={{ color: "#F5CF68", fontWeight: 700 }}>To install on iPhone/iPad: </span>
+            Tap the Safari <strong>Share</strong> button <span style={{ color: "#F5CF68", fontWeight: 700 }}>[ ⎕↑ ]</span> and select <strong>&quot;Add to Home Screen&quot;</strong>.
           </div>
-        </div>
+        )}
 
-        {/* Right: Install Action & Dismiss */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+          <button
+            onClick={handleDismiss}
+            style={{
+              flex: 1,
+              padding: "12px",
+              borderRadius: "12px",
+              background: "rgba(255, 255, 255, 0.07)",
+              border: "1px solid rgba(255, 255, 255, 0.12)",
+              color: "#A1A1AA",
+              fontSize: "13.5px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Maybe Later
+          </button>
           <button
             onClick={handleInstallClick}
             style={{
-              background: "none",
+              flex: 1.4,
+              padding: "12px",
+              borderRadius: "12px",
+              background: "linear-gradient(135deg, #FFF6D6 0%, #F5CF68 40%, #D4AF37 80%, #9B700F 100%)",
               border: "none",
-              color: "#F5CF68",
-              fontSize: "15px",
-              fontWeight: 700,
+              color: "#0A0A0C",
+              fontSize: "13.5px",
+              fontWeight: 800,
               cursor: "pointer",
-              padding: "6px 8px",
-              borderRadius: "8px",
-              transition: "opacity 0.15s ease",
+              boxShadow: "0 4px 16px rgba(245, 207, 104, 0.35)",
             }}
           >
-            Install
-          </button>
-          <button
-            onClick={handleDismiss}
-            aria-label="Dismiss banner"
-            style={{
-              background: "rgba(255, 255, 255, 0.08)",
-              border: "none",
-              color: "#A1A1AA",
-              fontSize: "12px",
-              width: "24px",
-              height: "24px",
-              borderRadius: "50%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-            }}
-          >
-            ✕
+            Install App
           </button>
         </div>
       </div>
-
-      {/* iOS Safari Tip */}
-      {iosStepShow && (
-        <div
-          style={{
-            marginTop: "6px",
-            background: "rgba(24, 24, 28, 0.98)",
-            border: "1px solid rgba(245, 207, 104, 0.3)",
-            borderRadius: "14px",
-            padding: "10px 14px",
-            fontSize: "12px",
-            color: "#E4E4E7",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
-          }}
-        >
-          <span style={{ color: "#F5CF68", fontWeight: 700 }}>To install on iPhone: </span>
-          Tap Safari Share button <span style={{ color: "#F5CF68", fontWeight: 700 }}>[ ⎕↑ ]</span> and select <strong>&quot;Add to Home Screen&quot;</strong>.
-        </div>
-      )}
     </div>
   );
 }
