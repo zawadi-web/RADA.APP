@@ -4,6 +4,7 @@
   "short_name": "Rada",
   "description": "Kenya's intentional dating platform. Know the intention before you catch feelings.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#09090B",
   "theme_color": "#09090B",
