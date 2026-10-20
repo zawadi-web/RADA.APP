@@ -149,3 +149,14 @@ button, a.nav-link, .touch-target {
   font-size: 0.75rem;
 }
 
+@keyframes slideDownInstall {
+  from {
+    transform: translateY(-80px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+

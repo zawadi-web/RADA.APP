@@ -1,55 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// Initial realistic Kenyan demo stories if database has none
-const DEMO_STORIES = [
-  {
-    id: "story-demo-1",
-    userId: "user-elcie",
-    mediaUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&auto=format&fit=crop&q=80",
-    caption: "Sunset cocktails in Westlands 🌅🥂",
-    createdAt: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 21 * 3600 * 1000).toISOString(),
-    user: {
-      id: "user-elcie",
-      fullName: "Elcie",
-      area: "Chuka",
-      county: "Tharaka-Nithi",
-      photos: [{ url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80" }],
-    },
-  },
-  {
-    id: "story-demo-2",
-    userId: "user-kevin",
-    mediaUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&auto=format&fit=crop&q=80",
-    caption: "Morning trail run in Karura Forest 🏃‍♂️🌿",
-    createdAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 18 * 3600 * 1000).toISOString(),
-    user: {
-      id: "user-kevin",
-      fullName: "Kevin",
-      area: "Kilimani",
-      county: "Nairobi",
-      photos: [{ url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80" }],
-    },
-  },
-  {
-    id: "story-demo-3",
-    userId: "user-zawadi",
-    mediaUrl: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=900&auto=format&fit=crop&q=80",
-    caption: "Art gallery opening & great jazz 🎨🎷",
-    createdAt: new Date(Date.now() - 10 * 3600 * 1000).toISOString(),
-    expiresAt: new Date(Date.now() + 14 * 3600 * 1000).toISOString(),
-    user: {
-      id: "user-zawadi",
-      fullName: "Zawadi",
-      area: "Lavington",
-      county: "Nairobi",
-      photos: [{ url: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=400&auto=format&fit=crop&q=80" }],
-    },
-  },
-];
-
 /**
  * GET /api/stories
  * Retrieves active stories (created within last 24h).
@@ -95,12 +46,10 @@ export async function GET() {
       dbStories = [];
     }
 
-    // Combine database stories with active demo stories
-    const combined = [...dbStories, ...DEMO_STORIES];
-    return NextResponse.json({ success: true, stories: combined });
+    return NextResponse.json({ success: true, stories: dbStories });
   } catch (err) {
     console.error("GET /api/stories error:", err);
-    return NextResponse.json({ success: true, stories: DEMO_STORIES });
+    return NextResponse.json({ success: true, stories: [] });
   }
 }
 

@@ -571,6 +571,251 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// ── 5. PWA VISITORS INSTALL POP-UP (Matches Chrome / WestView floating pill design) ──
+function PwaInstallPromptInner() {
+  const [showBanner, setShowBanner] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isIOS, setIsIOS] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
+  const [iosStepShow, setIosStepShow] = useState(false);
+  const [hostName, setHostName] = useState("rada.app");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    setHostName(window.location.host || "rada.app");
+
+    // Check if running as installed standalone PWA
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+    setIsStandalone(standalone);
+
+    // If already in installed app, never show!
+    if (standalone) return;
+
+    // Check if dismissed in this session so it doesn't nag the user
+    try {
+      if (sessionStorage.getItem("rada_install_prompt_dismissed") === "1") {
+        return;
+      }
+    } catch {}
+
+    // Detect iOS
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(ios);
+
+    if ((window as any).deferredPWAInstallPrompt) {
+      setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+    }
+
+    const handlePromptReady = () => {
+      if ((window as any).deferredPWAInstallPrompt) {
+        setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+      }
+    };
+    window.addEventListener("pwa-prompt-ready", handlePromptReady);
+
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      (window as any).deferredPWAInstallPrompt = e;
+      setShowBanner(true);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+
+    // Pop-up when visitor lands on the site after a gentle 1.2s delay
+    const timer = setTimeout(() => {
+      setShowBanner(true);
+    }, 1200);
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("pwa-prompt-ready", handlePromptReady);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  if (isStandalone || !showBanner) return null;
+
+  const handleInstallClick = async () => {
+    const promptEvent = deferredPrompt || (typeof window !== "undefined" && (window as any).deferredPWAInstallPrompt);
+    if (promptEvent && typeof promptEvent.prompt === "function") {
+      try {
+        await promptEvent.prompt();
+        const choice = await promptEvent.userChoice;
+        if (choice?.outcome === "accepted") {
+          setShowBanner(false);
+        }
+      } catch (err) {
+        console.error("Install prompt error:", err);
+      }
+      setDeferredPrompt(null);
+      if (typeof window !== "undefined") (window as any).deferredPWAInstallPrompt = null;
+    } else {
+      setIosStepShow((prev) => !prev);
+    }
+  };
+
+  const handleDismiss = () => {
+    setShowBanner(false);
+    try {
+      sessionStorage.setItem("rada_install_prompt_dismissed", "1");
+    } catch {}
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: "12px",
+        left: "12px",
+        right: "12px",
+        maxWidth: "420px",
+        margin: "0 auto",
+        zIndex: 99999,
+        animation: "slideDownInstall 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
+    >
+      <div
+        style={{
+          background: "#18181B",
+          border: "1px solid rgba(255, 255, 255, 0.14)",
+          borderRadius: "18px",
+          padding: "10px 14px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "12px",
+          boxShadow: "0 10px 32px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2)",
+        }}
+      >
+        {/* Left: App Icon */}
+        <div
+          style={{
+            width: "38px",
+            height: "38px",
+            borderRadius: "10px",
+            overflow: "hidden",
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: "#0A0A0C",
+            border: "1px solid rgba(245, 207, 104, 0.35)",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icon-192.png"
+            alt="Rada"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+
+        {/* Center: Title & Domain */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: "14.5px",
+              fontWeight: 700,
+              color: "#FFFFFF",
+              letterSpacing: "-0.01em",
+              lineHeight: 1.25,
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            Install Rada
+          </div>
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#8E8E93",
+              lineHeight: 1.3,
+              marginTop: "2px",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {hostName}
+          </div>
+        </div>
+
+        {/* Right: Install Action & Dismiss */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+          <button
+            onClick={handleInstallClick}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#F5CF68",
+              fontSize: "15px",
+              fontWeight: 700,
+              cursor: "pointer",
+              padding: "6px 10px",
+              borderRadius: "8px",
+              transition: "opacity 0.15s ease",
+            }}
+          >
+            Install
+          </button>
+          <button
+            onClick={handleDismiss}
+            aria-label="Dismiss banner"
+            style={{
+              background: "rgba(255, 255, 255, 0.08)",
+              border: "none",
+              color: "#A1A1AA",
+              fontSize: "12px",
+              width: "24px",
+              height: "24px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      {/* Manual Instructions for iOS Safari or Chrome */}
+      {iosStepShow && (
+        <div
+          style={{
+            marginTop: "6px",
+            background: "rgba(24, 24, 28, 0.98)",
+            border: "1px solid rgba(245, 207, 104, 0.3)",
+            borderRadius: "14px",
+            padding: "10px 14px",
+            fontSize: "12px",
+            color: "#E4E4E7",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.5)",
+            lineHeight: 1.45,
+          }}
+        >
+          {isIOS ? (
+            <>
+              <span style={{ color: "#F5CF68", fontWeight: 700 }}>To install on iPhone/iPad: </span>
+              Tap the Safari <strong>Share</strong> button <span style={{ color: "#F5CF68", fontWeight: 700 }}>[ ⎕↑ ]</span> and select <strong>&quot;Add to Home Screen&quot;</strong>.
+            </>
+          ) : (
+            <>
+              <span style={{ color: "#F5CF68", fontWeight: 700 }}>To install in browser: </span>
+              Tap browser menu <strong>(⋮)</strong> and select <strong>&quot;Install app&quot;</strong> or <strong>&quot;Add to Home screen&quot;</strong>.
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── 6. APP SHELL ─────────────────────────────────────────────────────────────
 export const AppClientShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const pathname = usePathname();
@@ -591,6 +836,7 @@ export const AppClientShell: React.FC<{ children: React.ReactNode }> = ({ childr
               <CoinPurchaseModalInner />
             </OnboardingGate>
             <FloatingThemeToggle />
+            <PwaInstallPromptInner />
           </HmrErrorBoundary>
         </RadaProvider>
       </ToastProvider>
