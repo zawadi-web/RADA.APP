@@ -6,8 +6,10 @@ import { IntentBadge } from "@/components/ui/IntentBadge";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
-import { Message } from "@/lib/types";
+import { Message, DateEscrow, DatePlan } from "@/lib/types";
 import { callSounds } from "@/lib/call-sounds";
+import { DateSafeModal } from "@/components/features/DateSafeModal";
+import { DatePlanModal } from "@/components/features/DatePlanModal";
 import styles from "./page.module.css";
 
 const REPORT_REASONS = [
@@ -41,6 +43,8 @@ export default function MatchesPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [selectedReason, setSelectedReason] = useState(REPORT_REASONS[0]);
   const [isSending, setIsSending] = useState(false);
+  const [isDateSafeOpen, setIsDateSafeOpen] = useState(false);
+  const [isDatePlanOpen, setIsDatePlanOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // ── CALLS (Voice & Video) ──
@@ -521,6 +525,44 @@ export default function MatchesPage() {
     } catch (err) {
       console.error("Delete message API error:", err);
     }
+  };
+
+  const handleEscrowCreated = (escrow: DateEscrow) => {
+    if (!activeConvId) return;
+    const escrowMsg: Message = {
+      id: `escrow-${Date.now()}`,
+      conversationId: activeConvId,
+      senderId: dbUserId || "user-me",
+      content: `🛡️ DateSafe Escrow: KES ${escrow.amountKsh} locked for date at ${escrow.venueName}`,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      type: "date_safe_escrow",
+      dateEscrow: escrow,
+    };
+    setConversations((prev) => ({
+      ...prev,
+      [activeConvId]: [...(prev[activeConvId] || []), escrowMsg],
+    }));
+    showToast?.(`🛡️ DateSafe active! KES ${escrow.amountKsh} locked in escrow.`, "success");
+  };
+
+  const handlePlanCreated = (plan: DatePlan) => {
+    if (!activeConvId) return;
+    const planMsg: Message = {
+      id: `plan-${Date.now()}`,
+      conversationId: activeConvId,
+      senderId: dbUserId || "user-me",
+      content: `📅 Date Proposal: ${plan.activity} @ ${plan.venue} (${plan.day})`,
+      isRead: false,
+      createdAt: new Date().toISOString(),
+      type: "date_plan",
+      datePlan: plan,
+    };
+    setConversations((prev) => ({
+      ...prev,
+      [activeConvId]: [...(prev[activeConvId] || []), planMsg],
+    }));
+    showToast?.(`📅 Date proposal sent to ${activeMatch?.matchedWith.fullName.split(" ")[0]}!`, "success");
   };
 
   // Play pleasant chime on incoming message
@@ -1045,8 +1087,16 @@ export default function MatchesPage() {
 
                 {/* Partner Name & Live Status */}
                 <div style={{ minWidth: 0, overflow: "hidden" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#E9EDEF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {activeMatch.matchedWith.fullName}
+                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#E9EDEF", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "flex", alignItems: "center", gap: "5px" }}>
+                    <span>{activeMatch.matchedWith.fullName}</span>
+                    {activeMatch.matchedWith.isVerifiedGold && (
+                      <span style={{ fontSize: "12px", color: "var(--rada-gold, #E5A93C)", fontWeight: 800 }} title="Rada Gold Verified">✦</span>
+                    )}
+                    {activeMatch.matchedWith.workAffiliation && (
+                      <span style={{ fontSize: "10px", background: "rgba(255,255,255,0.08)", padding: "1px 6px", borderRadius: "8px", color: "rgba(255,255,255,0.75)" }}>
+                        💼 {activeMatch.matchedWith.workAffiliation.split("/")[0]}
+                      </span>
+                    )}
                   </div>
                   {(() => {
                     const partnerLastActive = (activeMatch.matchedWith as any)?.lastActive || activeMatch.lastActivity;
@@ -1242,6 +1292,111 @@ export default function MatchesPage() {
                           <span>Call back</span>
                         </button>
                       </div>
+                    ) : msg.type === "date_safe_escrow" && msg.dateEscrow ? (
+                      /* DateSafe Escrow Card */
+                      <div style={{
+                        background: isMe ? "linear-gradient(135deg, #064E3B, #022C22)" : "linear-gradient(135deg, #1F2937, #111827)",
+                        border: "1.5px solid #34D399",
+                        borderRadius: "16px",
+                        padding: "14px 16px",
+                        maxWidth: "290px",
+                        color: "#FFF",
+                        boxShadow: "0 4px 16px rgba(16, 185, 129, 0.25)",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                          <span style={{ fontSize: "20px" }}>🛡️</span>
+                          <span style={{ fontSize: "11px", fontWeight: 800, color: "#34D399", textTransform: "uppercase" }}>
+                            Rada DateSafe™ Escrow
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: 800, marginBottom: "4px" }}>
+                          KES {msg.dateEscrow.amountKsh} Locked
+                        </div>
+                        <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.85)", marginBottom: "8px" }}>
+                          📍 {msg.dateEscrow.venueName} ({msg.dateEscrow.venueArea})
+                        </div>
+                        <div style={{
+                          background: "rgba(0,0,0,0.4)",
+                          borderRadius: "10px",
+                          padding: "8px",
+                          textAlign: "center",
+                          marginBottom: "10px",
+                        }}>
+                          <div style={{ fontSize: "10px", color: "#34D399", fontWeight: 700 }}>MUTUAL CHECK-IN PIN</div>
+                          <div style={{ fontSize: "20px", fontWeight: 900, letterSpacing: "4px", color: "#34D399" }}>
+                            {msg.dateEscrow.checkInPin}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => showToast?.(`✅ Both verified! KES ${msg.dateEscrow?.amountKsh} transport released.`, "success")}
+                          style={{
+                            width: "100%",
+                            padding: "8px 12px",
+                            borderRadius: "10px",
+                            background: "linear-gradient(135deg, #10B981, #059669)",
+                            border: "none",
+                            color: "#FFF",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                          }}
+                        >
+                          Check In at Venue ☕
+                        </button>
+                        <span className={styles.msgTime} style={{ display: "block", textAlign: "right", marginTop: "6px" }}>
+                          {timeStr}
+                        </span>
+                      </div>
+                    ) : msg.type === "date_plan" && msg.datePlan ? (
+                      /* Date Proposal Card */
+                      <div style={{
+                        background: isMe ? "linear-gradient(135deg, #78350F, #451A03)" : "linear-gradient(135deg, #1F2937, #111827)",
+                        border: "1.5px solid #E5A93C",
+                        borderRadius: "16px",
+                        padding: "14px 16px",
+                        maxWidth: "290px",
+                        color: "#FFF",
+                        boxShadow: "0 4px 16px rgba(229, 169, 60, 0.25)",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
+                          <span style={{ fontSize: "20px" }}>📅</span>
+                          <span style={{ fontSize: "11px", fontWeight: 800, color: "#E5A93C", textTransform: "uppercase" }}>
+                            Date Proposal
+                          </span>
+                        </div>
+                        <div style={{ fontSize: "16px", fontWeight: 800, marginBottom: "4px", color: "#FFF8F0" }}>
+                          {msg.datePlan.activity}
+                        </div>
+                        <div style={{ fontSize: "12.5px", color: "rgba(255,255,255,0.85)", marginBottom: "4px" }}>
+                          📍 {msg.datePlan.venue}
+                        </div>
+                        <div style={{ fontSize: "12px", color: "#E5A93C", fontWeight: 600, marginBottom: "10px" }}>
+                          ⏰ {msg.datePlan.day}
+                        </div>
+                        {!isMe && (
+                          <button
+                            type="button"
+                            onClick={() => showToast?.("🎉 Date Accepted! Added to your calendar.", "success")}
+                            style={{
+                              width: "100%",
+                              padding: "8px 12px",
+                              borderRadius: "10px",
+                              background: "linear-gradient(135deg, #E5A93C, #C59B27)",
+                              border: "none",
+                              color: "#0A0A0C",
+                              fontSize: "12px",
+                              fontWeight: 800,
+                              cursor: "pointer",
+                            }}
+                          >
+                            Accept Date Proposal 🥂
+                          </button>
+                        )}
+                        <span className={styles.msgTime} style={{ display: "block", textAlign: "right", marginTop: "6px" }}>
+                          {timeStr}
+                        </span>
+                      </div>
                     ) : (
                       /* Text / Audio / Video Bubble */
                       <div className={`${styles.bubble} ${isMe ? styles.bubbleMe : styles.bubblePartner}`}>
@@ -1271,6 +1426,52 @@ export default function MatchesPage() {
                 );
               })}
               <div ref={messagesEndRef} />
+            </div>
+
+            {/* Action Bar: DateSafe Escrow & Plan Date */}
+            <div style={{ display: "flex", gap: "8px", padding: "6px 12px 2px", overflowX: "auto" }}>
+              <button
+                type="button"
+                onClick={() => setIsDateSafeOpen(true)}
+                style={{
+                  background: "rgba(16, 185, 129, 0.15)",
+                  border: "1.5px solid #10B981",
+                  color: "#34D399",
+                  padding: "6px 12px",
+                  borderRadius: "16px",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  flexShrink: 0,
+                }}
+              >
+                <span>🛡️</span>
+                <span>DateSafe Escrow</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDatePlanOpen(true)}
+                style={{
+                  background: "rgba(229, 169, 60, 0.15)",
+                  border: "1.5px solid #E5A93C",
+                  color: "#E5A93C",
+                  padding: "6px 12px",
+                  borderRadius: "16px",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  flexShrink: 0,
+                }}
+              >
+                <span>📅</span>
+                <span>Plan Weekend Date</span>
+              </button>
             </div>
 
             {/* Quick Starter Chips */}
@@ -1940,6 +2141,29 @@ export default function MatchesPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* 🛡️ DateSafe Escrow Modal */}
+      {activeMatch && (
+        <DateSafeModal
+          isOpen={isDateSafeOpen}
+          onClose={() => setIsDateSafeOpen(false)}
+          matchId={activeMatch.conversationId}
+          partnerName={activeMatch.matchedWith.fullName.split(" ")[0]}
+          partnerId={activeMatch.matchedWith.id}
+          onEscrowCreated={handleEscrowCreated}
+        />
+      )}
+
+      {/* 📅 Weekend Date Plan Modal */}
+      {activeMatch && (
+        <DatePlanModal
+          isOpen={isDatePlanOpen}
+          onClose={() => setIsDatePlanOpen(false)}
+          matchId={activeMatch.conversationId}
+          partnerName={activeMatch.matchedWith.fullName.split(" ")[0]}
+          onPlanCreated={handlePlanCreated}
+        />
       )}
     </main>
   );

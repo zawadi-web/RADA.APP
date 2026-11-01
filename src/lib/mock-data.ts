@@ -43,6 +43,13 @@ export const CURRENT_USER: RadaUser = {
   completionScore: 88,
   isVip: false,
   lastActive: "Active now",
+  responsivenessScore: 98,
+  responsivenessBadge: "FAST_RESPONDER",
+  weekendVibe: "Sunday Brunch",
+  weekendVibeVenue: "Ankole Grill Kilimani",
+  isVerifiedGold: true,
+  workAffiliation: "Tech & Innovation",
+  isWorkVerified: true,
 };
 
 export const MOCK_DISCOVERY_USERS: RadaUser[] = [
@@ -110,6 +117,13 @@ export const MOCK_DISCOVERY_USERS: RadaUser[] = [
     completionScore: 100,
     isVip: true,
     lastActive: "Active 10m ago",
+    responsivenessScore: 99,
+    responsivenessBadge: "FAST_RESPONDER",
+    weekendVibe: "Karura Forest Walk",
+    weekendVibeVenue: "River Café Karura",
+    isVerifiedGold: true,
+    workAffiliation: "Senior UX Designer / FinTech",
+    isWorkVerified: true,
   },
   {
     id: "user-2",
@@ -168,6 +182,13 @@ export const MOCK_DISCOVERY_USERS: RadaUser[] = [
     completionScore: 92,
     isVip: false,
     lastActive: "Active 1h ago",
+    responsivenessScore: 96,
+    responsivenessBadge: "HIGH_INTENT",
+    weekendVibe: "Live Jazz & Cocktails",
+    weekendVibeVenue: "Geco Cafe Lavington",
+    isVerifiedGold: true,
+    workAffiliation: "Creative Director",
+    isWorkVerified: true,
   },
   {
     id: "user-3",

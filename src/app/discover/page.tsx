@@ -9,6 +9,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { VoiceNotePlayer } from "@/components/ui/VoiceNotePlayer";
 import { PromptReactionSheet } from "@/components/features/PromptReactionSheet";
 import { StoriesBar } from "@/components/features/StoriesBar";
+import { RadaOnAirModal } from "@/components/features/RadaOnAirModal";
+import { GhostBusterModal } from "@/components/features/GhostBusterModal";
 import { useTheme } from "@/lib/theme-context";
 import styles from "./page.module.css";
 
@@ -117,6 +119,9 @@ export default function DiscoverPage() {
   const [reactionPrompt, setReactionPrompt] = useState<{ question: string; answer: string } | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
+  const [isRadaOnAirOpen, setIsRadaOnAirOpen] = useState(false);
+  const [isGhostBusterOpen, setIsGhostBusterOpen] = useState(false);
+  const [selectedWeekendVibe, setSelectedWeekendVibe] = useState<string>("ALL");
   const touchStartX = React.useRef(0);
 
   const photos = currentCard?.photos && currentCard.photos.length > 0
@@ -324,6 +329,87 @@ export default function DiscoverPage() {
       {/* 24-Hour Active Radar Stories */}
       <StoriesBar />
 
+      {/* ✦ Rada On Air — Live 60s Blind Audio Speed Dating Banner */}
+      <div style={{ padding: "0 16px 10px" }}>
+        <button
+          onClick={() => setIsRadaOnAirOpen(true)}
+          style={{
+            width: "100%",
+            padding: "10px 14px",
+            borderRadius: "14px",
+            background: "linear-gradient(90deg, rgba(229,169,60,0.18), rgba(20,20,24,0.8))",
+            border: "1px solid rgba(229,169,60,0.4)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            cursor: "pointer",
+            color: "var(--rada-pearl, #FFF8F0)",
+            boxShadow: "0 2px 12px rgba(229,169,60,0.15)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "18px", filter: "drop-shadow(0 0 6px #E5A93C)" }}>🎙️</span>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "12.5px", fontWeight: 800, color: "var(--rada-gold, #E5A93C)" }}>
+                Rada On Air • 60s Blind Audio Dating
+              </div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>
+                Live daily 8:00–9:30 PM • Tap to tune in
+              </div>
+            </div>
+          </div>
+          <span style={{
+            fontSize: "11px",
+            fontWeight: 800,
+            background: "var(--rada-gold-gradient, #E5A93C)",
+            color: "#0A0A0C",
+            padding: "4px 10px",
+            borderRadius: "12px",
+          }}>
+            Join ✦
+          </span>
+        </button>
+      </div>
+
+      {/* Weekend Rada Category Chips */}
+      <div style={{
+        display: "flex",
+        gap: "6px",
+        overflowX: "auto",
+        padding: "0 16px 12px",
+        scrollbarWidth: "none",
+      }}>
+        {[
+          { id: "ALL", label: "All Radar" },
+          { id: "BRUNCH", label: "🥞 Sunday Brunch" },
+          { id: "HIKE", label: "🌲 Karura Hike" },
+          { id: "COFFEE", label: "☕ Coffee Date" },
+          { id: "JAZZ", label: "🎷 Live Jazz" },
+        ].map((chip) => {
+          const active = selectedWeekendVibe === chip.id;
+          return (
+            <button
+              key={chip.id}
+              onClick={() => setSelectedWeekendVibe(chip.id)}
+              style={{
+                padding: "6px 12px",
+                borderRadius: "20px",
+                background: active ? "var(--rada-gold, #E5A93C)" : "var(--rada-surface, rgba(255,255,255,0.05))",
+                border: `1px solid ${active ? "var(--rada-gold, #E5A93C)" : "var(--rada-border, rgba(255,255,255,0.1))"}`,
+                color: active ? "#0A0A0C" : "var(--rada-pearl, #FFF8F0)",
+                fontSize: "11.5px",
+                fontWeight: 700,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+              }}
+            >
+              {chip.label}
+            </button>
+          );
+        })}
+      </div>
+
       {locationError && (
         <LocationErrorBanner error={locationError} onDismiss={() => setLocationError(null)} />
       )}
@@ -425,13 +511,83 @@ export default function DiscoverPage() {
                 {currentCard.verified && (
                   <span className={styles.verifiedCheck} title="Verified Kenyan ID">✓</span>
                 )}
+                {currentCard.isVerifiedGold && (
+                  <span style={{ fontSize: "14px", color: "var(--rada-gold, #E5A93C)", fontWeight: 800, textShadow: "0 0 8px rgba(229,169,60,0.6)" }} title="Rada Gold Liveness Verified">✦ Gold</span>
+                )}
               </div>
+              {currentCard.workAffiliation && (
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.85)", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span>💼 {currentCard.workAffiliation}</span>
+                  {currentCard.isWorkVerified && <span style={{ color: "#34D399", fontWeight: 800 }}>✓</span>}
+                </div>
+              )}
               <div className={styles.locationRow}>
                 <LocationBadge area={currentCard.area} county={currentCard.county} distanceKm={currentCard.distanceKm} />
                 <span className={styles.occupationText}>{currentCard.occupation}</span>
               </div>
             </div>
           </div>
+
+          {/* Trust & Weekend Plan Bar */}
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", padding: "12px 16px 2px" }}>
+            <span
+              onClick={() => setIsGhostBusterOpen(true)}
+              style={{
+                background: "rgba(229,169,60,0.12)",
+                border: "1px solid rgba(229,169,60,0.3)",
+                borderRadius: "12px",
+                padding: "4px 8px",
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "var(--rada-gold, #E5A93C)",
+                cursor: "pointer",
+              }}
+            >
+              ⚡ Fast Responder ({currentCard.responsivenessScore ?? 96}%)
+            </span>
+            <span
+              style={{
+                background: "rgba(52, 211, 153, 0.12)",
+                border: "1px solid rgba(52, 211, 153, 0.3)",
+                borderRadius: "12px",
+                padding: "4px 8px",
+                fontSize: "11px",
+                fontWeight: 700,
+                color: "#34D399",
+              }}
+            >
+              🛡️ DateSafe Escrow
+            </span>
+          </div>
+
+          {/* Weekend Date Proposal Callout */}
+          {currentCard.weekendVibe && (
+            <div style={{
+              margin: "8px 16px 0",
+              background: "linear-gradient(135deg, rgba(229,169,60,0.12), rgba(0,0,0,0.4))",
+              border: "1px solid rgba(229,169,60,0.35)",
+              borderRadius: "14px",
+              padding: "10px 12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}>
+              <div>
+                <div style={{ fontSize: "10px", color: "var(--rada-gold, #E5A93C)", fontWeight: 800, textTransform: "uppercase" }}>
+                  📅 Weekend Rada
+                </div>
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "#FFF8F0" }}>
+                  {currentCard.weekendVibe}
+                </div>
+                {currentCard.weekendVibeVenue && (
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>
+                    @ {currentCard.weekendVibeVenue}
+                  </div>
+                )}
+              </div>
+              <span style={{ fontSize: "20px" }}>🥂</span>
+            </div>
+          )}
 
           {/* Intent Note Quote Callout */}
           {currentCard.intentNote && (
@@ -515,6 +671,18 @@ export default function DiscoverPage() {
           onSubmit={handleReactionSubmit}
         />
       )}
+
+      {/* ✦ Rada On Air — Audio Speed Dating Lounge */}
+      <RadaOnAirModal
+        isOpen={isRadaOnAirOpen}
+        onClose={() => setIsRadaOnAirOpen(false)}
+      />
+
+      {/* 👻 "Rada Gani?" Ghost Buster & Intent Score Modal */}
+      <GhostBusterModal
+        isOpen={isGhostBusterOpen}
+        onClose={() => setIsGhostBusterOpen(false)}
+      />
     </main>
   );
 }

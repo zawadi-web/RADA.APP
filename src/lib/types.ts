@@ -73,6 +73,41 @@ export interface RadaUser {
   latitude?: number;
   longitude?: number;
   distanceKm?: number;
+  // Intentionality & Ghost Score
+  responsivenessScore?: number; // 0 - 100
+  responsivenessBadge?: "FAST_RESPONDER" | "HIGH_INTENT" | "REGULAR" | "GHOST_WARNING";
+  // Weekend Rada Planner
+  weekendVibe?: string; // e.g. "Sunday Brunch", "Karura Forest Walk"
+  weekendVibeVenue?: string; // e.g. "Ankole Grill Kilimani"
+  // Gold Trust & Professional Verification
+  isVerifiedGold?: boolean;
+  workAffiliation?: string; // e.g. "Tech / Safaricom"
+  workEmailDomain?: string; // e.g. "safaricom.co.ke"
+  isWorkVerified?: boolean;
+}
+
+export interface DateEscrow {
+  id: string;
+  matchId: string;
+  senderId: string;
+  receiverId: string;
+  amountKsh: number;
+  venueName: string;
+  venueArea: string;
+  status: "HELD" | "RELEASED" | "REFUNDED";
+  checkInPin: string;
+  createdAt: string;
+  releasedAt?: string;
+}
+
+export interface DatePlan {
+  id: string;
+  matchId: string;
+  proposerId: string;
+  activity: string;
+  venue: string;
+  day: string; // e.g. "This Sunday @ 11:30 AM"
+  status: "PROPOSED" | "ACCEPTED" | "DECLINED";
 }
 
 export type LikeType = "STANDARD" | "SUPER_SPARK";
@@ -95,11 +130,13 @@ export interface Message {
   isRead: boolean;
   createdAt: string;
   isSystem?: boolean;
-  type?: "text" | "photo" | "video" | "voice" | "call";
+  type?: "text" | "photo" | "video" | "voice" | "call" | "date_plan" | "date_safe_escrow";
   mediaUrl?: string;
   durationSec?: number;
   callType?: "voice" | "video";
   callStatus?: "missed" | "completed" | "declined" | "cancelled";
+  datePlan?: DatePlan;
+  dateEscrow?: DateEscrow;
 }
 
 export interface MatchItem {

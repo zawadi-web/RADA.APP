@@ -9,6 +9,8 @@ import { useToast } from "@/components/ui/Toast";
 import { KENYAN_COUNTIES, getAreasForCounty, normalizeCounty } from "@/lib/kenya-locations";
 import { reverseGeocodeKenya, geolocateByIP } from "@/lib/kenya-geocoding";
 import { compressImage } from "@/lib/image-utils";
+import { GoldVerificationModal } from "@/components/features/GoldVerificationModal";
+import { GhostBusterModal } from "@/components/features/GhostBusterModal";
 
 // ── Intent labels ─────────────────────────────────────────────────────────────
 const INTENT_MAP: Record<string, { emoji: string; label: string }> = {
@@ -94,6 +96,8 @@ export default function ProfilePage() {
 
   const [activePhoto, setActivePhoto] = useState(0);
   const [editSheet, setEditSheet] = useState<string | null>(null);
+  const [isGoldModalOpen, setIsGoldModalOpen] = useState(false);
+  const [isGhostBusterOpen, setIsGhostBusterOpen] = useState(false);
 
   // Edit state
   const [editName, setEditName] = useState(currentUser.fullName || "");
@@ -542,8 +546,54 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* ── Rada Gold Trust & Verification Banner ──────────────────────── */}
+      <div style={{ margin: "16px 20px 0" }}>
+        <button
+          onClick={() => setIsGoldModalOpen(true)}
+          style={{
+            width: "100%",
+            padding: "14px 16px",
+            borderRadius: "16px",
+            background: currentUser.isVerifiedGold
+              ? "linear-gradient(135deg, rgba(229,169,60,0.2), rgba(20,20,24,0.9))"
+              : "linear-gradient(135deg, rgba(229,169,60,0.12), rgba(255,255,255,0.03))",
+            border: "1.5px solid var(--rada-gold, #E5A93C)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            cursor: "pointer",
+            color: "var(--rada-pearl, #FFF8F0)",
+            boxShadow: "0 2px 14px rgba(229,169,60,0.15)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", textAlign: "left" }}>
+            <span style={{ fontSize: "24px" }}>✦</span>
+            <div>
+              <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--rada-gold, #E5A93C)" }}>
+                {currentUser.isVerifiedGold ? "✦ Rada Gold Verified Member" : "Get Rada Gold™ Verified"}
+              </div>
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>
+                {currentUser.isWorkVerified
+                  ? `💼 Verified: ${currentUser.workAffiliation || currentUser.workEmailDomain}`
+                  : "3D Face Check + Work / University Credibility"}
+              </div>
+            </div>
+          </div>
+          <span style={{
+            fontSize: "11px",
+            fontWeight: 800,
+            background: "var(--rada-gold-gradient, #E5A93C)",
+            color: "#0A0A0C",
+            padding: "4px 10px",
+            borderRadius: "10px",
+          }}>
+            {currentUser.isVerifiedGold ? "Verified ✓" : "Verify →"}
+          </span>
+        </button>
+      </div>
+
       {/* ── Profile Info (Editable) ─────────────────────────────────────── */}
-      <div style={{ margin: "20px 20px 0", background: "rgba(255,255,255,0.03)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.07)", padding: "0 16px" }}>
+      <div style={{ margin: "16px 20px 0", background: "rgba(255,255,255,0.03)", borderRadius: "16px", border: "1px solid rgba(255,255,255,0.07)", padding: "0 16px" }}>
         <EditRow label="Name" value={currentUser.fullName?.split(" ")[0] || ""} onEdit={() => { setEditName(currentUser.fullName || ""); setEditSheet("name"); }} />
         <EditRow label="Age" value={currentUser.age ? `${currentUser.age} years` : ""} onEdit={() => { setEditAge(String(currentUser.age || "")); setEditSheet("age"); }} />
         <EditRow
@@ -562,6 +612,22 @@ export default function ProfilePage() {
             : ""
         } onEdit={() => { setEditInterestedIn(currentUser.interestedIn || []); setEditSheet("interestedIn"); }} />
         <EditRow label="My intention" value={INTENT_MAP[currentUser.intent]?.label || ""} onEdit={() => setEditSheet("intention")} />
+        <EditRow
+          label="Weekend Vibe"
+          value={currentUser.weekendVibe || "🥞 Set Weekend Plan"}
+          onEdit={() => {
+            updateProfile({
+              weekendVibe: currentUser.weekendVibe ? undefined : "Sunday Brunch @ Ankole Grill",
+              weekendVibeVenue: "Ankole Grill Kilimani",
+            });
+            showToast(currentUser.weekendVibe ? "Weekend plan cleared" : "Weekend set: Sunday Brunch @ Ankole Grill ✓", "success");
+          }}
+        />
+        <EditRow
+          label="Rada Gani? Score"
+          value={`${currentUser.responsivenessScore ?? 96}/100 (⚡ Fast)`}
+          onEdit={() => setIsGhostBusterOpen(true)}
+        />
         <EditRow label="Bio" value={currentUser.bio ? currentUser.bio.slice(0, 32) + (currentUser.bio.length > 32 ? "…" : "") : ""} onEdit={() => { setEditBio(currentUser.bio || ""); setEditSheet("bio"); }} />
       </div>
 
@@ -884,6 +950,18 @@ export default function ProfilePage() {
           </div>
         </Sheet>
       )}
+
+      {/* ✦ Rada Gold Trust Verification Modal */}
+      <GoldVerificationModal
+        isOpen={isGoldModalOpen}
+        onClose={() => setIsGoldModalOpen(false)}
+      />
+
+      {/* 👻 Intent & Responsiveness Modal */}
+      <GhostBusterModal
+        isOpen={isGhostBusterOpen}
+        onClose={() => setIsGhostBusterOpen(false)}
+      />
     </main>
   );
 }

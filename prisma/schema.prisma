@@ -91,6 +91,20 @@ model User {
   coins              Int           @default(20) // 20 welcome bonus coins
   coinTransactions   CoinTransaction[]
 
+  // Intentionality & Ghost Score
+  responsivenessScore Int           @default(95)
+  responsivenessBadge String        @default("FAST_RESPONDER") // "FAST_RESPONDER", "HIGH_INTENT", "REGULAR", "GHOST_WARNING"
+
+  // Weekend Rada Planner
+  weekendVibe         String?       // "Sunday Brunch", "Karura Forest Hike", etc.
+  weekendVibeVenue    String?       // "Ankole Grill Kilimani", "Artcaffé Westgate"
+
+  // Kenya Gold & Professional Trust Verification
+  isVerifiedGold      Boolean       @default(false)
+  workAffiliation     String?       // "Tech / Safaricom", "Legal / Bowmans"
+  workEmailDomain     String?       // "safaricom.co.ke"
+  isWorkVerified      Boolean       @default(false)
+
   // NextAuth OAuth accounts (Google)
   accounts        Account[]
   sessions        Session[]
@@ -267,4 +281,36 @@ model Story {
 
   @@index([userId, expiresAt])
   @@index([expiresAt, isExpired])
+}
+
+// DateSafe Transport & Escrow Guarantee
+model DateEscrow {
+  id          String    @id @default(cuid())
+  matchId     String
+  senderId    String
+  receiverId  String
+  amount      Int       @default(1000) // KES 1,000 transport/fare escrow
+  venueName   String
+  venueArea   String
+  status      String    @default("HELD") // "HELD", "RELEASED", "REFUNDED"
+  checkInPin  String    // 6-digit mutual check-in PIN
+  createdAt   DateTime  @default(now())
+  releasedAt  DateTime?
+
+  @@index([matchId])
+  @@index([senderId, receiverId])
+}
+
+// Weekend Date Proposal
+model DatePlan {
+  id          String   @id @default(cuid())
+  matchId     String
+  proposerId  String
+  activity    String   // e.g. "Sunday Brunch", "Karura Hike"
+  venue       String   // e.g. "Ankole Grill Kilimani"
+  day         String   // e.g. "This Sunday @ 11:30 AM"
+  status      String   @default("PROPOSED") // "PROPOSED", "ACCEPTED", "DECLINED"
+  createdAt   DateTime @default(now())
+
+  @@index([matchId])
 }
