@@ -1,5 +1,5 @@
 // Rada Service Worker - Enables PWA Installability and offline fallback
-const CACHE_NAME = 'rada-app-v1';
+const CACHE_NAME = 'rada-app-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.json',
@@ -8,6 +8,12 @@ const PRECACHE_ASSETS = [
   '/favicon.png',
   '/apple-touch-icon.png'
 ];
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();

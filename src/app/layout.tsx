@@ -58,7 +58,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('rada_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.deferredPWAInstallPrompt=e;window.dispatchEvent(new CustomEvent('pwa-prompt-ready'));});`,
+            __html: `(function(){try{var t=localStorage.getItem('rada_theme')||'light';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();function registerSW(){if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js',{scope:'/'}).then(function(reg){if(reg.waiting){reg.waiting.postMessage({type:'SKIP_WAITING'});}}).catch(function(err){console.warn('[Rada PWA] SW error:',err);});}}if(document.readyState==='complete'||document.readyState==='interactive'){registerSW();}else{window.addEventListener('DOMContentLoaded',registerSW);window.addEventListener('load',registerSW);}window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.deferredPWAInstallPrompt=e;window.dispatchEvent(new CustomEvent('pwa-prompt-ready',{detail:e}));});window.addEventListener('appinstalled',function(){window.deferredPWAInstallPrompt=null;window.dispatchEvent(new CustomEvent('pwa-installed'));});`,
           }}
         />
       </head>

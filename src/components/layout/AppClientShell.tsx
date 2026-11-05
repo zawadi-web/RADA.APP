@@ -578,6 +578,7 @@ function PwaInstallPromptInner() {
   const [isIOS, setIsIOS] = useState(false);
   const [isStandalone, setIsStandalone] = useState(false);
   const [iosStepShow, setIosStepShow] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
   const [hostName, setHostName] = useState("rada.app");
 
   useEffect(() => {
@@ -605,13 +606,17 @@ function PwaInstallPromptInner() {
     const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(ios);
 
+    // Sync any prompt that was already captured by the head script
     if ((window as any).deferredPWAInstallPrompt) {
       setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+      setShowBanner(true);
     }
 
-    const handlePromptReady = () => {
-      if ((window as any).deferredPWAInstallPrompt) {
-        setDeferredPrompt((window as any).deferredPWAInstallPrompt);
+    const handlePromptReady = (e: any) => {
+      const prompt = e?.detail || (window as any).deferredPWAInstallPrompt;
+      if (prompt) {
+        setDeferredPrompt(prompt);
+        setShowBanner(true);
       }
     };
     window.addEventListener("pwa-prompt-ready", handlePromptReady);
@@ -624,14 +629,27 @@ function PwaInstallPromptInner() {
     };
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
-    // Pop-up when visitor lands on the site after a gentle 1.2s delay
+    const handleAppInstalled = () => {
+      setShowBanner(false);
+      setDeferredPrompt(null);
+      (window as any).deferredPWAInstallPrompt = null;
+      try {
+        sessionStorage.setItem("rada_install_prompt_dismissed", "1");
+      } catch {}
+    };
+    window.addEventListener("appinstalled", handleAppInstalled);
+    window.addEventListener("pwa-installed", handleAppInstalled);
+
+    // Show banner after 2s if on iOS or if installable
     const timer = setTimeout(() => {
       setShowBanner(true);
-    }, 1200);
+    }, 2000);
 
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
       window.removeEventListener("pwa-prompt-ready", handlePromptReady);
+      window.removeEventListener("appinstalled", handleAppInstalled);
+      window.removeEventListener("pwa-installed", handleAppInstalled);
       clearTimeout(timer);
     };
   }, []);
@@ -639,22 +657,66 @@ function PwaInstallPromptInner() {
   if (isStandalone || !showBanner) return null;
 
   const handleInstallClick = async () => {
-    const promptEvent = deferredPrompt || (typeof window !== "undefined" && (window as any).deferredPWAInstallPrompt);
+    // 1. Check if native prompt is immediately ready
+    let promptEvent = deferredPrompt || (typeof window !== "undefined" && (window as any).deferredPWAInstallPrompt);
+
     if (promptEvent && typeof promptEvent.prompt === "function") {
       try {
         await promptEvent.prompt();
         const choice = await promptEvent.userChoice;
         if (choice?.outcome === "accepted") {
           setShowBanner(false);
+          try {
+            sessionStorage.setItem("rada_install_prompt_dismissed", "1");
+          } catch {}
         }
       } catch (err) {
-        console.error("Install prompt error:", err);
+        console.error("[PWA] Install prompt error:", err);
       }
       setDeferredPrompt(null);
       if (typeof window !== "undefined") (window as any).deferredPWAInstallPrompt = null;
-    } else {
-      setIosStepShow((prev) => !prev);
+      return;
     }
+
+    // 2. On iOS (Safari has no beforeinstallprompt API by design): show Add to Home Screen instructions
+    if (isIOS) {
+      setIosStepShow((prev) => !prev);
+      return;
+    }
+
+    // 3. On Android / Chrome / Edge: Wait for deferredPrompt rather than immediately falling back to manual text
+    setIsInstalling(true);
+    let attempts = 0;
+    const pollTimer = setInterval(async () => {
+      attempts++;
+      promptEvent = (window as any).deferredPWAInstallPrompt || deferredPrompt;
+      if (promptEvent && typeof promptEvent.prompt === "function") {
+        clearInterval(pollTimer);
+        setIsInstalling(false);
+        try {
+          await promptEvent.prompt();
+          const choice = await promptEvent.userChoice;
+          if (choice?.outcome === "accepted") {
+            setShowBanner(false);
+            try {
+              sessionStorage.setItem("rada_install_prompt_dismissed", "1");
+            } catch {}
+          }
+        } catch (err) {
+          console.error("[PWA] Delayed install prompt error:", err);
+        }
+        setDeferredPrompt(null);
+        if (typeof window !== "undefined") (window as any).deferredPWAInstallPrompt = null;
+        return;
+      }
+
+      if (attempts >= 6) {
+        // 3 seconds passed and no prompt event (e.g., already installed or private mode)
+        clearInterval(pollTimer);
+        setIsInstalling(false);
+        setIosStepShow(true);
+      }
+    }, 500);
   };
 
   const handleDismiss = () => {
@@ -690,7 +752,7 @@ function PwaInstallPromptInner() {
           boxShadow: "0 10px 32px rgba(0, 0, 0, 0.75), 0 0 1px rgba(255, 255, 255, 0.2)",
         }}
       >
-        {/* Left: App Icon */}
+        {/* Left: App Icon with Vibrant Rada Gold Branding */}
         <div
           style={{
             width: "38px",
@@ -701,16 +763,24 @@ function PwaInstallPromptInner() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            background: "#0A0A0C",
-            border: "1px solid rgba(245, 207, 104, 0.35)",
+            background: "linear-gradient(135deg, #F5CF68, #C59B27)",
+            border: "1px solid rgba(245, 207, 104, 0.4)",
+            position: "relative",
+            boxShadow: "0 2px 8px rgba(245, 207, 104, 0.25)",
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/icon-192.png"
             alt="Rada"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            style={{ width: "100%", height: "100%", objectFit: "cover", position: "relative", zIndex: 1 }}
+            onError={(e) => {
+              (e.currentTarget as HTMLElement).style.display = "none";
+            }}
           />
+          <span style={{ position: "absolute", fontSize: "20px", color: "#0A0A0C", fontWeight: 900, zIndex: 0 }}>
+            ✦
+          </span>
         </div>
 
         {/* Center: Title & Domain */}
@@ -748,19 +818,20 @@ function PwaInstallPromptInner() {
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
           <button
             onClick={handleInstallClick}
+            disabled={isInstalling}
             style={{
-              background: "none",
-              border: "none",
+              background: isInstalling ? "rgba(245, 207, 104, 0.2)" : "rgba(245, 207, 104, 0.12)",
+              border: "1px solid rgba(245, 207, 104, 0.4)",
               color: "#F5CF68",
-              fontSize: "15px",
+              fontSize: "14px",
               fontWeight: 700,
-              cursor: "pointer",
-              padding: "6px 10px",
-              borderRadius: "8px",
-              transition: "opacity 0.15s ease",
+              cursor: isInstalling ? "wait" : "pointer",
+              padding: "6px 14px",
+              borderRadius: "10px",
+              transition: "all 0.15s ease",
             }}
           >
-            Install
+            {isInstalling ? "Opening..." : "Install"}
           </button>
           <button
             onClick={handleDismiss}
@@ -784,7 +855,7 @@ function PwaInstallPromptInner() {
         </div>
       </div>
 
-      {/* Manual Instructions for iOS Safari or Chrome */}
+      {/* Manual Instructions fallback for iOS Safari or restricted browsers */}
       {iosStepShow && (
         <div
           style={{
@@ -806,8 +877,8 @@ function PwaInstallPromptInner() {
             </>
           ) : (
             <>
-              <span style={{ color: "#F5CF68", fontWeight: 700 }}>To install in browser: </span>
-              Tap browser menu <strong>(⋮)</strong> and select <strong>&quot;Install app&quot;</strong> or <strong>&quot;Add to Home screen&quot;</strong>.
+              <span style={{ color: "#F5CF68", fontWeight: 700 }}>Direct install note: </span>
+              If your browser doesn&apos;t open the direct prompt, tap menu <strong>(⋮)</strong> and select <strong>&quot;Install app&quot;</strong> or <strong>&quot;Add to Home screen&quot;</strong>.
             </>
           )}
         </div>
