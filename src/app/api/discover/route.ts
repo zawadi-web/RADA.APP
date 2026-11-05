@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { calculateDistanceKm, normalizeCounty } from "@/lib/kenya-locations";
-import { MOCK_DISCOVERY_USERS } from "@/lib/mock-data";
 
 /**
  * GET /api/discover
@@ -277,15 +276,7 @@ export async function GET(req: Request) {
       { headers: diagHeaders }
     );
   } catch (error) {
-    console.error("[DISCOVER API] Database unavailable, serving resilient fallback deck:", error);
-    const targetG = interestedIn
-      ? interestedIn.split(",").map(normalizeTargetGender).filter((g): g is "MAN" | "WOMAN" | "NON_BINARY" => g !== null)
-      : [];
-    const fallback = MOCK_DISCOVERY_USERS.filter((u) => {
-      if (userId && u.id === userId) return false;
-      if (targetG.length > 0 && !targetG.includes(u.gender as any)) return false;
-      return true;
-    }).slice(0, limit);
-    return NextResponse.json({ deck: fallback, total: fallback.length, isFallback: true }, { headers: diagHeaders });
+    console.error("[DISCOVER API] Database error:", error);
+    return NextResponse.json({ deck: [], total: 0 }, { headers: diagHeaders });
   }
 }

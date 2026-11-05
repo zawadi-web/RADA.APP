@@ -89,7 +89,7 @@ export default function ProfilePage() {
   const {
     currentUser, authUser, updateProfile, updateUserIntent,
     openVipModal, signOut, toggleLocation, useLocation,
-    switchToProfile, savedTestProfiles, createTestProfile,
+    switchToProfile, savedTestProfiles, createTestProfile, resetSwipes,
   } = useRada();
   const { showToast } = useToast();
   const { theme, toggleTheme } = useTheme();
@@ -830,8 +830,17 @@ export default function ProfilePage() {
       {/* ── Danger Zone ─────────────────────────────────────────────────── */}
       <div style={{ margin: "24px 20px 0", display: "flex", gap: "10px" }}>
         <button
+          onClick={async () => {
+            await resetSwipes();
+            showToast("Swiped likes cleared! Real profiles are back on Discover ✓", "success");
+          }}
+          style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid var(--rada-border-teal)", background: "var(--rada-gold-subtle)", color: "var(--rada-gold)", fontSize: "12px", fontWeight: 700, cursor: "pointer" }}
+        >
+          ↺ Reset Swipes (Rediscover Real Profiles)
+        </button>
+        <button
           onClick={resetOnboarding}
-          style={{ flex: 1, padding: "10px", borderRadius: "10px", border: "1px solid var(--rada-border)", background: "var(--rada-surface-raised)", color: "var(--rada-pearl-muted)", fontSize: "12px", cursor: "pointer" }}
+          style={{ padding: "10px 14px", borderRadius: "10px", border: "1px solid var(--rada-border)", background: "var(--rada-surface-raised)", color: "var(--rada-pearl-muted)", fontSize: "12px", cursor: "pointer" }}
         >
           Restart Setup
         </button>

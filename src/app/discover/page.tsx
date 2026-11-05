@@ -92,6 +92,7 @@ export default function DiscoverPage() {
     toggleLocation,
     isLoadingDeck,
     setLocationError,
+    resetSwipes,
   } = useRada();
 
 
@@ -268,9 +269,13 @@ export default function DiscoverPage() {
           <EmptyState
             icon="✦"
             title="Radar Ready"
-            description="No new profiles on your radar matching your preferences right now. Check back soon as more members join!"
-            actionLabel="View Profile →"
-            onAction={() => router.push("/profile")}
+            description="You've swiped through all available singles matching your preferences right now. Check back soon or rewind your radar to rediscover profiles!"
+            actionLabel="Rewind & Rediscover Profiles ↺"
+            onAction={async () => {
+              await resetSwipes();
+            }}
+            secondaryActionLabel="View My Profile →"
+            onSecondaryAction={() => router.push("/profile")}
           />
         </div>
       </main>

@@ -92,6 +92,7 @@ interface RadaContextType {
   // Auth methods
   signInWithEmailPassword: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   registerWithEmailPassword: (data: { email: string; password: string; fullName: string; gender?: string; intent?: string; county?: string; area?: string }) => Promise<{ success: boolean; error?: string }>;
+  resetSwipes: () => Promise<void>;
 }
 
 const RadaContext = createContext<RadaContextType | null>(null);
@@ -758,7 +759,26 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetDeck = () => {
-    setDeck(MOCK_DISCOVERY_USERS);
+    refreshDiscover();
+  };
+
+  const resetSwipes = async () => {
+    const activeId = dbUserId || (!currentUser.id?.startsWith("user-me") ? currentUser.id : null);
+    if (activeId) {
+      try {
+        await fetch("/api/likes/reset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: activeId }),
+        });
+      } catch (err) {
+        console.warn("Reset likes error:", err);
+      }
+    }
+    try {
+      localStorage.removeItem("rada_test_likes");
+    } catch {}
+    await refreshDiscover();
   };
 
   // ── Real API: Fetch Live Matches from DB ─────────────────────────────────
@@ -833,8 +853,8 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch {}
       matches.forEach((m) => likedUserIds.add(m.matchedWith.id));
 
-      // 3. Pool all candidate sources: server first, then local test profiles, then mock community
-      const allCandidates = [...serverCandidates, ...localCandidates, ...MOCK_DISCOVERY_USERS];
+      // 3. Pool only real candidate sources (Server database profiles + local user profiles). ZERO DUMMY DATA.
+      const allCandidates = [...serverCandidates, ...localCandidates];
 
       const allowedGenders = (currentUser.interestedIn && currentUser.interestedIn.length > 0)
         ? currentUser.interestedIn
@@ -1239,6 +1259,7 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
         canSendMessageInConversation,
         signInWithEmailPassword,
         registerWithEmailPassword,
+        resetSwipes,
       }}
     >
       {children}
