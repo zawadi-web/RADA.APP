@@ -702,6 +702,131 @@ export default function ProfilePage() {
         </div>
       )}
 
+      {/* ── Test Profiles Switcher (For Pair Testing & Multi-profile Verification) ── */}
+      <div style={{ margin: "24px 20px 0", background: "var(--rada-surface)", borderRadius: "18px", border: "1.5px solid var(--rada-border-teal)", padding: "18px" }}>
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--rada-gold)" }}>🧪 Switch &amp; Test Profiles</div>
+          <div style={{ fontSize: "11px", color: "var(--rada-pearl-muted)", marginTop: "2px", lineHeight: 1.4 }}>
+            Switch between your test profiles (Man &amp; Woman) to test mutual discovery, radar visibility, and instant matching.
+          </div>
+        </div>
+
+        {/* List of saved test profiles */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginBottom: "14px" }}>
+          {(() => {
+            const list = [...savedTestProfiles];
+            if (currentUser.fullName && currentUser.fullName !== "Set Your Name") {
+              const exists = list.some((p) => p.id === currentUser.id || p.fullName === currentUser.fullName);
+              if (!exists) list.unshift(currentUser);
+            }
+            if (list.length === 0) {
+              return (
+                <div style={{ padding: "12px", borderRadius: "10px", background: "var(--rada-surface-raised)", fontSize: "12px", color: "var(--rada-pearl-muted)", textAlign: "center" }}>
+                  No extra test profiles created yet. Tap below to create your pair test profile!
+                </div>
+              );
+            }
+            return list.map((p) => {
+              const isCurrent = (p.id === currentUser.id) || (p.fullName && p.fullName === currentUser.fullName);
+              return (
+                <div
+                  key={p.id || p.fullName}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 12px",
+                    borderRadius: "12px",
+                    background: isCurrent ? "var(--rada-gold-subtle)" : "var(--rada-surface-raised)",
+                    border: `1px solid ${isCurrent ? "var(--rada-gold)" : "var(--rada-border)"}`,
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ fontSize: "20px" }}>{p.gender === "WOMAN" ? "👩" : "👨"}</span>
+                    <div>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--rada-pearl)" }}>
+                        {p.fullName} {isCurrent && <span style={{ color: "var(--rada-gold)", fontSize: "11px" }}>(Active)</span>}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "var(--rada-pearl-muted)" }}>
+                        {p.gender === "WOMAN" ? "Woman" : "Man"}, {p.age || 24} • Seeking {p.interestedIn?.includes("MAN") ? "Men" : "Women"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {!isCurrent ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        switchToProfile(p);
+                        showToast(`Switched to ${p.fullName}! Open Discover to see your other profile.`, "success");
+                      }}
+                      style={{
+                        padding: "6px 12px",
+                        borderRadius: "8px",
+                        background: "var(--rada-gold-gradient)",
+                        color: "#0A0A0C",
+                        fontWeight: 800,
+                        fontSize: "12px",
+                        border: "none",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Switch →
+                    </button>
+                  ) : (
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--rada-gold)" }}>Active ✓</span>
+                  )}
+                </div>
+              );
+            });
+          })()}
+        </div>
+
+        {/* Quick Create Preset Buttons */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+          <button
+            type="button"
+            onClick={async () => {
+              showToast("Creating test Woman profile...", "neutral");
+              const p = await createTestProfile("FEMALE");
+              showToast(`Created & switched to ${p.fullName}! Open Discover to see men.`, "success");
+            }}
+            style={{
+              padding: "10px",
+              borderRadius: "10px",
+              border: "1.5px solid var(--rada-border-teal)",
+              background: "var(--rada-surface-raised)",
+              color: "var(--rada-pearl)",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            + Create Woman (👩)
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              showToast("Creating test Man profile...", "neutral");
+              const p = await createTestProfile("MALE");
+              showToast(`Created & switched to ${p.fullName}! Open Discover to see women.`, "success");
+            }}
+            style={{
+              padding: "10px",
+              borderRadius: "10px",
+              border: "1.5px solid var(--rada-border-teal)",
+              background: "var(--rada-surface-raised)",
+              color: "var(--rada-pearl)",
+              fontSize: "12px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            + Create Man (👨)
+          </button>
+        </div>
+      </div>
+
       {/* ── Danger Zone ─────────────────────────────────────────────────── */}
       <div style={{ margin: "24px 20px 0", display: "flex", gap: "10px" }}>
         <button

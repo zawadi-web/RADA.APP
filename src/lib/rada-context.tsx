@@ -151,6 +151,17 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Load from localStorage on client mount
   useEffect(() => {
     try {
+      // Load saved test profiles pool
+      const savedProfiles = localStorage.getItem("rada_saved_test_profiles");
+      if (savedProfiles) {
+        try {
+          const parsedList = JSON.parse(savedProfiles);
+          if (Array.isArray(parsedList) && parsedList.length > 0) {
+            setSavedTestProfiles(parsedList);
+          }
+        } catch {}
+      }
+
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
@@ -304,6 +315,15 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Advance deck immediately for responsive UX
     setDeck((prev) => prev.slice(1));
 
+    // Record test like in shared local storage for mutual test matching
+    try {
+      const testLikes: Array<{ senderId: string; receiverId: string; comment?: string }> = JSON.parse(
+        localStorage.getItem("rada_test_likes") || "[]"
+      );
+      testLikes.push({ senderId: currentUser.id, receiverId: target.id, comment });
+      localStorage.setItem("rada_test_likes", JSON.stringify(testLikes));
+    } catch {}
+
     // ── Real API path ──────────────────────────────────────────────────────
     const activeSenderId = dbUserId || (!currentUser.id?.startsWith("user-me") ? currentUser.id : null);
     if (activeSenderId && target.id && !target.id.startsWith("user-")) {
@@ -347,7 +367,17 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 
     // ── Local simulation fallback (mock data) ──────────────────────────────
-    const isMutual = likesReceived.some((l) => l.senderId === target.id) || target.id === "user-1" || target.id === "user-2";
+    let isMutual = likesReceived.some((l) => l.senderId === target.id) || target.id === "user-1" || target.id === "user-2";
+    if (!isMutual) {
+      try {
+        const testLikes: Array<{ senderId: string; receiverId: string }> = JSON.parse(
+          localStorage.getItem("rada_test_likes") || "[]"
+        );
+        if (testLikes.some((tl) => tl.senderId === target.id && tl.receiverId === currentUser.id)) {
+          isMutual = true;
+        }
+      } catch {}
+    }
 
     if (isMutual) {
       // Trigger Match!
@@ -526,12 +556,26 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = (updates: Partial<RadaUser>) => {
     setCurrentUser((prev) => {
       const updated = { ...prev, ...updates };
+      // Ensure persistent ID
+      if (!updated.id || updated.id === "user-me") {
+        updated.id = `user-${Date.now()}`;
+      }
       let score = 40;
       if (updated.photos.length >= 1) score += 20;
       if (updated.photos.length >= 3) score += 10;
       if (updated.prompts.length >= 1) score += 15;
       if (updated.bio) score += 15;
       const finalUser = { ...updated, completionScore: Math.min(score, 100) };
+
+      // Immediately save to local test profile list so other test profiles can discover it offline
+      try {
+        const savedList: RadaUser[] = JSON.parse(localStorage.getItem("rada_saved_test_profiles") || "[]");
+        const idx = savedList.findIndex((p) => p.id === finalUser.id || (p.fullName && p.fullName === finalUser.fullName));
+        if (idx >= 0) savedList[idx] = finalUser;
+        else savedList.push(finalUser);
+        localStorage.setItem("rada_saved_test_profiles", JSON.stringify(savedList));
+        setSavedTestProfiles(savedList);
+      } catch { /* ignore */ }
 
       // Background persist to PostgreSQL database
       fetch("/api/profile/save", {
@@ -554,10 +598,10 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .then((data) => {
           if (data.user?.id) {
             setDbUserId(data.user.id);
-            // Save to local test profile list
+            // Update local test profile with real DB ID
             try {
               const savedList: RadaUser[] = JSON.parse(localStorage.getItem("rada_saved_test_profiles") || "[]");
-              const idx = savedList.findIndex((p) => p.id === data.user.id || p.fullName === finalUser.fullName);
+              const idx = savedList.findIndex((p) => p.id === finalUser.id || p.id === data.user.id || p.fullName === finalUser.fullName);
               const toSave = { ...finalUser, id: data.user.id };
               if (idx >= 0) savedList[idx] = toSave;
               else savedList.push(toSave);
@@ -573,11 +617,49 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const switchToProfile = (profile: RadaUser) => {
+    // Save current active profile state before switching
+    try {
+      const list: RadaUser[] = JSON.parse(localStorage.getItem("rada_saved_test_profiles") || "[]");
+      const idx = list.findIndex((p) => p.id === currentUser.id || (p.fullName && p.fullName === currentUser.fullName));
+      if (idx >= 0) list[idx] = currentUser;
+      else if (currentUser.fullName && currentUser.fullName !== "Set Your Name") list.push(currentUser);
+      localStorage.setItem("rada_saved_test_profiles", JSON.stringify(list));
+      setSavedTestProfiles(list);
+    } catch {}
+
     setCurrentUser(profile);
-    setDbUserId(profile.id);
+    setDbUserId(profile.id?.startsWith("test-") || profile.id?.startsWith("user-") ? null : profile.id);
     try {
       localStorage.setItem("rada_onboarded", "1");
     } catch { /* ignore */ }
+
+    // Sync incoming test likes for this profile so match celebration and badges work
+    try {
+      const testLikes: Array<{ senderId: string; receiverId: string; comment?: string }> = JSON.parse(
+        localStorage.getItem("rada_test_likes") || "[]"
+      );
+      const list: RadaUser[] = JSON.parse(localStorage.getItem("rada_saved_test_profiles") || "[]");
+      const incoming = testLikes.filter((tl) => tl.receiverId === profile.id);
+      if (incoming.length > 0) {
+        const newLikesReceived: LikeItem[] = incoming.map((tl, idx) => {
+          const sender = list.find((p) => p.id === tl.senderId) || {
+            ...INITIAL_REAL_USER,
+            id: tl.senderId,
+            fullName: "Interested Member",
+          };
+          return {
+            id: `test-like-${idx}`,
+            senderId: tl.senderId,
+            receiverId: profile.id,
+            likeType: "STANDARD",
+            comment: tl.comment,
+            createdAt: "Just now",
+            sender,
+          };
+        });
+        setLikesReceived(newLikesReceived);
+      }
+    } catch {}
   };
 
   const createTestProfile = async (preset: "MALE" | "FEMALE"): Promise<RadaUser> => {
@@ -589,17 +671,35 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
       age: isMale ? 27 : 24,
       gender: isMale ? "MAN" : "WOMAN",
       interestedIn: isMale ? ["WOMAN"] : ["MAN"],
-      county: "Tharaka-Nithi",
-      area: "Chuka",
+      county: "Nairobi",
+      area: "Kilimani",
       occupation: isMale ? "Tech Entrepreneur" : "Brand Strategist",
       intent: "INTENTIONAL_DATING",
       bio: isMale
         ? "Looking for an intentional partner. Deep talks over coffee & authentic vibes."
         : "Looking for someone genuine who knows what they want. Authentic vibes.",
-      photos: [],
-      prompts: [],
+      photos: [
+        {
+          id: `p-${Date.now()}`,
+          url: isMale
+            ? "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80"
+            : "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80",
+          isPrimary: true,
+          order: 0,
+        },
+      ],
+      prompts: [
+        {
+          id: `pr-${Date.now()}`,
+          promptId: "intentionality",
+          question: "What intentional dating means to me...",
+          answer: isMale
+            ? "Direct clarity, emotional maturity, and shared future vision."
+            : "Meaningful conversations, authentic vibes, and mutual respect.",
+        },
+      ],
       verified: true,
-      completionScore: 85,
+      completionScore: 90,
       isVip: false,
       lastActive: "Just now",
     };
@@ -677,7 +777,7 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [dbUserId, currentUser.id]);
 
-  // ── Real API: Fetch Discovery Deck ────────────────────────────────────────
+  // ── Real API: Fetch Discovery Deck with Offline & Local Multi-Profile Fallback ──
   const refreshDiscover = useCallback(async () => {
     // Always use the real DB id for exclusion so the user never sees themselves
     const activeId = dbUserId || (currentUser.id?.startsWith("user-me") ? "" : currentUser.id) || "";
@@ -685,6 +785,8 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (prev.length === 0) setIsLoadingDeck(true);
       return prev;
     });
+
+    let serverCandidates: RadaUser[] = [];
     try {
       const interestedGenders = (currentUser.interestedIn && currentUser.interestedIn.length > 0)
         ? currentUser.interestedIn.join(",")
@@ -701,35 +803,85 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...(useLocation && currentUser.longitude !== undefined ? { longitude: currentUser.longitude.toString() } : {}),
       });
       const res = await fetch(`/api/discover?${params}`);
-      if (!res.ok) throw new Error("Failed to fetch discover deck");
-      const data = await res.json();
-      if (data.deck && Array.isArray(data.deck)) {
-        const allowedGenders = (currentUser.interestedIn && currentUser.interestedIn.length > 0)
-          ? currentUser.interestedIn
-          : [currentUser.gender === "MAN" ? "WOMAN" : "MAN"];
-        const allowsAll = allowedGenders.some((g) => (g as string).toUpperCase() === "BOTH" || (g as string).toUpperCase() === "ALL");
-
-        // Double-filter: exclude by DB id, local id, full name, email, and strictly enforce gender preference
-        const clean = data.deck.filter((u: RadaUser) => {
-          if (activeId && u.id === activeId) return false;
-          if (currentUser.id && u.id === currentUser.id) return false;
-          if (currentUser.fullName && u.fullName && u.fullName.trim().toLowerCase() === currentUser.fullName.trim().toLowerCase()) return false;
-          if (currentUser.email && u.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) return false;
-
-          if (!allowsAll && !allowedGenders.includes(u.gender)) {
-            return false;
-          }
-          return true;
-        });
-        setDeck(clean);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.deck && Array.isArray(data.deck)) {
+          serverCandidates = data.deck;
+        }
       }
+    } catch (err) {
+      console.warn("[RadaContext] API discover fallback to local pool:", err);
+    }
+
+    try {
+      // 1. Retrieve saved local test profiles (e.g. Profile 1 and Profile 2 created for pair testing)
+      let localCandidates: RadaUser[] = [];
+      try {
+        const storedProfiles: RadaUser[] = JSON.parse(localStorage.getItem("rada_saved_test_profiles") || "[]");
+        if (Array.isArray(storedProfiles)) {
+          localCandidates = storedProfiles;
+        }
+      } catch {}
+
+      // 2. Identify liked candidates so they don't appear in the deck
+      const likedUserIds = new Set<string>();
+      try {
+        const testLikes: Array<{ senderId: string; receiverId: string }> = JSON.parse(
+          localStorage.getItem("rada_test_likes") || "[]"
+        );
+        testLikes.filter((tl) => tl.senderId === currentUser.id).forEach((tl) => likedUserIds.add(tl.receiverId));
+      } catch {}
+      matches.forEach((m) => likedUserIds.add(m.matchedWith.id));
+
+      // 3. Pool all candidate sources: server first, then local test profiles, then mock community
+      const allCandidates = [...serverCandidates, ...localCandidates, ...MOCK_DISCOVERY_USERS];
+
+      const allowedGenders = (currentUser.interestedIn && currentUser.interestedIn.length > 0)
+        ? currentUser.interestedIn
+        : [currentUser.gender === "MAN" ? "WOMAN" : "MAN"];
+      const allowsAll = allowedGenders.some((g) => (g as string).toUpperCase() === "BOTH" || (g as string).toUpperCase() === "ALL");
+
+      const seen = new Set<string>();
+      const clean = allCandidates.filter((u: RadaUser) => {
+        if (!u || !u.id) return false;
+        // Never show yourself
+        if (activeId && u.id === activeId) return false;
+        if (currentUser.id && u.id === currentUser.id) return false;
+        if (currentUser.fullName && u.fullName && u.fullName.trim().toLowerCase() === currentUser.fullName.trim().toLowerCase()) return false;
+        if (currentUser.email && u.email && u.email.toLowerCase() === currentUser.email.toLowerCase()) return false;
+        // Skip already liked or matched
+        if (likedUserIds.has(u.id)) return false;
+
+        // Dedup by unique ID and name
+        const key = u.id + ":" + (u.fullName || "");
+        if (seen.has(key) || (u.fullName && seen.has(u.fullName.toLowerCase()))) return false;
+        seen.add(key);
+        if (u.fullName) seen.add(u.fullName.toLowerCase());
+
+        // Target gender check (what requester wants to see)
+        if (!allowsAll && !allowedGenders.includes(u.gender)) {
+          return false;
+        }
+
+        // Reciprocal check: candidate must be open to requester's gender
+        if (u.interestedIn && u.interestedIn.length > 0) {
+          const candidateWantsRequester = u.interestedIn.some(
+            (g) => (g as string) === "BOTH" || (g as string) === "ALL" || g === currentUser.gender
+          );
+          if (!candidateWantsRequester) return false;
+        }
+
+        return true;
+      });
+
+      setDeck(clean);
     } catch (err) {
       console.error("[RadaContext] refreshDiscover error:", err);
       setDeck([]);
     } finally {
       setIsLoadingDeck(false);
     }
-  }, [dbUserId, currentUser.id, currentUser.fullName, currentUser.intent, currentUser.gender, currentUser.interestedIn?.join(","), currentUser.county, currentUser.area, currentUser.latitude, currentUser.longitude, useLocation]);
+  }, [dbUserId, currentUser.id, currentUser.fullName, currentUser.intent, currentUser.gender, currentUser.interestedIn?.join(","), currentUser.county, currentUser.area, currentUser.latitude, currentUser.longitude, useLocation, matches]);
 
   // Auto-refresh deck when hydrated or when current user preferences change
   useEffect(() => {

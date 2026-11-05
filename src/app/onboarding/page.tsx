@@ -147,7 +147,10 @@ export default function OnboardingPage() {
     }
     if (intention) updates.intent = intention;
 
-    // Persist to PostgreSQL backend database immediately
+    // Persist to PostgreSQL backend database immediately (with offline local fallback)
+    const effectiveId = updates.id || `user-${Date.now()}`;
+    updates.id = effectiveId;
+
     try {
       const res = await fetch("/api/profile/save", {
         method: "POST",
@@ -167,41 +170,53 @@ export default function OnboardingPage() {
       const data = await res.json();
       if (data.user?.id) {
         updates.id = data.user.id;
-        // Synchronously save to localStorage so /discover immediately loads real identity
-        const localState = {
-          currentUser: {
-            id: data.user.id,
-            fullName: data.user.fullName,
-            birthDate: data.user.birthDate,
-            age: updates.age || 24,
-            gender: data.user.gender,
-            interestedIn: data.user.interestedInGenders || effectiveInterestedIn,
-            intent: data.user.intent,
-            bio: data.user.bio || "",
-            photos: data.user.photos || updates.photos || [],
-            prompts: [],
-            county: data.user.county || effectiveCounty,
-            area: data.user.area || selectedArea,
-            verified: true,
-            completionScore: data.user.completionScore || 70,
-            isVip: false,
-            lastActive: "Just now",
-          },
-          deck: [],
-          matches: [],
-          likesReceived: [],
-          conversations: {},
-          authUser,
-          isRealDataMode: true,
-          dbUserId: data.user.id,
-        };
-        try {
-          localStorage.setItem("rada_app_real_production_v3", JSON.stringify(localState));
-        } catch { /* storage full / private mode */ }
       }
     } catch (err) {
-      console.warn("Could not save to remote DB on onboarding finish:", err);
+      console.warn("Could not save to remote DB on onboarding finish (using local profile):", err);
     }
+
+    // Always save profile to local storage & test profiles pool
+    const birthYear = new Date().getFullYear() - (Number(updates.age) || 24);
+    const localUser = {
+      id: updates.id as string,
+      fullName: updates.fullName || "Member",
+      birthDate: `${birthYear}-01-01`,
+      age: Number(updates.age) || 24,
+      gender: updates.gender || (gender as any) || "MAN",
+      interestedIn: effectiveInterestedIn,
+      intent: (intention as any) || "INTENTIONAL_DATING",
+      bio: "",
+      photos: updates.photos || [],
+      prompts: [],
+      county: effectiveCounty,
+      area: selectedArea,
+      verified: true,
+      completionScore: 75,
+      isVip: false,
+      lastActive: "Just now",
+    };
+
+    try {
+      const savedList: any[] = JSON.parse(localStorage.getItem("rada_saved_test_profiles") || "[]");
+      const idx = savedList.findIndex((p) => p.id === localUser.id || p.fullName === localUser.fullName);
+      if (idx >= 0) savedList[idx] = localUser;
+      else savedList.push(localUser);
+      localStorage.setItem("rada_saved_test_profiles", JSON.stringify(savedList));
+    } catch {}
+
+    try {
+      const localState = {
+        currentUser: localUser,
+        deck: [],
+        matches: [],
+        likesReceived: [],
+        conversations: {},
+        authUser,
+        isRealDataMode: true,
+        dbUserId: (updates.id as string).startsWith("user-") ? null : (updates.id as string),
+      };
+      localStorage.setItem("rada_app_real_production_v3", JSON.stringify(localState));
+    } catch { /* storage full / private mode */ }
 
     updateProfile(updates as Parameters<typeof updateProfile>[0]);
     if (intention) updateUserIntent(intention as IntentType);
