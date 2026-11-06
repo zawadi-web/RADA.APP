@@ -20,8 +20,8 @@ const LocationErrorBanner = ({ error, onDismiss }: { error: string; onDismiss: (
     background: "rgba(255,90,95,0.08)",
     border: "1px solid rgba(255,90,95,0.4)",
     borderRadius: "10px",
-    padding: "10px 14px",
-    margin: "0 16px 8px",
+    padding: "8px 12px",
+    margin: "0 0 10px",
     fontSize: "12px",
     color: "#FF7B7F",
     display: "flex",
@@ -49,8 +49,8 @@ const LocationBtn = ({
     disabled={isPending}
     title={useLocation ? "GPS Radar Active — tap to toggle nationwide mode" : "Tap to enable precise GPS Radar for nearby singles"}
     style={{
-      background: useLocation ? "rgba(16, 185, 129, 0.12)" : "var(--rada-surface-raised)",
-      border: `1px solid ${useLocation ? "#10B981" : locationError ? "rgba(239, 68, 68, 0.4)" : "var(--rada-border)"}`,
+      background: useLocation ? "rgba(16, 185, 129, 0.12)" : "var(--rada-surface-raised, rgba(255,255,255,0.06))",
+      border: `1px solid ${useLocation ? "#10B981" : locationError ? "rgba(239, 68, 68, 0.4)" : "var(--rada-border, rgba(255,255,255,0.1))"}`,
       borderRadius: "9999px",
       padding: "5px 11px",
       fontSize: "11.5px",
@@ -59,7 +59,7 @@ const LocationBtn = ({
       display: "inline-flex",
       alignItems: "center",
       gap: "6px",
-      color: useLocation ? "#10B981" : "var(--rada-pearl)",
+      color: useLocation ? "#10B981" : "var(--rada-pearl, #FFF8F0)",
       transition: "all 0.2s ease",
       boxShadow: useLocation ? "0 2px 8px rgba(16, 185, 129, 0.2)" : "none",
     }}
@@ -69,7 +69,7 @@ const LocationBtn = ({
         width: "6px",
         height: "6px",
         borderRadius: "50%",
-        background: useLocation ? "#10B981" : isPending ? "var(--rada-gold)" : "#8696A0",
+        background: useLocation ? "#10B981" : isPending ? "var(--rada-gold, #F5CF68)" : "#8696A0",
         boxShadow: useLocation ? "0 0 6px #10B981" : "none",
       }}
     />
@@ -95,8 +95,8 @@ export default function DiscoverPage() {
     resetSwipes,
   } = useRada();
 
-
   const [isPendingLocation, setIsPendingLocation] = useState(false);
+  const [isRewinding, setIsRewinding] = useState(false);
 
   const handleLocationToggle = () => {
     if (!useLocation && !isPendingLocation) {
@@ -109,7 +109,6 @@ export default function DiscoverPage() {
     }
   };
 
-  // Stop pending state once location resolves (success or error)
   React.useEffect(() => {
     if (useLocation || locationError) {
       setIsPendingLocation(false);
@@ -122,7 +121,6 @@ export default function DiscoverPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isRadaOnAirOpen, setIsRadaOnAirOpen] = useState(false);
   const [isGhostBusterOpen, setIsGhostBusterOpen] = useState(false);
-  const [selectedWeekendVibe, setSelectedWeekendVibe] = useState<string>("ALL");
   const touchStartX = React.useRef(0);
 
   const photos = currentCard?.photos && currentCard.photos.length > 0
@@ -192,6 +190,15 @@ export default function DiscoverPage() {
     setDragOffset(0);
   };
 
+  const handleManualRewind = async () => {
+    setIsRewinding(true);
+    try {
+      await resetSwipes();
+    } finally {
+      setIsRewinding(false);
+    }
+  };
+
   if (isLoadingDeck && !currentCard) {
     return (
       <main className={styles.container}>
@@ -204,9 +211,9 @@ export default function DiscoverPage() {
             {currentUser.isVip ? "✦ VIP Active" : "Upgrade VIP"}
           </button>
         </header>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: "16px", padding: "40px" }}>
-          <div style={{ width: "56px", height: "56px", borderRadius: "50%", background: "linear-gradient(135deg, var(--color-radiant-coral), var(--color-deep-mauve))", animation: "pulse 1.5s ease-in-out infinite" }} />
-          <p style={{ color: "var(--color-text-secondary)", fontSize: "14px" }}>Finding your best matches...</p>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: "16px", padding: "60px 20px" }}>
+          <div style={{ width: "50px", height: "50px", borderRadius: "50%", background: "linear-gradient(135deg, #FFF6D6, #F5CF68)", animation: "pulse 1.4s ease-in-out infinite" }} />
+          <p style={{ color: "var(--rada-pearl-muted, #C4C4CD)", fontSize: "14px", fontWeight: 600 }}>Curating verified singles on your radar...</p>
         </div>
       </main>
     );
@@ -228,38 +235,31 @@ export default function DiscoverPage() {
               isPending={isPendingLocation}
             />
             <button
+              className={styles.iconBtn}
+              onClick={handleManualRewind}
+              disabled={isRewinding}
+              title="Rewind swipes & rediscover profiles"
+            >
+              ↺
+            </button>
+            <button
               className={styles.vipPill}
               onClick={openVipModal}
-              style={{ padding: "5px 11px", fontSize: "11.5px" }}
               title="Upgrade VIP"
             >
               {currentUser.isVip ? "✦ VIP" : "✦ VIP"}
             </button>
             <button
               onClick={toggleTheme}
+              className={styles.iconBtn}
               aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-              style={{
-                width: "30px",
-                height: "30px",
-                borderRadius: "50%",
-                background: "var(--rada-surface-raised)",
-                border: "1px solid var(--rada-border)",
-                color: "var(--rada-gold)",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "13px",
-                cursor: "pointer",
-                flexShrink: 0,
-              }}
             >
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
           </div>
         </header>
 
-        {/* 24-Hour Active Radar Stories (Always Visible) */}
+        {/* 24-Hour Active Radar Stories */}
         <StoriesBar />
 
         {locationError && (
@@ -269,11 +269,9 @@ export default function DiscoverPage() {
           <EmptyState
             icon="✦"
             title="Radar Ready"
-            description="You've swiped through all available singles matching your preferences right now. Check back soon or rewind your radar to rediscover profiles!"
-            actionLabel="Rewind & Rediscover Profiles ↺"
-            onAction={async () => {
-              await resetSwipes();
-            }}
+            description="You've swiped through all available singles matching your preferences right now. Tap rewind to rediscover real profiles and connect!"
+            actionLabel={isRewinding ? "Rewinding Radar..." : "Rewind & Rediscover Profiles ↺"}
+            onAction={handleManualRewind}
             secondaryActionLabel="View My Profile →"
             onSecondaryAction={() => router.push("/profile")}
           />
@@ -300,31 +298,24 @@ export default function DiscoverPage() {
             isPending={isPendingLocation}
           />
           <button
+            className={styles.iconBtn}
+            onClick={handleManualRewind}
+            disabled={isRewinding}
+            title="Rewind swipes & rediscover profiles"
+          >
+            ↺
+          </button>
+          <button
             className={styles.vipPill}
             onClick={openVipModal}
-            style={{ padding: "5px 11px", fontSize: "11.5px" }}
             title="Upgrade VIP"
           >
             {currentUser.isVip ? "✦ VIP" : "✦ VIP"}
           </button>
           <button
             onClick={toggleTheme}
+            className={styles.iconBtn}
             aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
-            style={{
-              width: "30px",
-              height: "30px",
-              borderRadius: "50%",
-              background: "var(--rada-surface-raised)",
-              border: "1px solid var(--rada-border)",
-              color: "var(--rada-gold)",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "13px",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
           >
             {theme === "dark" ? "☀️" : "🌙"}
           </button>
@@ -334,85 +325,17 @@ export default function DiscoverPage() {
       {/* 24-Hour Active Radar Stories */}
       <StoriesBar />
 
-      {/* ✦ Rada On Air — Live 60s Blind Audio Speed Dating Banner */}
-      <div style={{ padding: "0 16px 10px" }}>
+      {/* Sleek Feature Capsule: Rada On Air (Live 8:00 PM) */}
+      <div className={styles.featureCapsuleBar}>
         <button
+          type="button"
           onClick={() => setIsRadaOnAirOpen(true)}
-          style={{
-            width: "100%",
-            padding: "10px 14px",
-            borderRadius: "14px",
-            background: "linear-gradient(90deg, rgba(229,169,60,0.18), rgba(20,20,24,0.8))",
-            border: "1px solid rgba(229,169,60,0.4)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            cursor: "pointer",
-            color: "var(--rada-pearl, #FFF8F0)",
-            boxShadow: "0 2px 12px rgba(229,169,60,0.15)",
-          }}
+          className={styles.audioPill}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "18px", filter: "drop-shadow(0 0 6px #E5A93C)" }}>🎙️</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "12.5px", fontWeight: 800, color: "var(--rada-gold, #E5A93C)" }}>
-                Rada On Air • 60s Blind Audio Dating
-              </div>
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>
-                Live daily 8:00–9:30 PM • Tap to tune in
-              </div>
-            </div>
-          </div>
-          <span style={{
-            fontSize: "11px",
-            fontWeight: 800,
-            background: "var(--rada-gold-gradient, #E5A93C)",
-            color: "#0A0A0C",
-            padding: "4px 10px",
-            borderRadius: "12px",
-          }}>
-            Join ✦
-          </span>
+          <span className={styles.pulseDot} />
+          <span>🎙️ Rada On Air • Live Speed Dating</span>
+          <span style={{ color: "var(--rada-gold, #F5CF68)", fontWeight: 800 }}>Join ✦</span>
         </button>
-      </div>
-
-      {/* Weekend Rada Category Chips */}
-      <div style={{
-        display: "flex",
-        gap: "6px",
-        overflowX: "auto",
-        padding: "0 16px 12px",
-        scrollbarWidth: "none",
-      }}>
-        {[
-          { id: "ALL", label: "All Radar" },
-          { id: "BRUNCH", label: "🥞 Sunday Brunch" },
-          { id: "HIKE", label: "🌲 Karura Hike" },
-          { id: "COFFEE", label: "☕ Coffee Date" },
-          { id: "JAZZ", label: "🎷 Live Jazz" },
-        ].map((chip) => {
-          const active = selectedWeekendVibe === chip.id;
-          return (
-            <button
-              key={chip.id}
-              onClick={() => setSelectedWeekendVibe(chip.id)}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "20px",
-                background: active ? "var(--rada-gold, #E5A93C)" : "var(--rada-surface, rgba(255,255,255,0.05))",
-                border: `1px solid ${active ? "var(--rada-gold, #E5A93C)" : "var(--rada-border, rgba(255,255,255,0.1))"}`,
-                color: active ? "#0A0A0C" : "var(--rada-pearl, #FFF8F0)",
-                fontSize: "11.5px",
-                fontWeight: 700,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                flexShrink: 0,
-              }}
-            >
-              {chip.label}
-            </button>
-          );
-        })}
       </div>
 
       {locationError && (
@@ -448,7 +371,6 @@ export default function DiscoverPage() {
                 src={currentPhoto.url}
                 alt={currentCard.fullName}
                 className={styles.profileImg}
-                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
               />
             ) : (
               <div
@@ -465,23 +387,22 @@ export default function DiscoverPage() {
               >
                 <div
                   style={{
-                    width: "100px",
-                    height: "100px",
+                    width: "90px",
+                    height: "90px",
                     borderRadius: "50%",
-                    background: "linear-gradient(135deg, rgba(245, 207, 104, 0.16) 0%, rgba(20, 20, 24, 0.85) 100%)",
-                    border: "2px solid var(--rada-gold)",
-                    boxShadow: "var(--rada-gold-glow)",
+                    background: "rgba(245, 207, 104, 0.12)",
+                    border: "2px solid var(--rada-gold, #F5CF68)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: "40px",
+                    fontSize: "36px",
                     fontWeight: 800,
-                    color: "var(--rada-gold)",
+                    color: "var(--rada-gold, #F5CF68)",
                   }}
                 >
                   {currentCard.fullName.charAt(0).toUpperCase()}
                 </div>
-                <span style={{ fontSize: "11px", color: "var(--rada-gold)", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
+                <span style={{ fontSize: "11px", color: "var(--rada-gold, #F5CF68)", letterSpacing: "0.14em", textTransform: "uppercase", fontWeight: 700 }}>
                   ✦ Awaiting Photos
                 </span>
               </div>
@@ -517,82 +438,30 @@ export default function DiscoverPage() {
                   <span className={styles.verifiedCheck} title="Verified Kenyan ID">✓</span>
                 )}
                 {currentCard.isVerifiedGold && (
-                  <span style={{ fontSize: "14px", color: "var(--rada-gold, #E5A93C)", fontWeight: 800, textShadow: "0 0 8px rgba(229,169,60,0.6)" }} title="Rada Gold Liveness Verified">✦ Gold</span>
+                  <span style={{ fontSize: "13px", color: "var(--rada-gold, #F5CF68)", fontWeight: 800 }} title="Rada Gold Liveness Verified">✦ Gold</span>
                 )}
               </div>
-              {currentCard.workAffiliation && (
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.85)", marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span>💼 {currentCard.workAffiliation}</span>
-                  {currentCard.isWorkVerified && <span style={{ color: "#34D399", fontWeight: 800 }}>✓</span>}
-                </div>
-              )}
               <div className={styles.locationRow}>
                 <LocationBadge area={currentCard.area} county={currentCard.county} distanceKm={currentCard.distanceKm} />
-                <span className={styles.occupationText}>{currentCard.occupation}</span>
+                {currentCard.occupation && (
+                  <span className={styles.occupationText}>{currentCard.occupation}</span>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Trust & Weekend Plan Bar */}
-          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", padding: "12px 16px 2px" }}>
+          {/* Minimalist Trust & Safety Bar */}
+          <div className={styles.trustBar}>
             <span
               onClick={() => setIsGhostBusterOpen(true)}
-              style={{
-                background: "rgba(229,169,60,0.12)",
-                border: "1px solid rgba(229,169,60,0.3)",
-                borderRadius: "12px",
-                padding: "4px 8px",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "var(--rada-gold, #E5A93C)",
-                cursor: "pointer",
-              }}
+              className={`${styles.trustBadge} ${styles.trustBadgeGold}`}
             >
               ⚡ Fast Responder ({currentCard.responsivenessScore ?? 96}%)
             </span>
-            <span
-              style={{
-                background: "rgba(52, 211, 153, 0.12)",
-                border: "1px solid rgba(52, 211, 153, 0.3)",
-                borderRadius: "12px",
-                padding: "4px 8px",
-                fontSize: "11px",
-                fontWeight: 700,
-                color: "#34D399",
-              }}
-            >
+            <span className={styles.trustBadge}>
               🛡️ DateSafe Escrow
             </span>
           </div>
-
-          {/* Weekend Date Proposal Callout */}
-          {currentCard.weekendVibe && (
-            <div style={{
-              margin: "8px 16px 0",
-              background: "linear-gradient(135deg, rgba(229,169,60,0.12), rgba(0,0,0,0.4))",
-              border: "1px solid rgba(229,169,60,0.35)",
-              borderRadius: "14px",
-              padding: "10px 12px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}>
-              <div>
-                <div style={{ fontSize: "10px", color: "var(--rada-gold, #E5A93C)", fontWeight: 800, textTransform: "uppercase" }}>
-                  📅 Weekend Rada
-                </div>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#FFF8F0" }}>
-                  {currentCard.weekendVibe}
-                </div>
-                {currentCard.weekendVibeVenue && (
-                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)" }}>
-                    @ {currentCard.weekendVibeVenue}
-                  </div>
-                )}
-              </div>
-              <span style={{ fontSize: "20px" }}>🥂</span>
-            </div>
-          )}
 
           {/* Intent Note Quote Callout */}
           {currentCard.intentNote && (
@@ -603,13 +472,15 @@ export default function DiscoverPage() {
           )}
 
           {/* Bio Section */}
-          <div className={styles.bioSection}>
-            <p className={styles.bioText}>{currentCard.bio}</p>
-          </div>
+          {currentCard.bio && (
+            <div className={styles.bioSection}>
+              <p className={styles.bioText}>{currentCard.bio}</p>
+            </div>
+          )}
 
           {/* Voice Intro Note */}
           {currentCard.voiceNote && (
-            <div style={{ marginTop: "14px", marginBottom: "6px" }}>
+            <div style={{ padding: "0 18px", marginTop: "8px", marginBottom: "8px" }}>
               <VoiceNotePlayer
                 voiceNote={currentCard.voiceNote}
                 userName={currentCard.fullName.split(" ")[0]}
@@ -618,20 +489,22 @@ export default function DiscoverPage() {
           )}
 
           {/* Interactive Prompts */}
-          <div className={styles.promptsList}>
-            {currentCard.prompts.map((prompt) => (
-              <div key={prompt.id} className={styles.promptCard}>
-                <span className={styles.promptQuestion}>{prompt.question}</span>
-                <p className={styles.promptAnswer}>&ldquo;{prompt.answer}&rdquo;</p>
-                <button
-                  className={styles.reactBtn}
-                  onClick={() => handlePromptReact(prompt.question, prompt.answer)}
-                >
-                  <span>React with note 💬</span>
-                </button>
-              </div>
-            ))}
-          </div>
+          {currentCard.prompts && currentCard.prompts.length > 0 && (
+            <div className={styles.promptsList}>
+              {currentCard.prompts.map((prompt) => (
+                <div key={prompt.id} className={styles.promptCard}>
+                  <span className={styles.promptQuestion}>{prompt.question}</span>
+                  <p className={styles.promptAnswer}>&ldquo;{prompt.answer}&rdquo;</p>
+                  <button
+                    className={styles.reactBtn}
+                    onClick={() => handlePromptReact(prompt.question, prompt.answer)}
+                  >
+                    <span>React with note 💬</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Floating Action Controls */}
@@ -648,7 +521,7 @@ export default function DiscoverPage() {
           <button
             type="button"
             className={`${styles.actionBtn} ${styles.sparkBtn}`}
-            onClick={() => handlePromptReact(currentCard.prompts[0]?.question || "Intentional note", currentCard.prompts[0]?.answer || "Hello!")}
+            onClick={() => handlePromptReact(currentCard.prompts?.[0]?.question || "Intentional note", currentCard.prompts?.[0]?.answer || "Hello!")}
             aria-label="Super spark"
           >
             ✦
@@ -683,7 +556,7 @@ export default function DiscoverPage() {
         onClose={() => setIsRadaOnAirOpen(false)}
       />
 
-      {/* 👻 "Rada Gani?" Ghost Buster & Intent Score Modal */}
+      {/* 👻 Ghost Buster Modal */}
       <GhostBusterModal
         isOpen={isGhostBusterOpen}
         onClose={() => setIsGhostBusterOpen(false)}

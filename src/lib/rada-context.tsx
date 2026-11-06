@@ -778,6 +778,8 @@ export const RadaProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       localStorage.removeItem("rada_test_likes");
     } catch {}
+    setMatches([]);
+    setLikesReceived([]);
     await refreshDiscover();
   };
 

@@ -567,7 +567,14 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
   }, [pathname, router, isHydrated, currentUser, isPublicRoute]);
 
   if (isPublicRoute) return <>{children}</>;
-  if (!ready && !isHydrated) return <div style={{ minHeight: "100vh", background: "var(--rada-bg)" }} />;
+  if (!isHydrated || !ready) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#09090B", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px" }}>
+        <span style={{ fontSize: "28px", color: "#F5CF68", filter: "drop-shadow(0 0 12px rgba(245,207,104,0.6))" }}>✦</span>
+        <span style={{ fontFamily: "Cinzel, serif", fontSize: "18px", letterSpacing: "2px", color: "#FFF8F0", fontWeight: 700 }}>RADA</span>
+      </div>
+    );
+  }
   return <>{children}</>;
 }
 

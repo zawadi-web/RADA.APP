@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRada } from "@/lib/rada-context";
 import { useToast } from "@/components/ui/Toast";
 
@@ -38,8 +38,8 @@ export function StoriesBar() {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Fetch stories on mount
-  useEffect(() => {
+  // Fetch stories function
+  const fetchActiveStories = useCallback(() => {
     fetch("/api/stories")
       .then((res) => res.json())
       .then((data) => {
@@ -49,6 +49,24 @@ export function StoriesBar() {
       })
       .catch((err) => console.warn("Stories fetch fallback:", err));
   }, []);
+
+  // Fetch stories on mount and poll every 20 seconds for live updates
+  useEffect(() => {
+    fetchActiveStories();
+    const interval = setInterval(fetchActiveStories, 20000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchActiveStories();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [fetchActiveStories]);
 
   // Story Viewer Timer (5 seconds per slide)
   useEffect(() => {
@@ -60,7 +78,7 @@ export function StoriesBar() {
 
     setStoryProgress(0);
     const startTime = Date.now();
-    const duration = 5000; // 5 seconds
+    const duration = 5000;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -69,7 +87,6 @@ export function StoriesBar() {
 
       if (progress >= 100) {
         clearInterval(interval);
-        // Advance to next story or close if last
         if (activeStoryIndex < stories.length - 1) {
           setActiveStoryIndex((prev) => (prev !== null ? prev + 1 : null));
         } else {
@@ -90,7 +107,6 @@ export function StoriesBar() {
     setShowSourceModal(false);
 
     if (file.type.startsWith("video/")) {
-      // Validate Video duration <= 30s
       const videoElement = document.createElement("video");
       videoElement.preload = "metadata";
       videoElement.onloadedmetadata = () => {
@@ -111,7 +127,7 @@ export function StoriesBar() {
       return;
     }
 
-    // Photo selection with client-side compression
+    // Photo selection with high quality client-side compression
     const reader = new FileReader();
     reader.onload = (ev) => {
       const rawUrl = ev.target?.result as string;
@@ -146,7 +162,7 @@ export function StoriesBar() {
     reader.readAsDataURL(file);
   };
 
-  // Submit Story
+  // Submit Story with automatic user fallback
   const handlePublishStory = async () => {
     if (!newImagePreview) return;
     setIsPosting(true);
@@ -157,6 +173,10 @@ export function StoriesBar() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           userId: currentUserId,
+          authorName: currentUser.fullName,
+          authorPhotoUrl: currentUser.photos?.[0]?.url,
+          authorCounty: currentUser.county,
+          authorArea: currentUser.area,
           mediaUrl: newImagePreview,
           caption: newCaption.trim() || undefined,
         }),
@@ -164,7 +184,7 @@ export function StoriesBar() {
       const data = await res.json();
       if (data.story) {
         setStories((prev) => [data.story, ...prev]);
-        showToast("Story shared! Active for 24 hours ✦", "coral");
+        showToast("Story shared! Live on Radar for 24h ✦", "coral");
       }
       setIsCreatorOpen(false);
       setNewImagePreview(null);
@@ -179,7 +199,7 @@ export function StoriesBar() {
   const activeStory = activeStoryIndex !== null ? stories[activeStoryIndex] : null;
 
   return (
-    <div style={{ marginBottom: "16px", padding: "0 4px" }}>
+    <div style={{ marginBottom: "12px", padding: "0 8px" }}>
       {/* Hidden file input for camera capture */}
       <input
         ref={cameraInputRef}
@@ -203,9 +223,9 @@ export function StoriesBar() {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "14px",
+          gap: "12px",
           overflowX: "auto",
-          padding: "8px 2px",
+          padding: "4px 2px",
           scrollbarWidth: "none",
           WebkitOverflowScrolling: "touch",
         }}
@@ -218,7 +238,7 @@ export function StoriesBar() {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "6px",
+            gap: "5px",
             background: "none",
             border: "none",
             cursor: "pointer",
@@ -229,15 +249,16 @@ export function StoriesBar() {
           <div
             style={{
               position: "relative",
-              width: "58px",
-              height: "58px",
+              width: "56px",
+              height: "56px",
               borderRadius: "50%",
               padding: "2px",
-              background: "rgba(255, 255, 255, 0.12)",
-              border: "1.5px dashed rgba(245, 207, 104, 0.6)",
+              background: "rgba(255, 255, 255, 0.08)",
+              border: "1.5px dashed rgba(245, 207, 104, 0.7)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              transition: "transform 0.2s ease",
             }}
           >
             {currentUser?.photos?.[0]?.url ? (
@@ -252,13 +273,13 @@ export function StoriesBar() {
                   width: "100%",
                   height: "100%",
                   borderRadius: "50%",
-                  background: "#1E1E26",
+                  background: "#18181F",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--rada-gold)",
+                  color: "var(--rada-gold, #F5CF68)",
                   fontWeight: 800,
-                  fontSize: "18px",
+                  fontSize: "17px",
                 }}
               >
                 {currentUser?.fullName?.charAt(0) || "✦"}
@@ -270,24 +291,24 @@ export function StoriesBar() {
                 position: "absolute",
                 bottom: "-2px",
                 right: "-2px",
-                width: "20px",
-                height: "20px",
+                width: "19px",
+                height: "19px",
                 borderRadius: "50%",
                 background: "linear-gradient(135deg, #FFF6D6, #F5CF68 40%, #D4AF37 75%, #9B700F 100%)",
                 color: "#0A0A0E",
-                fontSize: "14px",
+                fontSize: "13px",
                 fontWeight: 900,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.6)",
+                boxShadow: "0 2px 8px rgba(0,0,0,0.7)",
                 border: "2px solid #09090B",
               }}
             >
               +
             </div>
           </div>
-          <span style={{ fontSize: "11px", color: "var(--rada-pearl)", fontWeight: 600 }}>
+          <span style={{ fontSize: "11px", color: "var(--rada-pearl, #FFF8F0)", fontWeight: 600 }}>
             Your Story
           </span>
         </button>
@@ -306,7 +327,7 @@ export function StoriesBar() {
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
-                gap: "6px",
+                gap: "5px",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
@@ -316,12 +337,12 @@ export function StoriesBar() {
             >
               <div
                 style={{
-                  width: "58px",
-                  height: "58px",
+                  width: "56px",
+                  height: "56px",
                   borderRadius: "50%",
-                  padding: "2.5px",
+                  padding: "2px",
                   background: "linear-gradient(135deg, #FFF6D6 0%, #F5CF68 35%, #D4AF37 70%, #9B700F 100%)",
-                  boxShadow: "0 2px 10px rgba(245, 207, 104, 0.35)",
+                  boxShadow: "0 2px 10px rgba(245, 207, 104, 0.3)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -346,9 +367,9 @@ export function StoriesBar() {
               <span
                 style={{
                   fontSize: "11px",
-                  color: "var(--rada-pearl-muted)",
+                  color: "var(--rada-pearl-muted, #C4C4CD)",
                   fontWeight: 600,
-                  maxWidth: "60px",
+                  maxWidth: "58px",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -370,7 +391,7 @@ export function StoriesBar() {
             position: "fixed",
             inset: 0,
             zIndex: 10001,
-            background: "rgba(0, 0, 0, 0.8)",
+            background: "rgba(0, 0, 0, 0.78)",
             backdropFilter: "blur(12px)",
             display: "flex",
             alignItems: "flex-end",
@@ -393,15 +414,15 @@ export function StoriesBar() {
               display: "flex",
               flexDirection: "column",
               gap: "14px",
-              color: "var(--rada-pearl)",
+              color: "var(--rada-pearl, #FFF8F0)",
             }}
           >
-            <div style={{ textAlign: "center", marginBottom: "8px" }}>
+            <div style={{ textAlign: "center", marginBottom: "6px" }}>
               <h3 style={{ margin: "0 0 6px", fontSize: "18px", fontWeight: 800, color: "#FFFFFF" }}>
                 Add to Story
               </h3>
-              <p style={{ margin: 0, fontSize: "12.5px", color: "var(--rada-pearl-muted)" }}>
-                Snap a live moment with your camera or select from your gallery.
+              <p style={{ margin: 0, fontSize: "12.5px", color: "var(--rada-pearl-muted, #C4C4CD)" }}>
+                Snap a live moment or choose from your gallery. Active for 24 hours.
               </p>
             </div>
 
@@ -426,7 +447,7 @@ export function StoriesBar() {
               }}
             >
               <span style={{ fontSize: "18px" }}>📸</span>
-              <span>Snap with Camera (Ask Permission)</span>
+              <span>Snap with Camera</span>
             </button>
 
             <button
@@ -436,9 +457,9 @@ export function StoriesBar() {
                 width: "100%",
                 padding: "14px 18px",
                 borderRadius: "14px",
-                background: "var(--rada-surface-raised)",
-                color: "var(--rada-pearl)",
-                border: "1px solid var(--rada-border)",
+                background: "rgba(255, 255, 255, 0.08)",
+                color: "var(--rada-pearl, #FFF8F0)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
                 fontSize: "14.5px",
                 fontWeight: 700,
                 cursor: "pointer",
@@ -449,7 +470,7 @@ export function StoriesBar() {
               }}
             >
               <span style={{ fontSize: "18px" }}>🖼️</span>
-              <span>Choose from Device Gallery</span>
+              <span>Choose from Gallery</span>
             </button>
 
             <button
@@ -458,7 +479,7 @@ export function StoriesBar() {
               style={{
                 background: "none",
                 border: "none",
-                color: "var(--rada-pearl-dim)",
+                color: "rgba(255, 255, 255, 0.5)",
                 fontSize: "13px",
                 cursor: "pointer",
                 padding: "8px",
@@ -500,11 +521,11 @@ export function StoriesBar() {
               display: "flex",
               flexDirection: "column",
               gap: "14px",
-              color: "var(--rada-pearl)",
+              color: "var(--rada-pearl, #FFF8F0)",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 800 }}>Add to Story</h3>
+              <h3 style={{ margin: 0, fontSize: "17px", fontWeight: 800 }}>Story Preview</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -514,7 +535,7 @@ export function StoriesBar() {
                 style={{
                   background: "rgba(255, 255, 255, 0.08)",
                   border: "none",
-                  color: "var(--rada-pearl-muted)",
+                  color: "rgba(255, 255, 255, 0.7)",
                   width: "30px",
                   height: "30px",
                   borderRadius: "50%",
@@ -567,9 +588,9 @@ export function StoriesBar() {
                 width: "100%",
                 padding: "12px 14px",
                 borderRadius: "12px",
-                background: "var(--rada-surface-raised)",
-                border: "1px solid var(--rada-border)",
-                color: "var(--rada-pearl)",
+                background: "rgba(255, 255, 255, 0.06)",
+                border: "1px solid rgba(255, 255, 255, 0.12)",
+                color: "#FFFFFF",
                 fontSize: "14px",
                 outline: "none",
               }}
@@ -589,8 +610,9 @@ export function StoriesBar() {
                 fontSize: "15px",
                 fontWeight: 800,
                 border: "none",
-                cursor: "pointer",
+                cursor: isPosting ? "wait" : "pointer",
                 boxShadow: "0 6px 20px rgba(245, 207, 104, 0.45)",
+                opacity: isPosting ? 0.7 : 1,
               }}
             >
               {isPosting ? "Posting Story..." : "Add to Story ✦"}
@@ -677,7 +699,7 @@ export function StoriesBar() {
                   height: "38px",
                   borderRadius: "50%",
                   objectFit: "cover",
-                  border: "2px solid var(--rada-gold)",
+                  border: "2px solid var(--rada-gold, #F5CF68)",
                 }}
               />
               <div>
@@ -685,7 +707,7 @@ export function StoriesBar() {
                   {activeStory.user.fullName}
                 </strong>
                 <span style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.7)" }}>
-                  {activeStory.user.area} • 24h Story
+                  {activeStory.user.area || activeStory.user.county} • 24h Story
                 </span>
               </div>
             </div>
@@ -797,48 +819,8 @@ export function StoriesBar() {
               </div>
             )}
           </div>
-
-          {/* Bottom Quick Reaction Row */}
-          <div
-            style={{
-              padding: "16px 20px 24px",
-              background: "linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.95))",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "18px",
-              zIndex: 10,
-            }}
-          >
-            {["🔥", "💖", "🥂", "😍", "✨"].map((emoji) => (
-              <button
-                key={emoji}
-                type="button"
-                onClick={() => {
-                  showToast(`Sent ${emoji} reaction to ${activeStory.user.fullName.split(" ")[0]}!`, "coral");
-                }}
-                style={{
-                  background: "rgba(255, 255, 255, 0.12)",
-                  border: "1px solid rgba(255, 255, 255, 0.2)",
-                  borderRadius: "50%",
-                  width: "44px",
-                  height: "44px",
-                  fontSize: "20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  cursor: "pointer",
-                  transition: "transform 0.15s ease",
-                }}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
         </div>
       )}
     </div>
   );
 }
-
-export default StoriesBar;

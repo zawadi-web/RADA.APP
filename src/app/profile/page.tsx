@@ -128,7 +128,6 @@ export default function ProfilePage() {
     const uploadedUrls: string[] = [];
     for (const file of fileArray) {
       try {
-        // First try fast Cloudinary upload via /api/upload
         const formData = new FormData();
         formData.append("file", file);
         formData.append("folder", "rada/profiles");
@@ -140,7 +139,6 @@ export default function ProfilePage() {
             continue;
           }
         }
-        // Fallback: lightweight compressed client-side canvas
         const compressed = await compressImage(file, 800, 0.75);
         if (compressed) uploadedUrls.push(compressed);
       } catch (err) {
@@ -157,7 +155,6 @@ export default function ProfilePage() {
 
     let nextPhotos = [...photos];
 
-    // If user clicked a specific slot to replace
     if (targetSlot !== null && targetSlot >= 0 && targetSlot < 3) {
       const newPhotoObj = {
         id: `p-${Date.now()}-${targetSlot}`,
@@ -172,7 +169,6 @@ export default function ProfilePage() {
         nextPhotos.push(newPhotoObj);
       }
 
-      // If additional files were selected, fill remaining empty slots
       const remaining = uploadedUrls.slice(1);
       for (const extraUrl of remaining) {
         if (nextPhotos.length < 3) {
@@ -185,7 +181,6 @@ export default function ProfilePage() {
         }
       }
     } else {
-      // Append up to 3 total
       for (const url of uploadedUrls) {
         if (nextPhotos.length < 3) {
           nextPhotos.push({
@@ -198,7 +193,6 @@ export default function ProfilePage() {
       }
     }
 
-    // Normalize order and isPrimary
     nextPhotos = nextPhotos.slice(0, 3).map((p, idx) => ({
       ...p,
       isPrimary: idx === 0,

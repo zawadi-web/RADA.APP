@@ -214,6 +214,7 @@ export async function GET(req: Request) {
           (INTENT_SCORE[user.intent] ?? 1) +
           (userIntent && user.intent === userIntent ? 8 : 0) +
           (user.isVip ? 3 : 0) +
+          (user.photos && user.photos.length > 0 ? user.photos.length * 10 : 0) +
           proximityScore;
 
         return {

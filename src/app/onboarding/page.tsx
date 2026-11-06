@@ -38,7 +38,7 @@ const goToDiscover = () => {
 };
 
 export default function OnboardingPage() {
-  const { authUser, updateProfile, updateUserIntent, toggleLocation } = useRada();
+  const { authUser, updateProfile, updateUserIntent, toggleLocation, setDbUserId } = useRada();
 
   const [step, setStep] = useState(authUser ? 1 : 0);
   const [name, setName] = useState(authUser?.name?.split(" ")[0] || "");
@@ -170,6 +170,7 @@ export default function OnboardingPage() {
       const data = await res.json();
       if (data.user?.id) {
         updates.id = data.user.id;
+        setDbUserId(data.user.id);
       }
     } catch (err) {
       console.warn("Could not save to remote DB on onboarding finish (using local profile):", err);
